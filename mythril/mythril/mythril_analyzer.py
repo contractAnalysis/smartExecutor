@@ -157,7 +157,8 @@ class MythrilAnalyzer:
                     create_timeout=self.create_timeout,
                     transaction_count=transaction_count,
                     modules=modules,
-                    compulsory_statespace=False,
+                    compulsory_statespace=True,  # @wei
+                    # compulsory_statespace=False,
                     disable_dependency_pruning=self.disable_dependency_pruning,
                     custom_modules_directory=self.custom_modules_directory,
                 )

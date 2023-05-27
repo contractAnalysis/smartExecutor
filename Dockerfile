@@ -28,6 +28,10 @@ RUN apt-get update \
      wget \
   && ln -s /usr/bin/python3 /usr/local/bin/python
 
+RUN pip3 install solc-select
+RUN solc-select install all
+RUN export PATH=/usr/local/bin:$PATH
+
 COPY ./requirements.txt /opt/mythril/requirements.txt
 
 RUN cd /opt/mythril \

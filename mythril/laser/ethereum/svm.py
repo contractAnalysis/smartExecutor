@@ -208,7 +208,8 @@ class LaserEVM:
                 len(self.edges),
                 self.total_states,
             )
-
+            print(f'#@statespace')
+            print("{} nodes, {} edges, {} total states".format(len(self.nodes), len(self.edges), self.total_states))
         for hook in self._stop_sym_exec_hooks:
             hook()
 
