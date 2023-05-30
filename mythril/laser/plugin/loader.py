@@ -69,7 +69,18 @@ class LaserPluginLoader(object, metaclass=Singleton):
             if not enabled:
                 continue
 
+            # log.info(f"Instrumenting symbolic vm with plugin: {plugin_name}")
+            # plugin = plugin_builder(**self.plugin_args.get(plugin_name, {}))
+            # plugin.initialize(symbolic_vm)
+            # self.plugin_list[plugin_name] = plugin
+
             log.info(f"Instrumenting symbolic vm with plugin: {plugin_name}")
-            plugin = plugin_builder(**self.plugin_args.get(plugin_name, {}))
+            if plugin_name.__eq__("fdg-pruner") or plugin_name.__eq__("sse-support sequence execution"): #@wei take the coverage plugin instance as a parameter to get the fdg-pruner instance
+                # assume that the coverage plugin is initialized before the fdg-pruner
+                plugin = plugin_builder(**self.plugin_args.get(plugin_name, {"instructionCoveragePlugin":coveragePlugin}))
+            else:
+                plugin = plugin_builder(**self.plugin_args.get(plugin_name, {}))
             plugin.initialize(symbolic_vm)
-            self.plugin_list[plugin_name] = plugin
+            if plugin_name.__eq__("coverage"): #@wei save the instance of the coverage plguin instance
+                coveragePlugin=plugin
+

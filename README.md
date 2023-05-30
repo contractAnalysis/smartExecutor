@@ -1,3 +1,23 @@
+
+# SmartExecutor
+<p>SmartExecutor is designed to reduce the sequence explosion of symbolic execution on smart contracts .</p>
+<p>It is built on top of Mythril.</p>
+
+
+
+Get it with docker:<br>
+
+```bash
+$ docker pull 23278942/smartexecutor
+```
+
+How to run SmartExecutor:<br>
+```bash
+$ myth analyze <solidity-file>:<contract-name> -fdg
+```
+<p>&nbsp;&nbsp;</p>
+<hr>
+
 # Mythril
 
 <p align="center">

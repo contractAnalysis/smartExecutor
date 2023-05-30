@@ -1,3 +1,4 @@
+from mythril.laser.ethereum.state.world_state import WorldState
 from mythril.laser.ethereum.svm import LaserEVM
 from mythril.laser.plugin.interface import LaserPlugin
 from mythril.laser.plugin.builder import PluginBuilder
@@ -17,6 +18,38 @@ import logging
 
 
 log = logging.getLogger(__name__)
+def get_ftn_seq_annotation_from_ws(state:WorldState) -> list:
+    """ Returns the global state annotation
+
+    :param state: A world state object
+    """
+
+    annotations = cast(
+        List[WSDependencyAnnotation],
+        list(state.get_annotations(WSDependencyAnnotation)),
+    )
+    if len(annotations)>0:
+        if len(annotations[0].annotations_stack)>0:
+            return annotations[0].annotations_stack[0].ftn_seq
+    else: return []
+
+def get_writes_annotation_from_ws(state:WorldState) -> list:
+    """ Returns the global state annotation
+
+    :param state: A world state object
+    """
+
+    annotations = cast(
+        List[WSDependencyAnnotation],
+        list(state.get_annotations(WSDependencyAnnotation)),
+    )
+    if len(annotations)>0:
+        if len(annotations[0].annotations_stack) > 0:
+            return annotations[0].annotations_stack[0].storage_written
+    else:
+        return []
+
+
 
 
 def get_dependency_annotation(state: GlobalState) -> DependencyAnnotation:
@@ -236,6 +269,10 @@ class DependencyPruner(LaserPlugin):
             self.update_sstores(annotation.path, location)
             annotation.extend_storage_write_cache(self.iteration, location)
 
+            # @wei
+            tx_len = len(annotation.ftn_seq) + 1
+            annotation.extend_storage_write_cache(tx_len, location)
+
         @symbolic_vm.pre_hook("SLOAD")
         def sload_hook(state: GlobalState):
             annotation = get_dependency_annotation(state)
@@ -289,6 +326,9 @@ class DependencyPruner(LaserPlugin):
 
             if annotation.has_call:
                 self.update_calls(annotation.path)
+            #@wei add function name in annotation
+            ftn_name=state.environment.active_function_name
+            annotation.ftn_seq.append(ftn_name)
 
         def _check_basic_block(address: int, annotation: DependencyAnnotation):
             """This method is where the actual pruning happens.
@@ -299,6 +339,12 @@ class DependencyPruner(LaserPlugin):
 
             # Don't skip any blocks in the contract creation transaction
             if self.iteration < 2:
+                return
+
+            # #@wei for sequence execution, ignore dependency pruner(critical)
+            # if self.iteration>fdg.FDG_global.phase1_depth_limit+1:
+            #     return
+            if self.iteration > 2:  # @wei
                 return
 
             # Don't skip newly discovered blocks

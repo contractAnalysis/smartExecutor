@@ -19,7 +19,8 @@ class Bool(Expression[z3.BoolRef]):
 
         :return:
         """
-        self.simplify()
+        # self.simplify()
+        self.simplify_yes()
         return z3.is_false(self.raw)
 
     @property
@@ -28,7 +29,8 @@ class Bool(Expression[z3.BoolRef]):
 
         :return:
         """
-        self.simplify()
+        # self.simplify()
+        self.simplify_yes()
         return z3.is_true(self.raw)
 
     @property
@@ -37,7 +39,8 @@ class Bool(Expression[z3.BoolRef]):
 
         :return: Concrete value or None
         """
-        self.simplify()
+        # self.simplify()
+        self.simplify_yes()
         if self.is_true:
             return True
         elif self.is_false:

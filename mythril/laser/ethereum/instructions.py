@@ -65,6 +65,8 @@ from mythril.support.model import get_model
 from mythril.support.support_utils import get_code_hash
 
 from mythril.support.loader import DynLoader
+import fdg
+from mythril.laser.smt.expression import simplify_yes
 
 log = logging.getLogger(__name__)
 
@@ -252,7 +254,8 @@ class Instruction:
             op = "swap"
         elif self.op_code.startswith("LOG"):
             op = "log"
-
+        elif self.op_code.startswith("EMPTY"):#@wei: to handle opcode "-"
+            op = "empty"
         instruction_mutator = (
             getattr(self, op + "_", None)
             if not post
@@ -310,14 +313,19 @@ class Instruction:
                 new_value = Concat(
                     symbol_factory.BitVecVal(0, 256 - new_value.size()), new_value
                 )
-
-            global_state.mstate.stack.append(new_value)
+            # global_state.mstate.stack.append(new_value)
+            global_state.mstate.stack.append(simplify_yes(new_value))
 
         else:
             push_value += "0" * max(length_of_value - (len(push_value) - 2), 0)
+            # global_state.mstate.stack.append(
+            #     symbol_factory.BitVecVal(int(push_value, 16), 256)
+            # )
+
             global_state.mstate.stack.append(
-                symbol_factory.BitVecVal(int(push_value, 16), 256)
+                simplify_yes(symbol_factory.BitVecVal(int(push_value, 16), 256))
             )
+
         return [global_state]
 
     @StateTransition()
@@ -329,6 +337,15 @@ class Instruction:
         """
         value = int(global_state.get_current_instruction()["opcode"][3:], 10)
         global_state.mstate.stack.append(global_state.mstate.stack[-value])
+        return [global_state]
+
+    @StateTransition()
+    def empty_(self, global_state: GlobalState) -> List[GlobalState]:
+        """
+
+        :param global_state:
+        :return:
+        """
         return [global_state]
 
     @StateTransition()
@@ -470,6 +487,7 @@ class Instruction:
                 + helper.pop_bitvec(global_state.mstate)
             )
         )
+
         return [global_state]
 
     @StateTransition()
@@ -726,6 +744,7 @@ class Instruction:
         :param global_state:
         :return:
         """
+
         state = global_state.mstate
 
         op1 = state.stack.pop()
@@ -1038,9 +1057,37 @@ class Instruction:
 
         if len(data_list) > 1:
             data = simplify(Concat(data_list))
+            # # @wei
+            # print(f'_=_=_')
+            # print(f'in sha3_() of instructions.py: ')
+            # print(f'slot index: {data_list[-1]} ')
+            # print(f'simplified data: {data}\n')
+
+            if fdg.global_config.flag_preprocessing or fdg.global_config.tx_len == 0:
+                sim_data = simplify_yes(Concat(data_list))
+                fdg.preprocessing.slot_location.map_key_to_slot(sim_data, data_list)
+
+
         elif len(data_list) == 1:
             data = data_list[0]
+            # # @wei
+            # print(f'_=_=_')
+            # print(f'in sha3_() of instructions.py: ')
+            # print(f'slot index: {data_list[-1]} ')
+            # print(f'simplified data: {data}')
+
+            if fdg.global_config.flag_preprocessing or fdg.global_config.tx_len == 0:
+                try:
+                    sim_data = simplify_yes(data_list[0])
+                    fdg.preprocessing.slot_location.map_key_to_slot(sim_data, simplify_yes(data_list))
+                    print(f'instructions.py: sim_data: {sim_data}')
+                except:
+                    print(f'instructions.py: has a problem to collect data')
+
         else:
+            # @wei
+            print(f'in sha3_() of instructions.py: get empty keccak hash')
+
             # TODO: handle finding x where func(x)==func("")
             result = keccak_function_manager.get_empty_keccak_hash()
             state.stack.append(result)
@@ -1556,6 +1603,88 @@ class Instruction:
 
         return [new_state]
 
+    # @StateTransition(increment_pc=False, enable_gas=False)
+    # def jumpi_(self, global_state: GlobalState) -> List[GlobalState]:
+    #     """
+    #
+    #     :param global_state:
+    #     :return:
+    #     """
+    #     fdg.global_config.temp_count+=1
+    #     state = global_state.mstate
+    #     disassembly = global_state.environment.code
+    #     min_gas, max_gas = get_opcode_gas("JUMPI")
+    #     states = []
+    #
+    #     op0, condition = state.stack.pop(), state.stack.pop()
+    #
+    #     try:
+    #         jump_addr = util.get_concrete_int(op0)
+    #
+    #     except TypeError:
+    #         log.debug("Skipping JUMPI to invalid destination.")
+    #         global_state.mstate.pc += 1
+    #         global_state.mstate.min_gas_used += min_gas
+    #         global_state.mstate.max_gas_used += max_gas
+    #         return [global_state]
+    #     # False case
+    #
+    #     negated = (
+    #         simplify(Not(condition)) if isinstance(condition, Bool) else condition == 0
+    #     )
+    #     negated.simplify()
+    #     # True case
+    #     condi = simplify(condition) if isinstance(condition, Bool) else condition != 0
+    #     condi.simplify()
+    #
+    #     negated_cond = (type(negated) == bool and negated) or (
+    #         isinstance(negated, Bool) and not is_false(negated)
+    #     )
+    #     positive_cond = (type(condi) == bool and condi) or (
+    #         isinstance(condi, Bool) and not is_false(condi)
+    #     )
+    #
+    #     if fdg.global_config.flag_preprocessing or negated_cond:
+    #         # States have to be deep copied during a fork as summaries assume independence across states.
+    #         new_state = deepcopy(global_state)
+    #         # add JUMPI gas cost
+    #         new_state.mstate.min_gas_used += min_gas
+    #         new_state.mstate.max_gas_used += max_gas
+    #
+    #         # manually increment PC
+    #
+    #         new_state.mstate.depth += 1
+    #         new_state.mstate.pc += 1
+    #         new_state.world_state.constraints.append(negated)
+    #         states.append(new_state)
+    #     else:
+    #         log.debug("Pruned unreachable states.")
+    #
+    #     # Get jump destination
+    #     index = util.get_instruction_index(disassembly.instruction_list, jump_addr)
+    #
+    #     if index is None:
+    #         log.debug("Invalid jump destination: " + str(jump_addr))
+    #         return states
+    #
+    #     instr = disassembly.instruction_list[index]
+    #
+    #     if instr["opcode"] == "JUMPDEST":
+    #         if fdg.global_config.flag_preprocessing or positive_cond:
+    #             new_state = deepcopy(global_state)
+    #             # add JUMPI gas cost
+    #             new_state.mstate.min_gas_used += min_gas
+    #             new_state.mstate.max_gas_used += max_gas
+    #
+    #             # manually set PC to destination
+    #             new_state.mstate.pc = index
+    #             new_state.mstate.depth += 1
+    #             new_state.world_state.constraints.append(condi)
+    #             states.append(new_state)
+    #         else:
+    #             log.debug("Pruned unreachable states.")
+    #     return states
+
     @StateTransition(increment_pc=False, enable_gas=False)
     def jumpi_(self, global_state: GlobalState) -> List[GlobalState]:
         """
@@ -1563,6 +1692,7 @@ class Instruction:
         :param global_state:
         :return:
         """
+        fdg.global_config.temp_count += 1
         state = global_state.mstate
         disassembly = global_state.environment.code
         min_gas, max_gas = get_opcode_gas("JUMPI")
@@ -1572,6 +1702,7 @@ class Instruction:
 
         try:
             jump_addr = util.get_concrete_int(op0)
+
         except TypeError:
             log.debug("Skipping JUMPI to invalid destination.")
             global_state.mstate.pc += 1
@@ -1581,21 +1712,29 @@ class Instruction:
         # False case
 
         negated = (
-            simplify(Not(condition)) if isinstance(condition, Bool) else condition == 0
+            simplify_yes(Not(condition)) if isinstance(condition, Bool) else condition == 0
         )
-        negated.simplify()
+        # print(f'negated:{negated}')
+        negated.simplify_yes() # it is simplified
+        # print(f'simplified negated:{negated}')
         # True case
-        condi = simplify(condition) if isinstance(condition, Bool) else condition != 0
-        condi.simplify()
+        condi = simplify_yes(condition) if isinstance(condition, Bool) else condition != 0
+        # print(f'condi:{condi}')
+        condi.simplify_yes()
+        # print(f'simplified condi:{condi}')
 
-        negated_cond = (type(negated) == bool and negated) or (
-            isinstance(negated, Bool) and not is_false(negated)
-        )
-        positive_cond = (type(condi) == bool and condi) or (
-            isinstance(condi, Bool) and not is_false(condi)
-        )
+        if fdg.global_config.flag_preprocessing:
+            negated_cond=True
+            positive_cond=True
+        else:
+            negated_cond = (type(negated) == bool and negated) or (
+                isinstance(negated, Bool) and not is_false(negated)
+            )
+            positive_cond = (type(condi) == bool and condi) or (
+                isinstance(condi, Bool) and not is_false(condi)
+            )
 
-        if negated_cond:
+        if  negated_cond:
             # States have to be deep copied during a fork as summaries assume independence across states.
             new_state = deepcopy(global_state)
             # add JUMPI gas cost
@@ -1603,7 +1742,6 @@ class Instruction:
             new_state.mstate.max_gas_used += max_gas
 
             # manually increment PC
-
             new_state.mstate.depth += 1
             new_state.mstate.pc += 1
             new_state.world_state.constraints.append(negated)
@@ -1621,7 +1759,7 @@ class Instruction:
         instr = disassembly.instruction_list[index]
 
         if instr["opcode"] == "JUMPDEST":
-            if positive_cond:
+            if  positive_cond:
                 new_state = deepcopy(global_state)
                 # add JUMPI gas cost
                 new_state.mstate.min_gas_used += min_gas

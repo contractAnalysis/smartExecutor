@@ -14,7 +14,7 @@ from mythril.support.support_utils import sha3
 from typing import Dict, Tuple, List, Optional
 
 import logging
-
+import fdg.global_config
 
 TOTAL_PARTS = 10**40
 PART = (2**256 - 1) // TOTAL_PARTS
@@ -104,6 +104,10 @@ class KeccakFunctionManager:
         if data.symbolic is False:
             concrete_hash = self.find_concrete_keccak(data)
             self.concrete_hashes[data] = concrete_hash
+            # @wei
+            if fdg.global_config.flag_preprocessing or fdg.global_config.tx_len == 0:
+                fdg.preprocessing.slot_location.map_concrete_hash_key_to_slot(data, concrete_hash)
+
             return concrete_hash
 
         if length not in self.symbolic_inputs:
@@ -161,6 +165,10 @@ class KeccakFunctionManager:
             self.interval_hook_for_size[length] = self._index_counter
             index = self._index_counter
             self._index_counter -= INTERVAL_DIFFERENCE
+
+            # @wei data: func_input; hash: func(func_input)
+            if fdg.global_config.flag_preprocessing or fdg.global_config.tx_len == 0:
+                fdg.preprocessing.slot_location.map_hash_key_to_slot(func_input, func)
 
         lower_bound = index * PART
         upper_bound = lower_bound + PART

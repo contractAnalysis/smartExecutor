@@ -4,6 +4,8 @@ execution."""
 from copy import deepcopy
 from z3 import ExprRef
 from typing import Union, Optional
+
+import fdg
 from mythril.support.support_utils import Singleton
 from mythril.laser.ethereum.state.calldata import ConcreteCalldata
 from mythril.laser.ethereum.state.account import Account
@@ -228,6 +230,11 @@ class ContractCreationTransaction(BaseTransaction):
         callee_account = world_state.create_account(
             0, concrete_storage=True, creator=caller.value, address=contract_address
         )
+        if fdg.global_config.optimization == 1:
+            # @wei add Ether to the contract account
+            initial_ether = symbol_factory.BitVecSym("initial_ether", 256)
+            callee_account.set_balance(initial_ether)
+
         callee_account.contract_name = contract_name or callee_account.contract_name
         # init_call_data "should" be false, but it is easier to model the calldata symbolically
         # and add logic in codecopy/codesize/calldatacopy/calldatasize than to model code "correctly"
@@ -273,6 +280,12 @@ class ContractCreationTransaction(BaseTransaction):
         if return_data is None or return_data.size == 0:
             self.return_data = None
             raise TransactionEndSignal(global_state, revert=revert)
+        #@wei
+        if fdg.global_config.random_baseline==0: # baseline is not active
+            if fdg.global_config.flag_fwrg: # when fdg_pruner is active
+                if revert:
+                    self.return_data = None
+                    raise TransactionEndSignal(global_state, revert=revert)
 
         global_state.environment.active_account.code.assign_bytecode(
             tuple(return_data.return_data)

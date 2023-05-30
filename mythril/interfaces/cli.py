@@ -15,6 +15,7 @@ import coloredlogs
 import traceback
 from ast import literal_eval
 
+import fdg.global_config
 import mythril.support.signatures as sigs
 from argparse import ArgumentParser, Namespace, RawTextHelpFormatter
 from mythril.concolic import concolic_execution
@@ -411,7 +412,12 @@ def create_hash_to_addr_parser(hash_parser: ArgumentParser):
 
 def add_graph_commands(parser: ArgumentParser):
     commands = parser.add_argument_group("commands")
+    # @wei
+    commands.add_argument("-fdg", "--function_wr_graph", default=False, action='store_true',
+                          help="indicate if function write/read graph is used to guide state exploration")
+
     commands.add_argument("-g", "--graph", help="generate a control flow graph")
+
     commands.add_argument(
         "-j",
         "--statespace-json",
@@ -434,7 +440,96 @@ def create_safe_functions_parser(parser: ArgumentParser):
 
     options = parser.add_argument_group("options")
     add_analysis_args(options)
+    add_fwrg_analysis_args(options) #@wei
 
+def add_fwrg_analysis_args(options):
+    # @wei
+    options.add_argument(
+        "--optimization",
+        type=int,
+        default=0,
+        help="optimization, current support: 1(yes),0(no)",
+    )
+    # @wei
+    options.add_argument(
+        "--consider-all-reads",
+        type=int,
+        default=0,
+        help="indicate whether all reads are considered or not",
+    )
+    # @wei
+    options.add_argument(
+        "-fct",
+        "--function-coverage-threshold",
+        type=int,
+        default=98,
+        help="specify the code coverage threshold that is used to determine deep functions",
+    )
+
+    # @wei
+    options.add_argument(
+        "-fss",
+        "--function-search-strategy",
+        choices=["dfs", "bfs", "mine", 'seq'],
+        default="bfs",
+        help="Function data flow graph search strategy",
+    )
+
+    # @wei
+    options.add_argument(
+        "-seq",
+        "--sequences",
+        type=str,
+        help="sequences that will be executed directly",
+
+    )
+
+    options.add_argument(
+        "-p",
+        "--print-function-coverage",
+        type=int,
+        default=1,
+        help="0: no; 1:print function coverage",
+    )
+
+    options.add_argument(
+        "--preprocess-timeout",
+        type=int,
+        default=100,
+        help="The amount of seconds to spend on the preprocess",
+    )
+
+    options.add_argument(
+        "--execution-times-limit",
+        type=int,
+        default=5,
+        help="limit the times a function can be executed",
+    )
+
+    options.add_argument(
+        "--random-baseline",
+        type=int,
+        default=0,  # 0 means the baseline is inactive
+        help=" with values from  0 to 10. indicate the percent of functions to be considered",
+    )
+def add_fwrg_arguments(args: Namespace):
+    # @wei
+    fdg.global_config.function_coverage_threshold = args.function_coverage_threshold
+    fdg.global_config.function_search_strategy = args.function_search_strategy
+    fdg.global_config.sequences = args.sequences
+    fdg.global_config.random_baseline = args.random_baseline
+
+    fdg.global_config.print_function_coverage = args.print_function_coverage
+
+    fdg.global_config.preprocess_timeout = args.preprocess_timeout
+    fdg.global_config.optimization = args.optimization
+    fdg.global_config.flag_consider_all_reads = args.consider_all_reads
+    fdg.global_config.execution_times_limit = args.execution_times_limit
+
+    if args.function_wr_graph:
+        fdg.global_config.flag_fwrg = True
+    else:
+        fdg.global_config.flag_fwrg = False
 
 def add_analysis_args(options):
     """
@@ -515,11 +610,18 @@ def add_analysis_args(options):
         default=10,
         help="The amount of seconds to spend on the initial contract creation",
     )
+
+
+
+
+
+
     options.add_argument(
         "--parallel-solving",
         action="store_true",
         help="Enable solving z3 queries in parallel",
     )
+
     options.add_argument(
         "--solver-log",
         help="Path to the directory for solver log",
@@ -599,12 +701,13 @@ def create_analyzer_parser(analyzer_parser: ArgumentParser):
     add_graph_commands(analyzer_parser)
     options = analyzer_parser.add_argument_group("options")
     add_analysis_args(options)
-
+    add_fwrg_analysis_args(options)#@wei
 
 def create_foundry_parser(foundry_parser: ArgumentParser):
     add_graph_commands(foundry_parser)
     options = foundry_parser.add_argument_group("options")
     add_analysis_args(options)
+    add_fwrg_analysis_args(options)#@wei
 
 
 def validate_args(args: Namespace):
@@ -806,6 +909,7 @@ def execute_command(
             exit_with_error("text", "Analysis error encountered: " + format(e))
 
     elif args.command in ANALYZE_LIST + FOUNDRY_LIST:
+        add_fwrg_arguments(args) #@wei
         analyzer = MythrilAnalyzer(
             strategy=strategy, disassembler=disassembler, address=address, cmd_args=args
         )
@@ -872,10 +976,11 @@ def execute_command(
                     "markdown": report.as_markdown(),
                 }
                 print(outputs[args.outform])
-                if len(report.issues) > 0:
-                    exit(1)
-                else:
-                    exit(0)
+                # comment them so that the time can be printed in myth.py
+                # if len(report.issues) > 0:
+                #     exit(1)
+                # else:
+                #     exit(0)
             except DetectorNotFoundError as e:
                 exit_with_error(args.outform, format(e))
             except CriticalError as e:

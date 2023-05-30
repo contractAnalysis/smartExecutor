@@ -3,6 +3,8 @@ LASER."""
 import re
 from typing import Dict, List, Union, TYPE_CHECKING, cast
 
+from mythril.laser.smt.expression import simplify_yes
+
 if TYPE_CHECKING:
     from mythril.laser.ethereum.state.machine_state import MachineState
     from mythril.laser.ethereum.state.global_state import GlobalState
@@ -93,7 +95,11 @@ def pop_bitvec(state: "MachineState") -> BitVec:
         return symbol_factory.BitVecVal(item, 256)
     else:
         item = cast(BitVec, item)
-        return simplify(item)
+        # return simplify(item)  # can simplify a data from storage
+        if item.symbolic: # symbolic function can simplify an expression
+            return simplify(item)
+        else:
+            return simplify_yes(item) #@wei make sure a concrete value is indeed treated as a concrete value
 
 
 def get_concrete_int(item: Union[int, Expression]) -> int:
@@ -145,8 +151,8 @@ def concrete_int_to_bytes(val):
     # logging.debug("concrete_int_to_bytes " + str(val))
     if type(val) == int:
         return val.to_bytes(32, byteorder="big")
-    return simplify(val).value.to_bytes(32, byteorder="big")
-
+    # return simplify(val).value.to_bytes(32, byteorder="big")
+    return simplify_yes(val).value.to_bytes(32, byteorder="big")#@wei
 
 def bytearray_to_int(arr):
     """

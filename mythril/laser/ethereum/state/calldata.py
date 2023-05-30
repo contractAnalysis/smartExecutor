@@ -21,6 +21,7 @@ from mythril.laser.smt import (
     symbol_factory,
     Solver,
 )
+from mythril.laser.smt.expression import simplify_yes
 
 
 class BaseCalldata:
@@ -52,7 +53,8 @@ class BaseCalldata:
         :return:
         """
         parts = self[offset : offset + 32]
-        return simplify(Concat(parts))
+        # return simplify(Concat(parts))
+        return simplify_yes(Concat(parts))
 
     def __getitem__(self, item: Union[int, slice, BitVec]) -> Any:
         """
@@ -87,8 +89,8 @@ class BaseCalldata:
                         element = symbol_factory.BitVecVal(element, 8)
 
                     parts.append(element)
-                    current_index = simplify(current_index + step)
-
+                    # current_index = simplify(current_index + step)
+                    current_index = simplify_yes(current_index + step)
             except Z3Exception:
                 raise IndexError("Invalid Calldata Slice")
             return parts
@@ -146,7 +148,8 @@ class ConcreteCalldata(BaseCalldata):
         :return:
         """
         item = symbol_factory.BitVecVal(item, 256) if isinstance(item, int) else item
-        return simplify(self._calldata[item])
+        # return simplify(self._calldata[item])
+        return simplify_yes(self._calldata[item])
 
     def concrete(self, model: Model) -> list:
         """
@@ -238,10 +241,18 @@ class SymbolicCalldata(BaseCalldata):
         :return:
         """
         item = symbol_factory.BitVecVal(item, 256) if isinstance(item, int) else item
-        return simplify(
+        # return simplify(
+        #     If(
+        #         item < self._size,
+        #         simplify(self._calldata[cast(BitVec, item)]),
+        #         symbol_factory.BitVecVal(0, 8),
+        #     )
+        # )
+
+        return simplify_yes(
             If(
                 item < self._size,
-                simplify(self._calldata[cast(BitVec, item)]),
+                simplify_yes(self._calldata[cast(BitVec, item)]),
                 symbol_factory.BitVecVal(0, 8),
             )
         )
@@ -301,7 +312,9 @@ class BasicSymbolicCalldata(BaseCalldata):
             return_value = If(r_index == expr_item, r_value, return_value)
         if not clean:
             self._reads.append((expr_item, symbolic_base_value))
-        return simplify(return_value)
+        # return simplify(return_value)
+
+        return simplify_yes(return_value)
 
     def concrete(self, model: Model) -> list:
         """

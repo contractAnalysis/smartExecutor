@@ -13,7 +13,8 @@ from mythril.laser.smt import (
     simplify,
     symbol_factory,
 )
-
+import fdg
+from mythril.laser.smt.expression import simplify_yes
 
 def convert_bv(val: Union[int, BitVec]) -> BitVec:
     if isinstance(val, BitVec):
@@ -53,6 +54,33 @@ class Memory:
         """
         self._msize += size
 
+    # def get_word_at(self, index: int) -> Union[int, BitVec]:
+    #     """Access a word from a specified memory index.
+    #
+    #     :param index: integer representing the index to access
+    #     :return: 32 byte word at the specified index
+    #     """
+    #     try:
+    #         return symbol_factory.BitVecVal(
+    #             util.concrete_int_from_bytes(
+    #                 bytes([util.get_concrete_int(b) for b in self[index : index + 32]]),
+    #                 0,
+    #             ),
+    #             256,
+    #         )
+    #     except TypeError:
+    #         result = simplify(
+    #             Concat(
+    #                 [
+    #                     b if isinstance(b, BitVec) else symbol_factory.BitVecVal(b, 8)
+    #                     for b in cast(
+    #                         List[Union[int, BitVec]], self[index : index + 32]
+    #                     )
+    #                 ]
+    #             )
+    #         )
+    #         assert result.size() == 256
+    #         return result
     def get_word_at(self, index: int) -> Union[int, BitVec]:
         """Access a word from a specified memory index.
 
@@ -68,18 +96,43 @@ class Memory:
                 256,
             )
         except TypeError:
-            result = simplify(
-                Concat(
-                    [
-                        b if isinstance(b, BitVec) else symbol_factory.BitVecVal(b, 8)
-                        for b in cast(
-                            List[Union[int, BitVec]], self[index : index + 32]
+            #@wei address the error in preprocessing
+            if fdg.global_config.flag_preprocessing:
+                try:
+                    result = simplify_yes(
+                        Concat(
+                            [
+                                b if isinstance(b, BitVec) else symbol_factory.BitVecVal(b, 8)
+                                for b in cast(
+                                List[Union[int, BitVec]], self[index: index + 32]
+                            )
+                            ]
                         )
-                    ]
-                )
-            )
+                    )
+                except:
+                    fdg.global_config.preprocessing_exception = True
+                    print(f'memory.py in preprocessing: has exception')
+                    result = symbol_factory.BitVecVal(0, 256)
+
+            else:
+                try:
+                    result = simplify_yes(
+                        Concat(
+                            [
+                                b if isinstance(b, BitVec) else symbol_factory.BitVecVal(b, 8)
+                                for b in cast(
+                                List[Union[int, BitVec]], self[index: index + 32]
+                            )
+                            ]
+                        )
+                    )
+                except:
+                    print(f'memory.py: has exception')
+                    result = symbol_factory.BitVecVal(0, 256)
+
             assert result.size() == 256
             return result
+
 
     def write_word_at(self, index: int, value: Union[int, BitVec, bool, Bool]) -> None:
         """Writes a 32 byte word to memory at the specified index`
@@ -149,13 +202,13 @@ class Memory:
             if (bvstop - bvstart).symbolic:
                 symbolic_len = True
 
-            while simplify(bvstep * itr != simplify(bvstop - bvstart)) and (
+            while simplify_yes(bvstep * itr != simplify_yes(bvstop - bvstart)) and (
                 not symbolic_len or itr <= APPROX_ITR
             ):
                 ret_lis.append(self[bvstart + bvstep * itr])
                 itr += 1
             return ret_lis
-        item = simplify(convert_bv(item))
+        item = simplify_yes(convert_bv(item))
         return self._memory.get(item, 0)
 
     def __setitem__(
@@ -189,7 +242,7 @@ class Memory:
             itr = symbol_factory.BitVecVal(0, 256)
             if (bvstop - bvstart).symbolic:
                 symbolic_len = True
-            while simplify(bvstep * itr != simplify(bvstop - bvstart)) and (
+            while simplify_yes(bvstep * itr != simplify_yes(bvstop - bvstart)) and (
                 not symbolic_len or itr <= APPROX_ITR
             ):
                 self[bvstart + itr * bvstep] = cast(List[Union[int, BitVec]], value)[
@@ -198,7 +251,7 @@ class Memory:
                 itr += 1
 
         else:
-            bv_key = simplify(convert_bv(key))
+            bv_key = simplify_yes(convert_bv(key))
             if bv_key >= len(self):
                 return
             if isinstance(value, int):

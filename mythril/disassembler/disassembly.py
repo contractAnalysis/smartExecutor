@@ -1,10 +1,11 @@
 """This module contains the class used to represent disassembly code."""
+from fdg.output_data import print_dict
 from mythril.ethereum import util
 from mythril.disassembler import asm
 from mythril.support.signatures import SignatureDB
 
 from typing import Dict, List, Tuple
-
+import fdg.global_config
 
 class Disassembly(object):
     """Disassembly class.
@@ -48,10 +49,14 @@ class Disassembly(object):
             function_hash, jump_target, function_name = get_function_info(
                 index, self.instruction_list, signatures
             )
+            # @wei get a mapping from function name to function hash
+            fdg.global_config.method_identifiers[function_name] = function_hash
+
             self.func_hashes.append(function_hash)
             if jump_target is not None and function_name is not None:
                 self.function_name_to_address[function_name] = jump_target
                 self.address_to_function_name[jump_target] = function_name
+        # print_dict(fdg.global_config.method_identifiers,"method identifiers in disassembler.py")
 
     def get_easm(self):
         """

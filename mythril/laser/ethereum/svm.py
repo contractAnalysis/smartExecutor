@@ -1,7 +1,7 @@
 """This module implements the main symbolic execution engine."""
 import logging
 from collections import defaultdict
-from copy import copy
+from copy import copy, deepcopy
 from datetime import datetime, timedelta
 import random
 from typing import Callable, Dict, DefaultDict, List, Tuple, Optional
@@ -30,7 +30,9 @@ from mythril.laser.ethereum.transaction import (
 )
 from mythril.laser.smt import symbol_factory
 from mythril.support.support_args import args
+import fdg
 
+from fdg.preprocessing.preprocess import execute_preprocessing
 log = logging.getLogger(__name__)
 
 
@@ -122,6 +124,14 @@ class LaserEVM:
         self.iprof = iprof
         self.instr_pre_hook: Dict[str, List[Callable]] = {}
         self.instr_post_hook: Dict[str, List[Callable]] = {}
+
+        self._start_sym_trans_hooks_laserEVM=[] #@wei
+        self._stop_sym_trans_hooks_laserEVM = []  # @wei
+        self._branch_check_hooks = []  # @wei
+        self.preprocessing_pre_hooks = defaultdict(list)  # @wei
+        self._pre_execute_state_hooks = []  # type:List[Callable]#@wei
+        self._post_execute_state_hooks = []  # type:List[Callable] #@wei
+        self._preprocessing_execute_state_hooks = []
         for op in OPCODES:
             self.instr_pre_hook[op] = []
             self.instr_post_hook[op] = []
@@ -137,8 +147,15 @@ class LaserEVM:
             "start_exec": self._start_exec_hooks,
             "stop_exec": self._stop_exec_hooks,
             "transaction_end": self._transaction_end_hooks,
+            'pre_execute_state':self._pre_execute_state_hooks,#@wei
+            'post_execute_state':self._post_execute_state_hooks,#@wei
+            'branch_check':self._branch_check_hooks,#@wei
+            'preprocessing_execute_state':self._preprocessing_execute_state_hooks,#@wei
+            'start_sym_trans_laserEVM':self._start_sym_trans_hooks_laserEVM,#@wei
+            'stop_sym_trans_laserEVM':self._stop_sym_trans_hooks_laserEVM,#@wei
         }
         log.info("LASER EVM initialized with dynamic loader: " + str(dynamic_loader))
+
 
     def extend_strategy(self, extension: ABCMeta, **kwargs) -> None:
         self.strategy = extension(self.strategy, **kwargs)
@@ -185,6 +202,8 @@ class LaserEVM:
             created_account = execute_contract_creation(
                 self, creation_code, contract_name, world_state=world_state
             )
+            fdg.global_config.contract_address = created_account.address
+
             log.info(
                 "Finished contract creation, found {} open states".format(
                     len(self.open_states)
@@ -198,7 +217,10 @@ class LaserEVM:
                     "Check whether the bytecode is indeed the creation code, otherwise use the --bin-runtime flag"
                 )
 
-            self.execute_transactions(created_account.address)
+            if fdg.global_config.flag_fwrg:
+                self._execute_transactions_fdg(created_account.address)
+            else:
+                self._execute_transactions(created_account.address)
 
         log.info("Finished symbolic execution")
         if self.requires_statespace:
@@ -277,6 +299,41 @@ class LaserEVM:
 
         self.executed_transactions = True
 
+    def _execute_transactions_fdg(self, address):
+        """This function executes multiple transactions on the address
+
+        :param address: Address of the contract
+        :return:
+        """
+        self.time = datetime.now()
+        i = 0
+        while i < fdg.global_config.transaction_count:  # @wei rewrite loop
+            if fdg.global_config.random_baseline == 0:
+                if i == 0:
+                    copy_laserEVM = deepcopy(self)
+                    execute_preprocessing(address, copy_laserEVM)
+                    i += 1
+                    continue
+
+            log.info(
+                "Starting message call transaction, iteration: {}, {} initial states".format(
+                    i, len(self.open_states)
+                )
+            )
+            for hook in self._start_sym_trans_hooks:
+                hook()
+            for hook in self._start_sym_trans_hooks_laserEVM:
+                hook(self)
+
+            execute_message_call(self, address)
+
+            for hook in self._stop_sym_trans_hooks:
+                hook()
+
+            for hook in self._stop_sym_trans_hooks_laserEVM:
+                hook(self)
+            i += 1
+
     def _check_create_termination(self) -> bool:
         if len(self.open_states) != 0:
             return (
@@ -290,6 +347,190 @@ class LaserEVM:
             self.execution_timeout > 0
             and self.time + timedelta(seconds=self.execution_timeout) <= datetime.now()
         )
+
+        # @wei
+
+    def _check_preprocessing_termination(self) -> bool:
+
+        return self.time + timedelta(seconds=fdg.global_config.preprocess_timeout) <= datetime.now()
+
+        # @wei
+
+    def _check_preprocessing_error(self) -> bool:
+        return fdg.global_config.preprocessing_exception
+        return self.time + timedelta(seconds=fdg.global_config.preprocess_timeout) <= datetime.now()
+
+        # @wei adopt from exec()
+    #@wei
+    def exec_preprocessing(self):
+        """
+                :param create:
+                :param track_gas:
+                :return:
+        """
+        for global_state in self.strategy:
+
+            # @wei througth timeout
+            if self._check_preprocessing_termination():
+                log.debug("hit the exec_preprocessing excution time, return.")
+                print("hit the exec_preprocessing excution time, return.")
+                fdg.global_config.flag_preprocess_timeout = True
+                return None
+            # @wei check errors in preprocessing
+            if self._check_preprocessing_error():
+                log.debug("have exceptions in preprocessing.")
+                print("have exceptions in preprocessing.")
+                return None
+
+            try:
+
+                new_states, op_code = self.execute_state_preprocessing(global_state)
+
+            except NotImplementedError:
+                log.debug("Encountered unimplemented instruction")
+                continue
+
+            # should be kept otherwise, active function information can not be obtained.
+            self.manage_cfg(op_code, new_states)  # TODO: What about op_code is None?
+            if new_states:
+                self.work_list += new_states
+
+        return None
+
+    # @wei
+    def _execute_preprocessing_pre_hook(self, op_code: str, global_state):
+        if op_code not in self.preprocessing_pre_hooks.keys():
+            return
+        for hook in self.preprocessing_pre_hooks[op_code]:
+            hook(global_state)
+
+    # @wei
+    def execute_state_preprocessing(
+        self, global_state: GlobalState
+    ) -> Tuple[List[GlobalState], Optional[str]]:
+        """Execute a single instruction in global_state.
+
+        :param global_state:
+        :return: A list of successor states.
+        """
+
+        instructions = global_state.environment.code.instruction_list
+        # print(f'{global_state.environment.active_function_name}:{instructions[global_state.mstate.pc]}')
+        # if instructions[global_state.mstate.pc]['address'] == 375:
+        #     print(f'xx')
+        try:
+            op_code = instructions[global_state.mstate.pc]["opcode"]
+            # Execute hooks
+            for hook in self._preprocessing_execute_state_hooks:
+                hook(global_state, op_code)
+
+        except IndexError:
+            self._add_world_state(global_state)
+            return [], None
+
+        if len(global_state.mstate.stack) < get_required_stack_elements(op_code):
+            error_msg = (
+                "Stack Underflow Exception due to insufficient "
+                "stack elements for the address {}".format(
+                    instructions[global_state.mstate.pc]["address"]
+                )
+            )
+            new_global_states = self.handle_vm_exception(
+                global_state, op_code, error_msg
+            )
+            self._execute_post_hook(op_code, new_global_states)
+            return new_global_states, op_code
+
+        try:
+            self._execute_preprocessing_pre_hook(op_code, global_state)
+        except PluginSkipState:
+            return [], None
+
+        try:
+            new_global_states = Instruction(
+                op_code,
+                self.dynamic_loader,
+                pre_hooks=[],
+                post_hooks=[],
+            ).evaluate(global_state)
+
+        except VmException as e:
+            for hook in self._transaction_end_hooks:
+                hook(
+                    global_state,
+                    global_state.current_transaction,
+                    None,
+                    False,
+                )
+            new_global_states = self.handle_vm_exception(global_state, op_code, str(e))
+
+        except TransactionStartSignal as start_signal:
+            # Setup new global state
+            new_global_state = start_signal.transaction.initial_global_state()
+
+            new_global_state.transaction_stack = copy(
+                global_state.transaction_stack
+            ) + [(start_signal.transaction, global_state)]
+            new_global_state.node = global_state.node
+            new_global_state.world_state.constraints = (
+                start_signal.global_state.world_state.constraints
+            )
+
+            log.debug("Starting new transaction %s", start_signal.transaction)
+
+            return [new_global_state], op_code
+
+        except TransactionEndSignal as end_signal:
+            (
+                transaction,
+                return_global_state,
+            ) = end_signal.global_state.transaction_stack[-1]
+
+            log.debug("Ending transaction %s.", transaction)
+
+            for hook in self._transaction_end_hooks:
+                hook(
+                    end_signal.global_state,
+                    transaction,
+                    return_global_state,
+                    end_signal.revert,
+                )
+
+            if return_global_state is None:
+                if (
+                    not isinstance(transaction, ContractCreationTransaction)
+                    or transaction.return_data
+                ) and not end_signal.revert:
+                    check_potential_issues(global_state)
+                    end_signal.global_state.world_state.node = global_state.node
+                    self._add_world_state(end_signal.global_state)
+
+                new_global_states = []
+            else:
+
+                # First execute the post hook for the transaction ending instruction
+                self._execute_post_hook(op_code, [end_signal.global_state])
+
+                # Propagate annotations
+                new_annotations = [
+                    annotation
+                    for annotation in global_state.annotations
+                    if annotation.persist_over_calls
+                ]
+                return_global_state.add_annotations(new_annotations)
+
+                new_global_states = self._end_message_call(
+                    copy(return_global_state),
+                    global_state,
+                    revert_changes=False or end_signal.revert,
+                    return_data=transaction.return_data,
+                )
+
+        # self._execute_post_hook(op_code, new_global_states)
+
+        return new_global_states, op_code
+
+
 
     def exec(self, create=False, track_gas=False) -> Optional[List[GlobalState]]:
         """
@@ -312,19 +553,24 @@ class LaserEVM:
                 log.debug("Hit execution timeout, returning.")
                 return final_states + [global_state] if track_gas else None
             try:
+
                 new_states, op_code = self.execute_state(global_state)
+
             except NotImplementedError:
                 log.debug("Encountered unimplemented instruction")
                 continue
 
             if self.strategy.run_check() and (
                 len(new_states) > 1 and random.uniform(0, 1) < args.pruning_factor
-            ):
+            ): # need to be careful: previous version:if args.sparse_pruning is False:
                 new_states = [
                     state
                     for state in new_states
                     if state.world_state.constraints.is_possible()
                 ]
+
+
+
             self.manage_cfg(op_code, new_states)  # TODO: What about op_code is None?
             if new_states:
                 self.work_list += new_states
@@ -332,6 +578,7 @@ class LaserEVM:
                 final_states.append(global_state)
             self.total_states += len(new_states)
 
+        # need to be careful as this does not appear in previous version
         for hook in self._stop_exec_hooks:
             hook()
 
@@ -383,6 +630,7 @@ class LaserEVM:
             return [], None
 
         instructions = global_state.environment.code.instruction_list
+
         try:
             op_code = instructions[global_state.mstate.pc]["opcode"]
         except IndexError:
@@ -573,8 +821,13 @@ class LaserEVM:
                 self._new_node_state(state, JumpType.RETURN)
 
         for state in new_states:
-            state.node.states.append(state)
-
+            # state.node.states.append(state)
+            # @wei
+            if state.mstate.pc >= len(state.environment.code.instruction_list):
+                print(
+                    f'self.mstate.pc:{state.mstate.pc}; len(instructions):{len(state.environment.code.instruction_list)}')
+            else:
+                state.node.states.append(state)
     def _new_node_state(
         self, state: GlobalState, edge_type=JumpType.UNCONDITIONAL, condition=None
     ) -> None:
@@ -647,6 +900,8 @@ class LaserEVM:
             entrypoint = self.pre_hooks
         elif hook_type == "post":
             entrypoint = self.post_hooks
+        elif hook_type=='preprocessing_pre': #@wei
+            entrypoint=self.preprocessing_pre_hooks
         else:
             raise ValueError(
                 "Invalid hook type %s. Must be one of {pre, post}", hook_type
@@ -671,6 +926,12 @@ class LaserEVM:
                     self.instr_pre_hook[op].append(hook(op))
             else:
                 self.instr_pre_hook[opcode].append(hook)
+        elif hook_type == 'preprocessing_pre':  # @wei
+            if opcode is None:
+                for op, _, _, _ in OPCODES.values():
+                    self.instr_post_hook[op].append(hook(op))
+            else:
+                self.instr_post_hook[opcode].append(hook)
         else:
             if opcode is None:
                 for op in OPCODES:
@@ -778,6 +1039,24 @@ class LaserEVM:
             if op_code not in self.post_hooks.keys():
                 self.post_hooks[op_code] = []
             self.post_hooks[op_code].append(func)
+            return func
+
+        return hook_decorator
+
+    #@wei  preprocessing_pre_hook
+    def preprocessing_pre_hook(self, op_code: str) -> Callable:
+        """
+        :param op_code:
+        :return:
+        """
+        def hook_decorator(func: Callable):
+            """
+            :param func:
+            :return:
+            """
+            if op_code not in self.preprocessing_pre_hooks.keys():
+                self.preprocessing_pre_hooks[op_code] = []
+            self.preprocessing_pre_hooks[op_code].append(func)
             return func
 
         return hook_decorator

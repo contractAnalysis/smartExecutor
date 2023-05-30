@@ -36,6 +36,8 @@ class DependencyAnnotation(MergeableStateAnnotation):
         self.has_call = False  # type: bool
         self.path = [0]  # type: List
         self.blocks_seen = set()  # type: Set[int]
+        self.ftn_seq = []  # @wei
+        self.condition_status = {}  # @wei
 
     def __copy__(self):
         result = DependencyAnnotation()
@@ -44,6 +46,8 @@ class DependencyAnnotation(MergeableStateAnnotation):
         result.has_call = self.has_call
         result.path = copy(self.path)
         result.blocks_seen = copy(self.blocks_seen)
+        result.ftn_seq = copy(self.ftn_seq)  # @wei
+        result.condition_status = copy(self.condition_status)  # @wei
         return result
 
     def get_storage_write_cache(self, iteration: int):
@@ -64,6 +68,9 @@ class DependencyAnnotation(MergeableStateAnnotation):
         merged_annotation.blocks_seen = self.blocks_seen.union(other.blocks_seen)
         merged_annotation.has_call = self.has_call
         merged_annotation.path = copy(self.path)
+        merged_annotation.ftn_seq = copy(self.ftn_seq)  # @wei
+        merged_annotation.condition_status = copy(self.condition_status)  # @wei
+
         merged_annotation.storage_loaded = self.storage_loaded.union(
             other.storage_loaded
         )
@@ -121,3 +128,5 @@ class WSDependencyAnnotation(MergeableStateAnnotation):
                 merged_annotation.annotations_stack.append(copy(a1))
             merged_annotation.annotations_stack.append(a1.merge_annotation(a2))
         return merged_annotation
+
+

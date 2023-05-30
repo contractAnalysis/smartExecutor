@@ -46,7 +46,12 @@ class BitVec(Expression[z3.BitVecRef]):
 
         :return:
         """
-        self.simplify()
+        # self.simplify()
+
+        if str(self.raw.decl()).__eq__('Select'): # in case of a value read from storage
+            self.simplify() # do not simplify in the preprocessing
+        else:
+            self.simplify_yes() # always simplify
         return not isinstance(self.raw, z3.BitVecNumRef)
 
     @property
@@ -60,6 +65,18 @@ class BitVec(Expression[z3.BitVecRef]):
         assert isinstance(self.raw, z3.BitVecNumRef)
         return self.raw.as_long()
 
+    # def __add__(self, other: Union[int, "BitVec"]) -> "BitVec":
+    #     """Create an addition expression.
+    #
+    #     :param other:
+    #     :return:
+    #     """
+    #     if isinstance(other, int):
+    #         return BitVec(self.raw + other, annotations=self.annotations)
+    #
+    #     union = self.annotations.union(other.annotations)
+    #     return BitVec(self.raw + other.raw, annotations=union)
+
     def __add__(self, other: Union[int, "BitVec"]) -> "BitVec":
         """Create an addition expression.
 
@@ -71,6 +88,7 @@ class BitVec(Expression[z3.BitVecRef]):
 
         union = self.annotations.union(other.annotations)
         return BitVec(self.raw + other.raw, annotations=union)
+
 
     def __sub__(self, other: Union[int, "BitVec"]) -> "BitVec":
         """Create a subtraction expression.

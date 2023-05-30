@@ -1,15 +1,13 @@
 """This module contains functions setting up and executing transactions with
 symbolic values."""
 import logging
-from typing import Optional, List, Union
-from copy import deepcopy
+from typing import Optional, List
 
-
+import fdg.preprocessing.address_collection
 from mythril.disassembler.disassembly import Disassembly
 from mythril.laser.ethereum.cfg import Node, Edge, JumpType
 from mythril.laser.ethereum.state.account import Account
 from mythril.laser.ethereum.state.calldata import SymbolicCalldata
-from mythril.laser.ethereum.state.constraints import Constraints
 from mythril.laser.ethereum.state.world_state import WorldState
 from mythril.laser.ethereum.transaction.transaction_models import (
     MessageCallTransaction,
@@ -18,8 +16,6 @@ from mythril.laser.ethereum.transaction.transaction_models import (
     BaseTransaction,
 )
 from mythril.laser.smt import symbol_factory, Or, Bool, BitVec
-from mythril.support.support_args import args as cmd_args
-
 
 FUNCTION_HASH_BYTE_LENGTH = 4
 
@@ -72,6 +68,8 @@ class Actors:
 
 
 ACTORS = Actors()
+#@wei
+fdg.preprocessing.address_collection.actors=ACTORS
 
 
 def generate_function_constraints(
@@ -149,6 +147,47 @@ def execute_message_call(
         _setup_global_state_for_execution(laser_evm, transaction, constraints)
 
     laser_evm.exec()
+
+def execute_message_call_preprocessing(laser_evm, callee_address: BitVec) -> None:
+    """Executes a message call transaction from all open states.
+
+    :param laser_evm:
+    :param callee_address:
+    """
+    # TODO: Resolve circular import between .transaction and ..svm to import LaserEVM here
+    open_states = laser_evm.open_states[:]
+    del laser_evm.open_states[:]
+
+    for open_world_state in open_states:
+        if open_world_state[callee_address].deleted:
+            log.debug("Can not execute dead contract, skipping.")
+            continue
+
+        # next_transaction_id = get_next_transaction_id() (from old version)
+        next_transaction_id =tx_id_manager.get_next_tx_id()
+
+        external_sender = symbol_factory.BitVecSym(
+            "sender_{}".format(next_transaction_id), 256
+        )
+
+        transaction = MessageCallTransaction(
+            world_state=open_world_state,
+            identifier=next_transaction_id,
+            gas_price=symbol_factory.BitVecSym(
+                "gas_price{}".format(next_transaction_id), 256
+            ),
+            gas_limit=8000000,  # block gas limit
+            origin=external_sender,
+            caller=external_sender,
+            callee_account=open_world_state[callee_address],
+            call_data=SymbolicCalldata(next_transaction_id),
+            call_value=symbol_factory.BitVecSym(
+                "call_value{}".format(next_transaction_id), 256
+            ),
+        )
+        _setup_global_state_for_execution(laser_evm, transaction)
+
+    laser_evm.exec_preprocessing()
 
 
 def execute_contract_creation(

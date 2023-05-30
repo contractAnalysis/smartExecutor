@@ -1,6 +1,6 @@
 """This module contains a wrapper around LASER for extended analysis
 purposes."""
-
+from fdg.fdg_pruner import FDG_prunerBuilder
 from mythril.analysis.module import EntryPoint, ModuleLoader, get_detection_module_hooks
 from mythril.laser.execution_info import ExecutionInfo
 from mythril.laser.ethereum import svm
@@ -35,7 +35,7 @@ from mythril.support.support_args import args
 from typing import Union, List, Type, Optional
 from mythril.solidity.soliditycontract import EVMContract, SolidityContract
 from .ops import Call, VarType, get_variable
-
+import fdg.global_config
 
 class SymExecWrapper:
     """Wrapper class for the LASER Symbolic virtual machine.
@@ -146,6 +146,10 @@ class SymExecWrapper:
 
         if not disable_dependency_pruning:
             plugin_loader.load(DependencyPrunerBuilder())
+
+        if fdg.global_config.flag_fwrg:#@wei add FDG_pruner plugin
+            plugin_loader.load(FDG_prunerBuilder())
+            # disable_dependency_pruning=True
 
         plugin_loader.instrument_virtual_machine(self.laser, None)
 

@@ -6,6 +6,7 @@ import traceback
 from typing import Optional, List
 from argparse import Namespace
 
+from fdg.constraint_check_time import StateConstraintCheckIndicator
 from . import MythrilDisassembler
 from mythril.support.source_support import Source
 from mythril.support.loader import DynLoader
@@ -141,6 +142,8 @@ class MythrilAnalyzer:
         """
         all_issues = []  # type: List[Issue]
         SolverStatistics().enabled = True
+        StateConstraintCheckIndicator().enabled = True  # @wei to record the time to check state constraints
+
         exceptions = []
         execution_info = None  # type: Optional[List[ExecutionInfo]]
         for contract in self.contracts:
@@ -182,6 +185,10 @@ class MythrilAnalyzer:
 
             all_issues += issues
             log.info("Solver statistics: \n{}".format(str(SolverStatistics())))
+            print("Solver statistics:{}".format(str(SolverStatistics())))
+            # @wei
+            log.info(f'state constraint checking statistics:\n{str(StateConstraintCheckIndicator())}')
+            print(f'state constraint checking statistics:{str(StateConstraintCheckIndicator())}')
 
         source_data = Source()
         source_data.get_source_from_contracts_list(self.contracts)

@@ -14,6 +14,8 @@ ADDRESS = "address"
 
 # TODO: Make this more specific when TypedDict supports key re-usage.
 OPCODES: Dict = {
+
+    "EMPTY":{GAS:(0,0),STACK:(0,0),ADDRESS:0xFFF},#@wei
     "STOP": {GAS: (0, 0), STACK: (0, 0), ADDRESS: 0x00},
     "ADD": {GAS: (3, 3), STACK: BIN_OPERATOR_TUPLE, ADDRESS: 0x01},
     "MUL": {GAS: (5, 5), STACK: BIN_OPERATOR_TUPLE, ADDRESS: 0x02},
