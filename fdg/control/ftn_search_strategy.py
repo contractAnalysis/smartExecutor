@@ -21,7 +21,7 @@ class FunctionSearchStrategy():
         self.world_states={}
         self.search_history={}
         self.current_state_key=''
-        print(f'search strategy: {self.name}')
+        # print(f'search strategy: {self.name}')
 
     def save_states(self,key:str,states:list):
         if key in self.world_states.keys():

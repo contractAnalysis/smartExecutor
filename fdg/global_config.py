@@ -120,3 +120,6 @@ temp_count=0
 
 global time_temp
 time_temp=0
+
+global count
+count=0

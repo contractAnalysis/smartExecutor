@@ -204,7 +204,6 @@ class Guider():
     def save_genesis_states(self,states:list):
         self.genesis_states=deepcopy(states)
         if self.ftn_search_strategy.name in ['mine']:
-
             states_dict=self.organize_states(states)
             self.ftn_search_strategy.update_states(states_dict)
 

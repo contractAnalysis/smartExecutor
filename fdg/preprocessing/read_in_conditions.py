@@ -22,7 +22,7 @@ class ReadInCondition():
         self.function_conditions={ftn:{} for ftn in functions}
 
         self.read_slots_in_conditions={}
-        self.read_addr_slots_in_conditions={}
+
 
 
     def extract_from_condition_x(self, state: GlobalState):
@@ -104,7 +104,7 @@ class ReadInCondition():
             if fdg.global_config.optimization == 1:
                 collect_value_for_sender(simplify_condi_str)  # collect the value that is compared with msg.sender
 
-            self.add_conditions(function, address, condi_str)
+            # self.add_conditions(function, address, condi_str)
 
             temp_condi = ''
             if 'Store(K' in condi_str:
@@ -156,25 +156,22 @@ class ReadInCondition():
         # print(f'\n====== read_in_conditions.py =====')
         for ftn, read_info in self.fun_read_in_conditions.items():
             self.read_slots_in_conditions[ftn]=[] # keep all slots read in conditions
-            self.read_addr_slots_in_conditions[ftn]={} # organize slots based on bytecode addresses
             ftn_slots=[]
-            for addr,loc_list in read_info.items():
-                addr_slots=[]
-                for loc in loc_list:
-                    try:
-                        loc_str=str_without_space_line(loc)
-                        mapped_slots = slot_location.map_location_to_slot(loc)
-                        if len(mapped_slots)==0:
-                            mapped_slots=[loc_str]
+            locations_all = []
+            for addr, locations in read_info.items():
+                if len(locations) > 0:
+                    locations_all += locations
+            locations_all = list(set(locations_all))
 
-                        for item in mapped_slots:
-                            if item  not in ftn_slots:
-                                ftn_slots.append(item )
-                            if item  not in addr_slots:
-                                addr_slots.append(item )
-                    except:
-                        print(f'{loc} is not mapped to a slot (read_in_conditions.py).')
-                self.read_addr_slots_in_conditions[ftn][addr]=addr_slots
+            for loc in locations_all:
+                try:
+                    mapped_slots = slot_location.map_location_to_slot(loc)
+                    for item in mapped_slots:
+                        if item  not in ftn_slots:
+                            ftn_slots.append(item )
+                except:
+                    print(f'{loc} is not mapped to a slot (read_in_conditions.py).')
+
             self.read_slots_in_conditions[ftn]=ftn_slots
 
 
@@ -185,7 +182,7 @@ class ReadInCondition():
     def print_read_slot_info(self):
         output_reads_in_conditions_1(self.fun_read_in_conditions,
                                            self.read_slots_in_conditions,
-                                           self.read_addr_slots_in_conditions,
+                                            {},
                                             self.function_conditions,
                                            "reads_in_conditions.txt",
                                            "read information in conditions",

@@ -5,7 +5,7 @@ from fdg.output_data import output_write_read_data
 from fdg.preprocessing.slot_location import Slot_Location
 from fdg.utils import str_without_space_line
 from mythril.laser.ethereum.state.global_state import GlobalState
-
+from mythril.laser.smt import BitVec
 
 
 class Function_Write_Read_Info():
@@ -78,6 +78,7 @@ class Function_Write_Read_Info():
             if location not in self.writes_addr_location[function][address]:
                 self.writes_addr_location[function][address] += [location]
 
+
     def map_locations_to_slots(self,slot_location:Slot_Location):
 
         for ftn_name,writes in self.writes_addr_location.items():
@@ -89,10 +90,7 @@ class Function_Write_Read_Info():
             locations_all=list(set(locations_all))
 
             for loc in locations_all:
-                loc_str=str_without_space_line(loc)
-                re_slots=slot_location.map_location_to_slot(loc_str)
-                if len(re_slots)==0:
-                    re_slots=[loc_str] # be loc itself
+                re_slots=slot_location.map_location_to_slot(loc)
                 for slot in re_slots:
                     if slot not in my_slots:
                         my_slots.append(slot)
@@ -108,10 +106,7 @@ class Function_Write_Read_Info():
             locations_all = list(set(locations_all))
 
             for loc in locations_all:
-                loc_str=str_without_space_line(loc)
-                re_slots = slot_location.map_location_to_slot(loc_str)
-                if len(re_slots)==0:
-                    re_slots=[loc_str]
+                re_slots=slot_location.map_location_to_slot(loc)
                 for slot in re_slots:
                     if slot not in my_slots:
                         my_slots.append(slot)

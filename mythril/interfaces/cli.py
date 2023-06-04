@@ -412,9 +412,6 @@ def create_hash_to_addr_parser(hash_parser: ArgumentParser):
 
 def add_graph_commands(parser: ArgumentParser):
     commands = parser.add_argument_group("commands")
-    # @wei
-    commands.add_argument("-fdg", "--function_wr_graph", default=False, action='store_true',
-                          help="indicate if function write/read graph is used to guide state exploration")
 
     commands.add_argument("-g", "--graph", help="generate a control flow graph")
 
@@ -526,10 +523,7 @@ def add_fwrg_arguments(args: Namespace):
     fdg.global_config.flag_consider_all_reads = args.consider_all_reads
     fdg.global_config.execution_times_limit = args.execution_times_limit
 
-    if args.function_wr_graph:
-        fdg.global_config.flag_fwrg = True
-    else:
-        fdg.global_config.flag_fwrg = False
+    fdg.global_config.flag_fwrg=args.function_wr_graph
 
 def add_analysis_args(options):
     """
@@ -537,6 +531,13 @@ def add_analysis_args(options):
 
     :param options: Analysis Options
     """
+    options.add_argument(
+        "-fdg",
+        "--function-wr-graph",
+        default=False,
+        action="store_true",
+        help="use guided exploration",
+    )
 
     options.add_argument(
         "-m",

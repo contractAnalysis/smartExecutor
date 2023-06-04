@@ -1,3 +1,4 @@
+from copy import copy
 
 import fdg
 from fdg.output_data import output_key_to_slot
@@ -7,7 +8,7 @@ from mythril.laser.smt import (
     BitVec,
     Function,
 )
-
+from mythril.laser.smt.expression import simplify_yes
 
 
 class Slot_Location():
@@ -39,14 +40,22 @@ class Slot_Location():
                 self.str_key_to_slot_all[str_key] = [str_value]
 
     def map_location_to_slot(self, location)->list:
-        if not isinstance(location,str):
-            str_loc=str_without_space_line(location)
-        else:
-            str_loc=location
+        str_loc = str_without_space_line(location)
         if str_loc in self.str_key_to_slot_all.keys():
             return self.str_key_to_slot_all[str_loc]
-        else:
-            return []
+
+        if isinstance(location,BitVec):
+            if location.symbolic:
+                if str(location.raw.decl()) in ['+', '-']:
+                    # print(f'Do not map loc {loc}')
+                    return []
+                else:
+                    for str_key in self.str_key_to_slot_all.keys():
+                        if str_loc in str_key:
+                            return [self.str_key_to_slot_all[str_key]]
+
+        return [str_loc]
+
 
 
 
@@ -65,24 +74,39 @@ def map_key_to_slot(data:BitVec, data_list:list):
         applied in sha3_() of instructions.py to collect the slots that data belong to
         avoid applying symbolic() method, use str as the key
     """
-    # print(f'\n............key.......................')
-    # print(f'key:{str_without_space_line(data)}')
-    str_data=str_without_space_line(data)
+
+    sim_data = simplify_yes(copy(data))
+    str_data=str_without_space_line(sim_data)
     if str_data not in key_to_slot.keys():
         slot=data_list[-1]
-        slot_str=str_without_space_line(slot)
-        if slot_str in key_to_slot.keys():
-            key_to_slot[str_data] = key_to_slot[slot_str]
-        else:
-            key_to_slot[str_data] = slot_str
+        slot_str = str_without_space_line(slot)
+        # check a slot having a symbolic value
+        mapped_slot=''
+        if isinstance(slot,BitVec):
+            if slot.symbolic:
+                if slot_str.startswith('Extract(7,0'):
+                    match_part = slot_str[len('Extract(7,0,'):-1]
+                else:
+                    match_part=slot_str
+                for str_key in key_to_slot.keys():
+                    if match_part in str_key:
+                        mapped_slot=key_to_slot[str_key]
+                        break
+                if len(mapped_slot) > 0:
+                    key_to_slot[str_data] = mapped_slot
+                else:
+                    ...  # donot consider currently
+                return
+
+        key_to_slot[str_data] = slot_str
+
+
 
 
 def map_hash_key_to_slot(func_input: BitVec, func: Function):
     """
     applied in _create_condition(self, func_input: BitVec) in keccak_function_manager.py module
     """
-    # print(f'\n.......... hash key .........................')
-    # print(f'key:{str_without_space_line(func(func_input))}')
 
     hash_key_str=str_without_space_line(func(func_input))
     if hash_key_str not in hash_key_to_slot.keys():
@@ -98,11 +122,6 @@ def map_concrete_hash_key_to_slot(data:BitVec,concrete_hash:BitVec):
     """
     pplied in create_keccak(self, data: BitVec) n keccak_function_manager.py module
     """
-
-    # print(f'\n............concrete key.......................')
-    # print(f'key:{str_without_space_line(concrete_hash)}')
-    # print(f'\tvalue:{str_without_space_line(data)}')
-
     concrete_hash_str = str_without_space_line(concrete_hash)
     if concrete_hash_str not in hash_key_to_slot.keys():
         data_str = str_without_space_line(data)

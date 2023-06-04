@@ -225,13 +225,9 @@ def output_reads_in_conditions_1(reads_in_conditions:dict,read_slots_in_conditio
 
     with open(fdg.global_config.output_path + file_name , 'w') as fw:
         fw.write(f'\n====== reads in conditions in functions ======\n')
+
+
         for ftn,read_info in reads_in_conditions.items():
-            fw.write(f'\n-----{ftn}--------\n')
-            fw.write(f'\tread slots: {read_info}\n')
-
-
-        fw.write(f'\n====== read slots in conditions in functions ======\n')
-        for ftn,read_info in read_slots_in_conditions.items():
             fw.write(f'\n-----{ftn}--------\n')
             fw.write(f'\tread slots: {read_info}\n')
 
@@ -240,6 +236,13 @@ def output_reads_in_conditions_1(reads_in_conditions:dict,read_slots_in_conditio
             for addr, info in read_info.items():
                 fw.write(f'\n-----{ftn}--------\n')
                 fw.write(f'\taddress {addr}: slots {info}\n')
+
+        fw.write(f'\n====== read slots in conditions in functions ======\n')
+        for ftn,read_info in read_slots_in_conditions.items():
+            fw.write(f'\n-----{ftn}--------\n')
+            fw.write(f'\tread slots: {read_info}\n')
+
+
 
         fw.write(f'\n====== conditions for each function ======\n')
         for ftn, conditions in function_conditions.items():

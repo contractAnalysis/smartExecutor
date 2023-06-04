@@ -217,11 +217,11 @@ class LaserEVM:
                     "Check whether the bytecode is indeed the creation code, otherwise use the --bin-runtime flag"
                 )
 
-            if fdg.global_config.flag_fwrg:
-                self._execute_transactions_fdg(created_account.address)
-            else:
-                self._execute_transactions(created_account.address)
-
+            # if fdg.global_config.flag_fwrg:
+            #     self._execute_transactions_fdg(created_account.address)
+            # else:
+            #     self._execute_transactions(created_account.address)
+            self.execute_transactions(created_account.address)
         log.info("Finished symbolic execution")
         if self.requires_statespace:
             log.info(
@@ -246,7 +246,11 @@ class LaserEVM:
             hook()
 
         if self.executed_transactions is False:
-            self._execute_transactions(address)
+            if fdg.global_config.flag_fwrg:
+                self._execute_transactions_fdg(address)
+            else:
+                self._execute_transactions(address)
+            # self._execute_transactions(address)
 
         for hook in self._stop_exec_trans_hooks:
             hook()
@@ -311,6 +315,9 @@ class LaserEVM:
             if fdg.global_config.random_baseline == 0:
                 if i == 0:
                     copy_laserEVM = deepcopy(self)
+                    copy_laserEVM.requires_statespace=False
+                    copy_laserEVM.post_hooks={}
+                    copy_laserEVM.pre_hooks={}
                     execute_preprocessing(address, copy_laserEVM)
                     i += 1
                     continue
@@ -415,8 +422,11 @@ class LaserEVM:
         """
 
         instructions = global_state.environment.code.instruction_list
-        # print(f'{global_state.environment.active_function_name}:{instructions[global_state.mstate.pc]}')
-        # if instructions[global_state.mstate.pc]['address'] == 375:
+        # # if global_state.environment.active_function_name in ['UnstakeAll()']:
+        # #     print(f'xx')
+        if global_state.environment.active_function_name=='Stake()':
+            print(f'{global_state.environment.active_function_name}:{instructions[global_state.mstate.pc]}')
+        # if instructions[global_state.mstate.pc]['address'] == 4675:
         #     print(f'xx')
         try:
             op_code = instructions[global_state.mstate.pc]["opcode"]
@@ -425,7 +435,7 @@ class LaserEVM:
                 hook(global_state, op_code)
 
         except IndexError:
-            self._add_world_state(global_state)
+            # self._add_world_state(global_state)
             return [], None
 
         if len(global_state.mstate.stack) < get_required_stack_elements(op_code):
@@ -438,7 +448,7 @@ class LaserEVM:
             new_global_states = self.handle_vm_exception(
                 global_state, op_code, error_msg
             )
-            self._execute_post_hook(op_code, new_global_states)
+            # self._execute_post_hook(op_code, new_global_states)
             return new_global_states, op_code
 
         try:
@@ -455,13 +465,13 @@ class LaserEVM:
             ).evaluate(global_state)
 
         except VmException as e:
-            for hook in self._transaction_end_hooks:
-                hook(
-                    global_state,
-                    global_state.current_transaction,
-                    None,
-                    False,
-                )
+            # for hook in self._transaction_end_hooks:
+            #     hook(
+            #         global_state,
+            #         global_state.current_transaction,
+            #         None,
+            #         False,
+            #     )
             new_global_states = self.handle_vm_exception(global_state, op_code, str(e))
 
         except TransactionStartSignal as start_signal:
@@ -488,28 +498,28 @@ class LaserEVM:
 
             log.debug("Ending transaction %s.", transaction)
 
-            for hook in self._transaction_end_hooks:
-                hook(
-                    end_signal.global_state,
-                    transaction,
-                    return_global_state,
-                    end_signal.revert,
-                )
+            # for hook in self._transaction_end_hooks:
+            #     hook(
+            #         end_signal.global_state,
+            #         transaction,
+            #         return_global_state,
+            #         end_signal.revert,
+            #     )
 
             if return_global_state is None:
-                if (
-                    not isinstance(transaction, ContractCreationTransaction)
-                    or transaction.return_data
-                ) and not end_signal.revert:
-                    check_potential_issues(global_state)
-                    end_signal.global_state.world_state.node = global_state.node
-                    self._add_world_state(end_signal.global_state)
+                # if (
+                #     not isinstance(transaction, ContractCreationTransaction)
+                #     or transaction.return_data
+                # ) and not end_signal.revert:
+                #     check_potential_issues(global_state)
+                #     end_signal.global_state.world_state.node = global_state.node
+                #     self._add_world_state(end_signal.global_state)
 
                 new_global_states = []
             else:
 
-                # First execute the post hook for the transaction ending instruction
-                self._execute_post_hook(op_code, [end_signal.global_state])
+                # # First execute the post hook for the transaction ending instruction
+                # self._execute_post_hook(op_code, [end_signal.global_state])
 
                 # Propagate annotations
                 new_annotations = [
@@ -630,6 +640,13 @@ class LaserEVM:
             return [], None
 
         instructions = global_state.environment.code.instruction_list
+
+        # # if global_state.environment.active_function_name not in ['constructor','fallback']:
+        # #     print(f'xx')
+        if global_state.environment.active_function_name=='Stake()':
+            print(f'{global_state.environment.active_function_name}:{instructions[global_state.mstate.pc]}')
+            # if instructions[global_state.mstate.pc]['address'] == 4675:
+            #     print(f'xx')
 
         try:
             op_code = instructions[global_state.mstate.pc]["opcode"]

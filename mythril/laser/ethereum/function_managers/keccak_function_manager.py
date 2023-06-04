@@ -166,9 +166,9 @@ class KeccakFunctionManager:
             index = self._index_counter
             self._index_counter -= INTERVAL_DIFFERENCE
 
-            # @wei data: func_input; hash: func(func_input)
-            if fdg.global_config.flag_preprocessing or fdg.global_config.tx_len == 0:
-                fdg.preprocessing.slot_location.map_hash_key_to_slot(func_input, func)
+        # # @wei data: func_input; hash: func(func_input)
+        # if fdg.global_config.flag_preprocessing or fdg.global_config.tx_len == 0:
+        #     fdg.preprocessing.slot_location.map_hash_key_to_slot(func_input, func)
 
         lower_bound = index * PART
         upper_bound = lower_bound + PART

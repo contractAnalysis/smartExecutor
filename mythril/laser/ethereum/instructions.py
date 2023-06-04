@@ -1064,8 +1064,7 @@ class Instruction:
             # print(f'simplified data: {data}\n')
 
             if fdg.global_config.flag_preprocessing or fdg.global_config.tx_len == 0:
-                sim_data = simplify_yes(Concat(data_list))
-                fdg.preprocessing.slot_location.map_key_to_slot(sim_data, data_list)
+                fdg.preprocessing.slot_location.map_key_to_slot(Concat(data_list), data_list)
 
 
         elif len(data_list) == 1:
@@ -1078,9 +1077,9 @@ class Instruction:
 
             if fdg.global_config.flag_preprocessing or fdg.global_config.tx_len == 0:
                 try:
-                    sim_data = simplify_yes(data_list[0])
-                    fdg.preprocessing.slot_location.map_key_to_slot(sim_data, simplify_yes(data_list))
-                    print(f'instructions.py: sim_data: {sim_data}')
+                    # sim_data = simplify_yes(data_list[0])
+                    fdg.preprocessing.slot_location.map_key_to_slot(data_list[0], data_list)
+                    print(f'instructions.py: sim_data: {data_list[0]}')
                 except:
                     print(f'instructions.py: has a problem to collect data')
 
@@ -1093,7 +1092,11 @@ class Instruction:
             state.stack.append(result)
             return [global_state]
 
+
         result = keccak_function_manager.create_keccak(data)
+        if fdg.global_config.flag_preprocessing or fdg.global_config.tx_len == 0:
+            fdg.preprocessing.slot_location.map_key_to_slot(result, data_list)
+
         state.stack.append(result)
 
         return [global_state]
