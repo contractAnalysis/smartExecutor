@@ -164,7 +164,7 @@ def execute_message_call_preprocessing(laser_evm, callee_address: BitVec) -> Non
             continue
 
         # next_transaction_id = get_next_transaction_id() (from old version)
-        next_transaction_id =tx_id_manager.get_next_tx_id()
+        next_transaction_id =1
 
         external_sender = symbol_factory.BitVecSym(
             "sender_{}".format(next_transaction_id), 256
@@ -253,10 +253,13 @@ def _setup_global_state_for_execution(
     global_state.transaction_stack.append((transaction, None))
     global_state.world_state.constraints += initial_constraints or []
 
+
     global_state.world_state.constraints.append(
         Or(*[transaction.caller == actor for actor in ACTORS.addresses.values()])
     )
-
+    #@wei remove constraints as there is no constraint solving in preprocesing
+    if fdg.global_config.flag_preprocessing:
+        global_state.world_state.constraints=[]
     new_node = Node(
         global_state.environment.active_account.contract_name,
         function_name=global_state.environment.active_function_name,

@@ -141,9 +141,9 @@ class Guider():
             next_functions = states_functions[key]
 
             if len(next_functions) > 0:
-                # save sequences to be executed
-                for child in next_functions:
-                    cur_iteration_all_sequences.append(ftn_seq + [child])
+                # # save sequences to be executed
+                # for child in next_functions:
+                #     cur_iteration_all_sequences.append(ftn_seq + [child])
 
                 # modify function dispatcher so that only specified functions are executed
                 to_modify_states = deepcopy(states)

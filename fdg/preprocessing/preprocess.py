@@ -1,12 +1,15 @@
 import time
+from copy import deepcopy, copy
 
 import fdg.global_config
+import mythril
 
 from fdg.preprocessing.instruction_coverage import InstructionCoverage
 
 from fdg.preprocessing.read_in_conditions import ReadInCondition
 from fdg.preprocessing.slot_location import Slot_Location
 from fdg.preprocessing.write_read_info import Function_Write_Read_Info
+from mythril.laser.ethereum.function_managers.keccak_function_manager import keccak_function_manager
 from mythril.laser.ethereum.strategy.basic import DepthFirstSearchStrategy, BreadthFirstSearchStrategy
 from mythril.laser.ethereum.strategy.extensions.bounded_loops import BoundedLoopsStrategy
 
@@ -32,9 +35,13 @@ class Preprocessing():
         self.timeout=False
         self.coverage=0
 
+        self.save_keccak_function_manager=None
+
     def main_preprocessing_start(self,iteration:int,laserEVM):
         fdg.global_config.tx_len = 1  # temporarily used as a flag
         log.info(f'start_iteration preprocessing.')
+        # save keccak_function_manager
+        self.save_keccak_function_manager=deepcopy(keccak_function_manager)
 
         laserEVM.open_states = laserEVM.open_states[0:1]
 
@@ -46,6 +53,9 @@ class Preprocessing():
 
 
     def main_preprocessing_end(self, iteration:int):
+        # set back the save data
+        keccak_function_manager.set_data(self.save_keccak_function_manager)
+
         self.slot_location.get_data()
 
         self.timeout = fdg.global_config.flag_preprocess_timeout
@@ -81,7 +91,6 @@ def execute_preprocessing(address, laserEVM):
     # doing preprocesing on a copy of laserEVM.
     # the problem of doing preprocessing on the original laserEVM is that
     # it is hard to set the current state of laserEVM to the previous laserEVM state (generated after contract creation transaction)
-
 
 
     for hook in laserEVM._start_sym_trans_hooks_laserEVM:

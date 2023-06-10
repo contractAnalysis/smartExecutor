@@ -365,10 +365,9 @@ class LaserEVM:
 
     def _check_preprocessing_error(self) -> bool:
         return fdg.global_config.preprocessing_exception
-        return self.time + timedelta(seconds=fdg.global_config.preprocess_timeout) <= datetime.now()
 
-        # @wei adopt from exec()
-    #@wei
+
+    # @wei adopt from exec()
     def exec_preprocessing(self):
         """
                 :param create:
@@ -376,7 +375,6 @@ class LaserEVM:
                 :return:
         """
         for global_state in self.strategy:
-
             # @wei througth timeout
             if self._check_preprocessing_termination():
                 log.debug("hit the exec_preprocessing excution time, return.")
@@ -390,7 +388,6 @@ class LaserEVM:
                 return None
 
             try:
-
                 new_states, op_code = self.execute_state_preprocessing(global_state)
 
             except NotImplementedError:
@@ -422,12 +419,7 @@ class LaserEVM:
         """
 
         instructions = global_state.environment.code.instruction_list
-        # # if global_state.environment.active_function_name in ['UnstakeAll()']:
-        # #     print(f'xx')
-        if global_state.environment.active_function_name=='Stake()':
-            print(f'{global_state.environment.active_function_name}:{instructions[global_state.mstate.pc]}')
-        # if instructions[global_state.mstate.pc]['address'] == 4675:
-        #     print(f'xx')
+
         try:
             op_code = instructions[global_state.mstate.pc]["opcode"]
             # Execute hooks
@@ -573,6 +565,7 @@ class LaserEVM:
             if self.strategy.run_check() and (
                 len(new_states) > 1 and random.uniform(0, 1) < args.pruning_factor
             ): # need to be careful: previous version:if args.sparse_pruning is False:
+
                 new_states = [
                     state
                     for state in new_states
@@ -640,13 +633,6 @@ class LaserEVM:
             return [], None
 
         instructions = global_state.environment.code.instruction_list
-
-        # # if global_state.environment.active_function_name not in ['constructor','fallback']:
-        # #     print(f'xx')
-        if global_state.environment.active_function_name=='Stake()':
-            print(f'{global_state.environment.active_function_name}:{instructions[global_state.mstate.pc]}')
-            # if instructions[global_state.mstate.pc]['address'] == 4675:
-            #     print(f'xx')
 
         try:
             op_code = instructions[global_state.mstate.pc]["opcode"]

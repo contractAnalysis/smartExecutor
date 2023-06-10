@@ -1606,87 +1606,6 @@ class Instruction:
 
         return [new_state]
 
-    # @StateTransition(increment_pc=False, enable_gas=False)
-    # def jumpi_(self, global_state: GlobalState) -> List[GlobalState]:
-    #     """
-    #
-    #     :param global_state:
-    #     :return:
-    #     """
-    #     fdg.global_config.temp_count+=1
-    #     state = global_state.mstate
-    #     disassembly = global_state.environment.code
-    #     min_gas, max_gas = get_opcode_gas("JUMPI")
-    #     states = []
-    #
-    #     op0, condition = state.stack.pop(), state.stack.pop()
-    #
-    #     try:
-    #         jump_addr = util.get_concrete_int(op0)
-    #
-    #     except TypeError:
-    #         log.debug("Skipping JUMPI to invalid destination.")
-    #         global_state.mstate.pc += 1
-    #         global_state.mstate.min_gas_used += min_gas
-    #         global_state.mstate.max_gas_used += max_gas
-    #         return [global_state]
-    #     # False case
-    #
-    #     negated = (
-    #         simplify(Not(condition)) if isinstance(condition, Bool) else condition == 0
-    #     )
-    #     negated.simplify()
-    #     # True case
-    #     condi = simplify(condition) if isinstance(condition, Bool) else condition != 0
-    #     condi.simplify()
-    #
-    #     negated_cond = (type(negated) == bool and negated) or (
-    #         isinstance(negated, Bool) and not is_false(negated)
-    #     )
-    #     positive_cond = (type(condi) == bool and condi) or (
-    #         isinstance(condi, Bool) and not is_false(condi)
-    #     )
-    #
-    #     if fdg.global_config.flag_preprocessing or negated_cond:
-    #         # States have to be deep copied during a fork as summaries assume independence across states.
-    #         new_state = deepcopy(global_state)
-    #         # add JUMPI gas cost
-    #         new_state.mstate.min_gas_used += min_gas
-    #         new_state.mstate.max_gas_used += max_gas
-    #
-    #         # manually increment PC
-    #
-    #         new_state.mstate.depth += 1
-    #         new_state.mstate.pc += 1
-    #         new_state.world_state.constraints.append(negated)
-    #         states.append(new_state)
-    #     else:
-    #         log.debug("Pruned unreachable states.")
-    #
-    #     # Get jump destination
-    #     index = util.get_instruction_index(disassembly.instruction_list, jump_addr)
-    #
-    #     if index is None:
-    #         log.debug("Invalid jump destination: " + str(jump_addr))
-    #         return states
-    #
-    #     instr = disassembly.instruction_list[index]
-    #
-    #     if instr["opcode"] == "JUMPDEST":
-    #         if fdg.global_config.flag_preprocessing or positive_cond:
-    #             new_state = deepcopy(global_state)
-    #             # add JUMPI gas cost
-    #             new_state.mstate.min_gas_used += min_gas
-    #             new_state.mstate.max_gas_used += max_gas
-    #
-    #             # manually set PC to destination
-    #             new_state.mstate.pc = index
-    #             new_state.mstate.depth += 1
-    #             new_state.world_state.constraints.append(condi)
-    #             states.append(new_state)
-    #         else:
-    #             log.debug("Pruned unreachable states.")
-    #     return states
 
     @StateTransition(increment_pc=False, enable_gas=False)
     def jumpi_(self, global_state: GlobalState) -> List[GlobalState]:
@@ -1695,7 +1614,7 @@ class Instruction:
         :param global_state:
         :return:
         """
-        fdg.global_config.temp_count += 1
+
         state = global_state.mstate
         disassembly = global_state.environment.code
         min_gas, max_gas = get_opcode_gas("JUMPI")
@@ -1712,30 +1631,34 @@ class Instruction:
             global_state.mstate.min_gas_used += min_gas
             global_state.mstate.max_gas_used += max_gas
             return [global_state]
-        # False case
 
-        negated = (
-            simplify_yes(Not(condition)) if isinstance(condition, Bool) else condition == 0
-        )
-        # print(f'negated:{negated}')
-        negated.simplify_yes() # it is simplified
-        # print(f'simplified negated:{negated}')
-        # True case
-        condi = simplify_yes(condition) if isinstance(condition, Bool) else condition != 0
-        # print(f'condi:{condi}')
-        condi.simplify_yes()
-        # print(f'simplified condi:{condi}')
 
         if fdg.global_config.flag_preprocessing:
+            negated=True
+            condi=True
             negated_cond=True
             positive_cond=True
         else:
+            # False case
+
+            negated = (
+                simplify(Not(condition)) if isinstance(condition, Bool) else condition == 0
+            )
+
+            negated.simplify()  # it is simplified
+
+            # True case
+            condi = simplify(condition) if isinstance(condition, Bool) else condition != 0
+
+            condi.simplify()
+
             negated_cond = (type(negated) == bool and negated) or (
                 isinstance(negated, Bool) and not is_false(negated)
             )
             positive_cond = (type(condi) == bool and condi) or (
                 isinstance(condi, Bool) and not is_false(condi)
             )
+
 
         if  negated_cond:
             # States have to be deep copied during a fork as summaries assume independence across states.

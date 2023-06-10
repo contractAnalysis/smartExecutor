@@ -1,3 +1,5 @@
+from copy import copy
+
 from mythril.laser.smt import (
     BitVec,
     Function,
@@ -53,6 +55,15 @@ class KeccakFunctionManager:
         self.concrete_hashes = {}
         self.symbolic_inputs = {}
 
+
+    #@wei
+    def set_data(self,data:object):
+        self.store_function = data.store_function
+        self.interval_hook_for_size = data.interval_hook_for_size
+        self.hash_result_store=data.hash_result_store
+        self.quick_inverse =data.quick_inverse
+        self.concrete_hashes = data.concrete_hashes
+        self.symbolic_inputs = data.symbolic_inputs
     @staticmethod
     def find_concrete_keccak(data: BitVec) -> BitVec:
         """
@@ -92,6 +103,7 @@ class KeccakFunctionManager:
         val = 89477152217924674838424037953991966239322087453347756267410168184682657981552
         return symbol_factory.BitVecVal(val, 256)
 
+
     def create_keccak(self, data: BitVec) -> BitVec:
         """
         Creates Keccak of the data
@@ -103,6 +115,7 @@ class KeccakFunctionManager:
 
         if data.symbolic is False:
             concrete_hash = self.find_concrete_keccak(data)
+
             self.concrete_hashes[data] = concrete_hash
             # @wei
             if fdg.global_config.flag_preprocessing or fdg.global_config.tx_len == 0:
@@ -116,7 +129,6 @@ class KeccakFunctionManager:
         self.symbolic_inputs[length].append(data)
         self.hash_result_store[length].append(func(data))
         return func(data)
-
     def create_conditions(self) -> Bool:
         condition = symbol_factory.Bool(True)
         for inputs_list in self.symbolic_inputs.values():
@@ -165,10 +177,6 @@ class KeccakFunctionManager:
             self.interval_hook_for_size[length] = self._index_counter
             index = self._index_counter
             self._index_counter -= INTERVAL_DIFFERENCE
-
-        # # @wei data: func_input; hash: func(func_input)
-        # if fdg.global_config.flag_preprocessing or fdg.global_config.tx_len == 0:
-        #     fdg.preprocessing.slot_location.map_hash_key_to_slot(func_input, func)
 
         lower_bound = index * PART
         upper_bound = lower_bound + PART
