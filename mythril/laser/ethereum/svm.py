@@ -269,6 +269,7 @@ class LaserEVM:
             old_states_count = len(self.open_states)
 
             if self.use_reachability_check:
+                log.info("do reachability check")
                 self.open_states = [
                     state
                     for state in self.open_states
@@ -425,6 +426,9 @@ class LaserEVM:
             # Execute hooks
             for hook in self._preprocessing_execute_state_hooks:
                 hook(global_state, op_code)
+
+            # if global_state.environment.active_function_name in ['getBalance(address,address)']:
+            #     print(f'{global_state.environment.active_function_name}:{instructions[global_state.mstate.pc]}')
 
         except IndexError:
             # self._add_world_state(global_state)
@@ -636,6 +640,9 @@ class LaserEVM:
 
         try:
             op_code = instructions[global_state.mstate.pc]["opcode"]
+            # if global_state.environment.active_function_name in ['getBalance(address,address)']:
+            #     print(f'{global_state.environment.active_function_name}:{instructions[global_state.mstate.pc]}')
+
         except IndexError:
             self._add_world_state(global_state)
             return [], None

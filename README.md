@@ -5,11 +5,20 @@
 
 
 
-Get it with docker:<br>
+Get it with Docker:<br>
 
 ```bash
 $ docker pull 23278942/smartexecutor
 ```
+Example to run in Docker container:<br>
+
+```
+sudo docker run -it --rm -v Solidity_file_path:/home/mythril/contracts --entrypoint /bin/bash docker_image 
+solc-select use solc_version
+myth analyze ./contracts/Solidity_file_name.sol:contract_name -fdg
+
+```
+
 
 How to run SmartExecutor:<br>
 ```bash

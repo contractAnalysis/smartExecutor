@@ -1634,13 +1634,12 @@ class Instruction:
 
 
         if fdg.global_config.flag_preprocessing:
-            negated=True
-            condi=True
+            negated = True
+            condi = True
             negated_cond=True
             positive_cond=True
         else:
             # False case
-
             negated = (
                 simplify(Not(condition)) if isinstance(condition, Bool) else condition == 0
             )
@@ -1811,6 +1810,11 @@ class Instruction:
             model = get_model(constraints)
         except UnsatError:
             model = None
+        except TypeError:
+            # # fix the error:
+            # # TypeError: unhashable        type: 'list'
+            model = None
+
         if isinstance(call_data, ConcreteCalldata):
             for element in call_data.concrete(model):
                 if isinstance(element, BitVec) and element.symbolic:
