@@ -348,13 +348,13 @@ class Mine(FunctionSearchStrategy):
         if self.preprocess_timeout or fdg.global_config.preprocessing_exception:
             if self.preprocess_coverage<50:
                 # execute 70% of functions+ functions assigned based on the partial graph
-                return self.assign_states_timeout(states_dict,7)
+                return self.assign_states_timeout(deep_functions,states_dict,7)
             elif self.preprocess_coverage<80:
                 # execute 50% of functions+ functions assigned based on the partial graph
-                return self.assign_states_timeout(states_dict,5)
+                return self.assign_states_timeout(deep_functions,states_dict,5)
             else:
                 # execute 30% of functions + functions assigned based on the partial graph
-                return self.assign_states_timeout(states_dict, 3)
+                return self.assign_states_timeout(deep_functions,states_dict, 3)
         return self.assign_states_normal(deep_functions,states_dict)
 
 
@@ -531,7 +531,7 @@ class Mine(FunctionSearchStrategy):
             if len(assigned_children)>0:
                 return {state_key: assigned_children},self.flag_consider_states
 
-    def assign_states_timeout(self, states_dict: dict = {},percent_of_functions:int=1) -> list:
+    def assign_states_timeout(self,deep_functions: list = None, states_dict: dict = {},percent_of_functions:int=1) -> list:
         """
 
         :param deep_functions:
@@ -625,7 +625,7 @@ class Mine(FunctionSearchStrategy):
             if len(self.cur_queue)==0:return {},None
 
             state_key=self.cur_queue.pop(0)
-            assigned_functions=self.functionAssignment.assign_functions_timeout(state_key, percent_of_functions)
+            assigned_functions=self.functionAssignment.assign_functions_timeout(state_key,deep_functions, percent_of_functions)
             if len(assigned_functions)>0:
                 return {state_key: assigned_functions},True
 
@@ -706,17 +706,17 @@ class DFS(FunctionSearchStrategy):
 
             if self.preprocess_timeout or fdg.global_config.preprocessing_exception:
                 if self.preprocess_coverage<50:
-                    assigned_functions=self.functionAssignment.assign_functions_timeout(state_key, 7)
+                    assigned_functions=self.functionAssignment.assign_functions_timeout(state_key,deep_functions, 7)
                     if len(assigned_functions) > 0:
                         return {state_key: assigned_functions},True
                     continue
                 elif self.preprocess_coverage < 80:
-                    assigned_functions = self.functionAssignment.assign_functions_timeout(state_key, 5)
+                    assigned_functions = self.functionAssignment.assign_functions_timeout(state_key,deep_functions, 5)
                     if len(assigned_functions) > 0:
                         return {state_key: assigned_functions},True
                     continue
                 else:
-                    assigned_functions = self.functionAssignment.assign_functions_timeout(state_key, 3)
+                    assigned_functions = self.functionAssignment.assign_functions_timeout(state_key,deep_functions, 3)
                     if len(assigned_functions) > 0:
                         return {state_key: assigned_functions},True
                     continue
@@ -799,17 +799,17 @@ class BFS(FunctionSearchStrategy):
             state_key = self.queue.pop(0)
             if self.preprocess_timeout or  fdg.global_config.preprocessing_exception:
                 if self.preprocess_coverage < 50:
-                    assigned_functions = self.functionAssignment.assign_functions_timeout(state_key, 7)
+                    assigned_functions = self.functionAssignment.assign_functions_timeout(state_key,deep_functions, 7)
                     if len(assigned_functions) > 0:
                         return {state_key: assigned_functions},True
                     continue
                 elif self.preprocess_coverage < 80:
-                    assigned_functions = self.functionAssignment.assign_functions_timeout(state_key, 5)
+                    assigned_functions = self.functionAssignment.assign_functions_timeout(state_key,deep_functions, 5)
                     if len(assigned_functions) > 0:
                         return {state_key: assigned_functions},True
                     continue
                 else:
-                    assigned_functions = self.functionAssignment.assign_functions_timeout(state_key, 3)
+                    assigned_functions = self.functionAssignment.assign_functions_timeout(state_key,deep_functions, 3)
                     if len(assigned_functions) > 0:
                         return {state_key: assigned_functions},True
                     continue

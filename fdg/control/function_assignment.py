@@ -95,7 +95,7 @@ class FunctionAssignment():
             self.record_assignment(to_execute_functions)
             return to_execute_functions
 
-    def assign_functions_timeout(self, state_key: str, percent_of_functions:int=1):
+    def assign_functions_timeout(self, state_key: str,dk_functions:list, percent_of_functions:int=1):
         print_function_assignmnets(self.assignment_times)
 
         ftn_seq = get_ftn_seq_from_key_1(state_key)
@@ -103,7 +103,7 @@ class FunctionAssignment():
         if len(fallback_case) > 0:
             return fallback_case
 
-        selected_functions=self.check_children_timeout(state_key,percent_of_functions)
+        selected_functions=self.check_children_timeout(ftn_seq,dk_functions,percent_of_functions)
         if len(selected_functions)>0:
             self.record_assignment(selected_functions)
         else:
@@ -126,7 +126,7 @@ class FunctionAssignment():
                 continue
             if self.assignment_times[ftn]>=2*self.times_limit:
                 continue
-            if cov<50:
+            if cov<70:
                 dk_left.append(ftn)
 
 
@@ -183,24 +183,38 @@ class FunctionAssignment():
 
             return children_left
 
-    def check_children_timeout(self, state_key:str, percent_of_functions:int) -> list:
+    def check_children_timeout(self, executed_ftn_seq: list, dk_functions: list, percent_of_functions:int) -> list:
 
-        to_be_considered_functions = [ftn for ftn, times in self.assignment_times.items() if
-                                      times < self.times_limit]
+        # to_be_considered_functions = [ftn for ftn, times in self.assignment_times.items() if
+        #                               times < self.times_limit]
 
-        ftn_seq = get_ftn_seq_from_key_1(state_key)
+        to_be_considered_functions = []
+        for ftn, cov in dk_functions:
+            # if ftn=='fallback':continue
+            if len(executed_ftn_seq) >= 2:
+                if ftn in executed_ftn_seq:
+                    continue
+            if self.assignment_times[ftn] < self.times_limit:
+                to_be_considered_functions.append(ftn)
+                continue
+            if self.assignment_times[ftn] >= 2 * self.times_limit:
+                continue
+            if cov < 70:
+                to_be_considered_functions.append(ftn)
+
+
         # do not consider the functions that appear in the sequence
-        if len(ftn_seq) >= 2:
-            to_be_considered_functions = [ftn for ftn in to_be_considered_functions if ftn not in ftn_seq]
+        if len(executed_ftn_seq) >= 2:
+            to_be_considered_functions = [ftn for ftn in to_be_considered_functions if ftn not in executed_ftn_seq]
 
-        children_1 = self.fwrg_manager.get_children_fwrg_T_A(ftn_seq[-1])
+        children_1 = self.fwrg_manager.get_children_fwrg_T_A(executed_ftn_seq[-1])
         # due to preprocessing timeout,read/write info is partly obtained. so, consider all reads
 
         # consider all the children
         if fdg.global_config.flag_consider_all_reads == 1:
-            children_0 = self.fwrg_manager.get_children_all_reads(ftn_seq[-1])
+            children_0 = self.fwrg_manager.get_children_all_reads(executed_ftn_seq[-1])
         else:
-            children_0 = self.fwrg_manager.get_children_fwrg(ftn_seq[-1])
+            children_0 = self.fwrg_manager.get_children_fwrg(executed_ftn_seq[-1])
 
         children=list(set(children_0+children_1))
         children=[child for child in children if child in to_be_considered_functions]

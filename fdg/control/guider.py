@@ -161,7 +161,7 @@ class Guider():
                 self.ftn_search_strategy.delete_state(key)
             # print(f'\n after state delete:{self.ftn_search_strategy.world_states.keys()}')
 
-        print_list(cur_iteration_all_sequences, f'current all sequence(s):')
+        # print_list(cur_iteration_all_sequences, f'current all sequence(s):')
 
 
 
