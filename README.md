@@ -6,8 +6,9 @@ SmartExecutor is built on top of [Mythril](https://github.com/ConsenSys/mythril)
 SmartExecutor is designed to reduce the sequence explosion of symbolic execution on smart contracts. It provides a scalable solution to symbolic execution while still keeping the basic features of Mythril.
 
 
-### Get it with Docker: ###
+###  Run SmartExecutor in Docker Container: ###
 
+Download the Docker image of SmartExecutor.
 ```bash
 $ docker pull 23278942/smartexecutor
 ```
