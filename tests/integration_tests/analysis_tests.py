@@ -5,7 +5,7 @@ import sys
 from utils import output_of
 from tests import PROJECT_DIR, TESTDATA
 
-MYTH = str(PROJECT_DIR / "myth")
+MYTH = str(PROJECT_DIR / "semyth")
 test_data = (
     (
         "flag_array.sol.o",

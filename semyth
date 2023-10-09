@@ -16,5 +16,5 @@ if __name__ == "__main__":
     # exit()
     seconds_end = time.time()
     print(f'#@time')
-    print(f'time used:{seconds_end-seconds_start}')
+    print(f'time used(s):{seconds_end-seconds_start}')
 

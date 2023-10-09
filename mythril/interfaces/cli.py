@@ -525,6 +525,9 @@ def add_fwrg_arguments(args: Namespace):
 
     fdg.global_config.flag_fwrg=args.function_wr_graph
 
+    if args.v>=3:
+        fdg.output_data.flag_basic=True
+
 def add_analysis_args(options):
     """
     Adds arguments for analysis
@@ -977,7 +980,7 @@ def execute_command(
                     "markdown": report.as_markdown(),
                 }
                 print(outputs[args.outform])
-                # comment them so that the time can be printed in myth.py
+                # comment them so that the time can be printed in semyth.py
                 # if len(report.issues) > 0:
                 #     exit(1)
                 # else:

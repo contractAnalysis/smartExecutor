@@ -2,7 +2,7 @@ from subprocess import Popen, PIPE
 from tests import PROJECT_DIR, TESTDATA
 import json
 
-MYTH = str(PROJECT_DIR / "myth")
+MYTH = str(PROJECT_DIR / "semyth")
 
 
 def test_parallel():

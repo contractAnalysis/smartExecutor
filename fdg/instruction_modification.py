@@ -38,7 +38,7 @@ class InstructionModification():
         if len(self.function_identifier)>0:
             self._feed_instructions_update()
 
-        print(f'total instruction: {len(self.instruction_list)}')
+        print(f'total instructions: {len(self.instruction_list)}')
 
     def _feed_instructions(self):
         """

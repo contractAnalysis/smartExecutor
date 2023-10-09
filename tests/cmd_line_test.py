@@ -2,7 +2,7 @@ from subprocess import check_output, CalledProcessError
 from tests import BaseTestCase, TESTDATA, PROJECT_DIR, TESTS_DIR
 from mock import patch
 
-MYTH = str(PROJECT_DIR / "myth")
+MYTH = str(PROJECT_DIR / "semyth")
 
 
 def output_of(command):

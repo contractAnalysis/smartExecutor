@@ -1,7 +1,7 @@
 import fdg.global_config
 from fdg.utils import str_without_space_line
 
-flag_basic=True
+flag_basic=False
 flag_detail=False
 flag_exp=False
 

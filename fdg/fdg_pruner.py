@@ -87,21 +87,22 @@ class FDG_pruner(LaserPlugin):
         @symbolic_vm.laser_hook("stop_sym_exec")
         def stop_sym_exec_hook():
             if fdg.global_config.random_baseline>0:return
-            if not fdg.global_config.flag_preprocess_timeout:
-                if not fdg.global_config.preprocessing_exception:
-                    if self.preprocess is not None and self.functionCoverage is not None:
-                        if self.preprocess.coverage == self.functionCoverage.coverage:
-                            print(f'Reach the maximum coverage.')
-            if fdg.global_config.print_function_coverage==1:
-               deep_functions_1st_time=self.functionCoverage.get_deep_functions_1st_time()
-               if len(deep_functions_1st_time) > 0:
-                    self.get_depth_k_functions()
-                    deep_function_in_the_end =self.depth_k
-                    print(
-                        f'depth-k functions: {len(deep_functions_1st_time) - len(deep_function_in_the_end)} out of {len(deep_functions_1st_time)} reaches the threshold {fdg.global_config.function_coverage_threshold}%')
-
-                    print(f'all depth-k function(s): {deep_functions_1st_time}')
-                    print(f'left depth-k function(s): {deep_function_in_the_end}')
+            # if not fdg.global_config.flag_preprocess_timeout:
+            #     if not fdg.global_config.preprocessing_exception:
+            #         if self.preprocess is not None and self.functionCoverage is not None:
+            #             if self.preprocess.coverage == self.functionCoverage.coverage:
+            #                 print(f'Reach the maximum coverage.')
+            #
+            # if fdg.global_config.print_function_coverage==1:
+            #    deep_functions_1st_time=self.functionCoverage.get_deep_functions_1st_time()
+            #    if len(deep_functions_1st_time) > 0:
+            #         self.get_depth_k_functions()
+            #         deep_function_in_the_end =self.depth_k
+            #         print(
+            #             f'depth-k functions: {len(deep_functions_1st_time) - len(deep_function_in_the_end)} out of {len(deep_functions_1st_time)} reaches the threshold {fdg.global_config.function_coverage_threshold}%')
+            #
+            #         print(f'all depth-k function(s): {deep_functions_1st_time}')
+            #         print(f'left depth-k function(s): {deep_function_in_the_end}')
 
 
 

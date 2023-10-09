@@ -14,10 +14,10 @@ import os
 import io
 
 # Package meta-data.
-NAME = "mythril"
+NAME = "smartExecutor"
 DESCRIPTION = "Security analysis tool for Ethereum smart contracts"
-URL = "https://github.com/ConsenSys/mythril"
-AUTHOR = "ConsenSys Dilligence"
+URL = "https://github.com/contractAnalysis/smartExecutor"
+AUTHOR = "contractAnalysis"
 AUTHOR_MAIL = None
 REQUIRES_PYTHON = ">=3.6.0"
 here = os.path.abspath(os.path.dirname(__file__))
@@ -122,6 +122,6 @@ setup(
     extras_require=EXTRAS,
     package_data={"mythril.analysis.templates": ["*"], "mythril.support.assets": ["*"]},
     include_package_data=True,
-    entry_points={"console_scripts": ["myth=mythril.interfaces.cli:main"]},
+    entry_points={"console_scripts": ["semyth=mythril.interfaces.cli:main"]},
     cmdclass={"verify": VerifyVersionCommand},
 )

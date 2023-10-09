@@ -5,7 +5,7 @@ import sys
 from tests import PROJECT_DIR, TESTDATA
 from utils import output_of
 
-MYTH = str(PROJECT_DIR / "myth")
+MYTH = str(PROJECT_DIR / "semyth")
 test_data = (
     ("version_contract.sol", "v0.7.0", True),
     ("version_contract.sol", "v0.8.0", False),

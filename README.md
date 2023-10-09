@@ -1,120 +1,133 @@
 
-# SmartExecutor
-<p>SmartExecutor is designed to reduce the sequence explosion of symbolic execution on smart contracts .</p>
-<p>It is built on top of Mythril.</p>
+##  SmartExecutor ##
+
+<p>SmartExecutor is built on top of [Mythril](https://github.com/ConsenSys/mythril), a symbolic-execution-based security analysis tool for EVM bytecode that can detect security vulnerabilities in smart contracts built for Ethereum, Hedera, Quorum, Vechain, Roostock, Tron and other EVM-compatible blockchains.</p>
+
+<p>SmartExecutor is designed to reduce the sequence explosion of symbolic execution on smart contracts. It provides a scalable solution to symbolic execution while still keeping the basic features of Mythril.</p>
 
 
-
-Get it with Docker:<br>
+### Get it with Docker: ###
 
 ```bash
 $ docker pull 23278942/smartexecutor
 ```
-Example to run in Docker container:<br>
+
+Example to run in a Docker container:
+
+Create and enter the docker container. 
+```
+sudo docker run -it --rm -v solidity_file_path_in_host:/home/mythril/contracts --entrypoint /bin/bash docker_image_id 
 
 ```
-sudo docker run -it --rm -v Solidity_file_path:/home/mythril/contracts --entrypoint /bin/bash docker_image 
-solc-select use solc_version
-myth analyze ./contracts/Solidity_file_name.sol:contract_name -fdg
 
+Run the following command to execute contract **contract_name** in the container
+```
+semyth analyze ./contracts/solidity_file_name.sol:contract_name -fdg
 ```
 
+### Run SmartExecutor in Pycharm IDE: ###
 
-How to run SmartExecutor:<br>
-```bash
-$ myth analyze <solidity-file>:<contract-name> -fdg
+1, Create a project through Pycharm IDE by cloning https://github.com/contractAnalysis/smartExecutor.git.
+
+2, Create a virtual environment and install dependencies.
+
+3, Find semyth.py in the root directory and add the parameters. Take the example Crowdsale.sol:
 ```
-<p>&nbsp;&nbsp;</p>
-<hr>
-
-# Mythril
-
-Mythril is a security analysis tool for EVM bytecode. It detects security vulnerabilities in smart contracts built for Ethereum, Hedera, Quorum, Vechain, Roostock, Tron and other EVM-compatible blockchains. It uses symbolic execution, SMT solving and taint analysis to detect a variety of security vulnerabilities. It's also used (in combination with other tools and techniques) in the [MythX](https://mythx.io) security analysis platform.
-
-If you are a smart contract developer, we recommend using [MythX tools](https://github.com/b-mueller/awesome-mythx-smart-contract-security-tools) which are optimized for usability and cover a wider range of security issues.
-
-Whether you want to contribute, need support, or want to learn what we have cooking for the future, our [Discord server](https://discord.gg/E3YrVtG) will serve your needs.
-
-## Installation and setup
-
-Get it with [Docker](https://www.docker.com):
-
-```bash
-$ docker pull mythril/myth
+a
+./tests/testdata/input_contracts/Crowdsale.sol:Crowdsale
+-fdg
 ```
+4, Run semyth.py by right clicking it and select "Run semyth".
 
-Install from Pypi (Python 3.6-3.9):
-
-```bash
-$ pip3 install mythril
+5, Check results in the Pycharm terminal. Here shows the results of evaluating Crowdsale.sol:
 ```
-
-See the [docs](https://mythril-classic.readthedocs.io/en/master/installation.html) for more detailed instructions. 
-
-## Usage
-
-Run:
-
-```
-$ myth analyze <solidity-file>
-```
-
-Or:
-
-```
-$ myth analyze -a <contract-address>
-```
-
-Specify the maximum number of transaction to explore with `-t <number>`. You can also set a timeout with `--execution-timeout <seconds>`.
-
-Here is an example of running Mythril on the file `killbilly.sol` which is in the `solidity_examples` directory for `3` transactions:
-
-```
-> myth a killbilly.sol -t 3
-==== Unprotected Selfdestruct ====
-SWC ID: 106
+Starting preprocessing.
+number of genesis states: 1
+total instructions: 476
+preprocessing: Achieved 99.79% coverage.
+Ending preprocessing.
+preprocessing time(s): 3.5448732376098633
+#@statespace
+190 nodes, 189 edges, 1547 total states
+#@coverage
+Achieved 10.34% coverage for code: 608060405269152d02c7e14af680000060005560006001553...
+#@coverage
+Achieved 99.79% coverage for code: 60806040526004361061006d576000357c010000000000000...
+==== Integer Arithmetic Bugs ====
+SWC ID: 101
 Severity: High
-Contract: KillBilly
-Function name: commencekilling()
-PC address: 354
-Estimated Gas Usage: 974 - 1399
-Any sender can cause the contract to self-destruct.
-Any sender can trigger execution of the SELFDESTRUCT instruction to destroy this contract account and withdraw its balance to an arbitrary address. Review the transaction trace generated for this issue and make sure that appropriate security controls are in place to prevent unrestricted access.
+Contract: Crowdsale
+Function name: constructor
+PC address: 42
+Estimated Gas Usage: 21038 - 103767
+The arithmetic operator can overflow.
+It is possible to cause an integer overflow or underflow in the arithmetic operation. 
 --------------------
-In file: killbilly.sol:22
+In file: ./tests/testdata/input_contracts/Crowdsale.sol:10
 
-selfdestruct(msg.sender)
+now+60 days
 
 --------------------
 Initial State:
 
-Account: [CREATOR], balance: 0x2, nonce:0, storage:{}
-Account: [ATTACKER], balance: 0x1001, nonce:0, storage:{}
+Account: [CREATOR], balance: 0x0, nonce:0, storage:{}
+Account: [ATTACKER], balance: 0x0, nonce:0, storage:{}
 
 Transaction Sequence:
 
 Caller: [CREATOR], calldata: , decoded_data: , value: 0x0
-Caller: [ATTACKER], function: killerize(address), txdata: 0x9fa299cc000000000000000000000000deadbeefdeadbeefdeadbeefdeadbeefdeadbeef, decoded_data: ('0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef',), value: 0x0
-Caller: [ATTACKER], function: activatekillability(), txdata: 0x84057065, value: 0x0
-Caller: [ATTACKER], function: commencekilling(), txdata: 0x7c11da20, value: 0x0
+
+==== Dependence on predictable environment variable ====
+SWC ID: 116
+Severity: Low
+Contract: Crowdsale
+Function name: setPhase(uint256)
+PC address: 415
+Estimated Gas Usage: 2729 - 2824
+A control flow decision is made based on The block.timestamp environment variable.
+The block.timestamp environment variable is used to determine a control flow decision. Note that the values of variables like coinbase, gaslimit, block number and timestamp are predictable and can be manipulated by a malicious miner. Also keep in mind that attackers know hashes of earlier blocks. Don't use any of those environment variables as sources of randomness and be aware that use of these variables introduces a certain level of trust into miners.
+--------------------
+In file: ./tests/testdata/input_contracts/Crowdsale.sol:19
+
+require (
+    (newPhase==1 && raised>=goal) ||
+    (newPhase==2 && raised<goal && now>end))
+
+--------------------
+Initial State:
+
+Account: [CREATOR], balance: 0x0, nonce:0, storage:{}
+Account: [ATTACKER], balance: 0x0, nonce:0, storage:{}
+
+Transaction Sequence:
+
+Caller: [CREATOR], calldata: , decoded_data: , value: 0x0
+Caller: [ATTACKER], function: setPhase(uint256), txdata: 0x2cc826550000000000000000000000000000000000000000000000000000000000000002, decoded_data: (2,), value: 0x0
+
+
+#@time
+time used(s):26.79217028617859
+
+Process finished with exit code 0
 
 ```
 
+### Run SmartExecutor as a Package ###
 
-Instructions for using Mythril are found on the [docs](https://mythril-classic.readthedocs.io/en/master/). 
-
-For support or general discussions please join the Mythril community on [Discord](https://discord.gg/E3YrVtG).
-
-## Building the Documentation
-Mythril's documentation is contained in the `docs` folder and is published to [Read the Docs](https://mythril-classic.readthedocs.io/en/develop/). It is based on Sphinx and can be built using the Makefile contained in the subdirectory:
-
+In stall SmartExecutor through pip:
 ```
-cd docs
-make html
+pip install smartExecutor
 ```
 
-This will create a `build` output directory containing the HTML output. Alternatively, PDF documentation can be built with `make latexpdf`. The available output format options can be seen with `make help`.
+How to run SmartExecutor:<br>
+```bash
+$ semyth analyze <solidity-file>:<contract-name> -fdg
+```
 
-## Vulnerability Remediation
+Note that the usage of SmartExecutor is almost the same as Mythril except that you have to use **semyth** instead of **myth** and you need to include the option **-fdg**, which is used to signal that the scalable alternative is in active. When **-fdg** is not given, SmartExecutor runs the basic model, i.e., Mythril itself.
 
-Visit the [Smart Contract Vulnerability Classification Registry](https://swcregistry.io/) to find detailed information and remediation guidance for the vulnerabilities reported.
+For this reason, here show some useful documents of Mythril:
+
+- [Instructions for using Mythril](https://mythril-classic.readthedocs.io/en/master/)
+- [Mythril's documentation](https://mythril-classic.readthedocs.io/en/develop/)
+- [Vulnerability Remediation](https://swcregistry.io/)

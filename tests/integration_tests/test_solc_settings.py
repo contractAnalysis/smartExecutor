@@ -5,7 +5,7 @@ import sys
 from subprocess import check_output, STDOUT
 from tests import PROJECT_DIR, TESTDATA
 
-MYTH = str(PROJECT_DIR / "myth")
+MYTH = str(PROJECT_DIR / "semyth")
 
 
 def test_positive_solc_settings():

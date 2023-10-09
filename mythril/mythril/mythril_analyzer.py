@@ -184,11 +184,11 @@ class MythrilAnalyzer:
                 issue.add_code_info(contract)
 
             all_issues += issues
-            log.info("Solver statistics: \n{}".format(str(SolverStatistics())))
-            print("Solver statistics:{}".format(str(SolverStatistics())))
-            # @wei
-            log.info(f'state constraint checking statistics:\n{str(StateConstraintCheckIndicator())}')
-            print(f'state constraint checking statistics:{str(StateConstraintCheckIndicator())}')
+            # log.info("Solver statistics: \n{}".format(str(SolverStatistics())))
+            # print("Solver statistics:{}".format(str(SolverStatistics())))
+            # # @wei
+            # log.info(f'state constraint checking statistics:\n{str(StateConstraintCheckIndicator())}')
+            # print(f'state constraint checking statistics:{str(StateConstraintCheckIndicator())}')
 
         source_data = Source()
         source_data.get_source_from_contracts_list(self.contracts)
