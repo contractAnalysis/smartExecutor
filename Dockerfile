@@ -28,13 +28,9 @@ RUN apt-get update \
      wget \
   && ln -s /usr/bin/python3 /usr/local/bin/python
 
-RUN pip3 install solc-select
-RUN solc-select install all
-RUN export PATH=/usr/local/bin:$PATH
+COPY ./requirements.txt /opt/smartExecutor/requirements.txt
 
-COPY ./requirements.txt /opt/mythril/requirements.txt
-
-RUN cd /opt/mythril \
+RUN cd /opt/smartExecutor \
   && pip3 install -r requirements.txt
 
 RUN locale-gen en_US.UTF-8
@@ -42,14 +38,14 @@ ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US.en
 ENV LC_ALL en_US.UTF-8
 
-COPY . /opt/mythril
-RUN cd /opt/mythril \
+COPY . /opt/smartExecutor
+RUN cd /opt/smartExecutor \
   && python setup.py install
 
-WORKDIR /home/mythril
+WORKDIR /home/smartExecutor
 
 RUN ( [ ! -z "${SOLC}" ] && set -e && for ver in $SOLC; do python -m solc.install v${ver}; done ) || true
 
-COPY ./mythril/support/assets/signatures.db /home/mythril/.mythril/signatures.db
+COPY ./smartExecutor/support/assets/signatures.db /home/smartExecutor/.mythril/signatures.db
 
-ENTRYPOINT ["/usr/local/bin/myth"]
+ENTRYPOINT ["/usr/local/bin/semyth"]
