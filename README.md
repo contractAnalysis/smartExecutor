@@ -25,8 +25,8 @@ semyth analyze ./contracts/solidity_file_name.sol:contract_name -fdg
 
 Example of executing Crowdsale.sol locating in the host in the Docker container:
 
+![](images/exampleUsingDockerImage.png)
 
-![](images/exampleUsingDockerImage.png){:width="900px" height="300px"}
 _/home/wei/PycharmProjects/Contracts/\_wei/_: the host directory where Crowdsale.sol resides in it.
 
 _/home/smartExecutor/contracts_: the directory in a container, no need to change it.
