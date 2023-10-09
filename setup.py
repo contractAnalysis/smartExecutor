@@ -14,7 +14,7 @@ import os
 import io
 
 # Package meta-data.
-NAME = "smartExecutor"
+NAME = "smartExecutorx"
 DESCRIPTION = "Security analysis tool for Ethereum smart contracts"
 URL = "https://github.com/contractAnalysis/smartExecutor"
 AUTHOR = "contractAnalysis"
@@ -56,7 +56,7 @@ TESTS_REQUIRE = ["mypy==0.782", "pytest>=3.6.0", "pytest_mock", "pytest-cov"]
 EXTRAS = {}
 
 # If version is set to None then it will be fetched from __version__.py
-VERSION = None
+VERSION = "v0.2"
 
 
 # Import the README and use it as the long-description.
@@ -71,7 +71,8 @@ except FileNotFoundError:
 # Load the package's __version__.py module as a dictionary.
 about = {}
 if not VERSION:
-    project_slug = NAME.lower().replace("-", "_").replace(" ", "_")
+    # project_slug = NAME.lower().replace("-", "_").replace(" ", "_")
+    project_slug = "fdg"
     with open(os.path.join(here, project_slug, "__version__.py")) as f:
         exec(f.read(), about)
 else:
