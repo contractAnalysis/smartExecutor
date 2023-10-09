@@ -30,7 +30,7 @@ semyth analyze ./contracts/solidity_file_name.sol:contract_name -fdg
 
 2, Create a virtual environment and install dependencies.
 
-3, Find semyth.py in the root directory and add the parameters. Take the example Crowdsale.sol:
+3, Find semyth.py in the root directory and add the parameters. Take the example of Crowdsale.sol:
 ```
 analyze
 ./tests/testdata/input_contracts/Crowdsale.sol:Crowdsale
@@ -124,7 +124,7 @@ Run SmartExecutor:
 $ semyth analyze <solidity-file>:<contract-name> -fdg
 ```
 
-Note that the usage of SmartExecutor is almost the same as Mythril except that you have to begin **semyth** instead of **myth** and you need to include the option **-fdg**, which is used to signal that the scalable alternative is in active. When **-fdg** is not given, SmartExecutor runs the basic model, i.e., Mythril itself.
+Note that the usage of SmartExecutor is almost the same as Mythril except that you have to begin with **semyth** instead of **myth** and you need to include the option **-fdg**, which is used to signal that the scalable alternative is in active. When **-fdg** is not given, SmartExecutor runs the basic model, i.e., Mythril itself.
 
 For this reason, here show some useful documents of Mythril:
 
