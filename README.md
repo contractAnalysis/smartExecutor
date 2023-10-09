@@ -1,9 +1,9 @@
 
 ##  SmartExecutor ##
 
-<p>SmartExecutor is built on top of [Mythril](https://github.com/ConsenSys/mythril), a symbolic-execution-based security analysis tool for EVM bytecode that can detect security vulnerabilities in smart contracts built for Ethereum, Hedera, Quorum, Vechain, Roostock, Tron and other EVM-compatible blockchains.</p>
+SmartExecutor is built on top of [Mythril](https://github.com/ConsenSys/mythril), a symbolic-execution-based security analysis tool for EVM bytecode that can detect security vulnerabilities in smart contracts built for Ethereum, Hedera, Quorum, Vechain, Roostock, Tron and other EVM-compatible blockchains.
 
-<p>SmartExecutor is designed to reduce the sequence explosion of symbolic execution on smart contracts. It provides a scalable solution to symbolic execution while still keeping the basic features of Mythril.</p>
+SmartExecutor is designed to reduce the sequence explosion of symbolic execution on smart contracts. It provides a scalable solution to symbolic execution while still keeping the basic features of Mythril.
 
 
 ### Get it with Docker: ###
@@ -33,7 +33,7 @@ semyth analyze ./contracts/solidity_file_name.sol:contract_name -fdg
 
 3, Find semyth.py in the root directory and add the parameters. Take the example Crowdsale.sol:
 ```
-a
+analyze
 ./tests/testdata/input_contracts/Crowdsale.sol:Crowdsale
 -fdg
 ```
@@ -114,17 +114,18 @@ Process finished with exit code 0
 
 ### Run SmartExecutor as a Package ###
 
-In stall SmartExecutor through pip:
+Install SmartExecutor through pip:
 ```
 pip install smartExecutor
 ```
 
-How to run SmartExecutor:<br>
+Run SmartExecutor:
+
 ```bash
 $ semyth analyze <solidity-file>:<contract-name> -fdg
 ```
 
-Note that the usage of SmartExecutor is almost the same as Mythril except that you have to use **semyth** instead of **myth** and you need to include the option **-fdg**, which is used to signal that the scalable alternative is in active. When **-fdg** is not given, SmartExecutor runs the basic model, i.e., Mythril itself.
+Note that the usage of SmartExecutor is almost the same as Mythril except that you have to begin **semyth** instead of **myth** and you need to include the option **-fdg**, which is used to signal that the scalable alternative is in active. When **-fdg** is not given, SmartExecutor runs the basic model, i.e., Mythril itself.
 
 For this reason, here show some useful documents of Mythril:
 
