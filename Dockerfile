@@ -46,6 +46,6 @@ WORKDIR /home/smartExecutor
 
 RUN ( [ ! -z "${SOLC}" ] && set -e && for ver in $SOLC; do python -m solc.install v${ver}; done ) || true
 
-COPY ./smartExecutor/support/assets/signatures.db /home/smartExecutor/.mythril/signatures.db
+COPY ./mythril/support/assets/signatures.db /home/smartExecutor/.mythril/signatures.db
 
 ENTRYPOINT ["/usr/local/bin/semyth"]
