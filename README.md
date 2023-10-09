@@ -16,7 +16,7 @@ Example to run in a Docker container:
 
 Create and enter the docker container. 
 ```
-sudo docker run -it --rm -v solidity_file_path_in_host:/home/mythril/contracts --entrypoint /bin/bash docker_image_id 
+sudo docker run -it --rm -v solidity_file_path_in_host:/home/smartExecutor/contracts --entrypoint /bin/bash docker_image_id 
 ```
 
 Run the following command to execute contract **contract_name** in the container
