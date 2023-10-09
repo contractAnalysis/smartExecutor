@@ -12,17 +12,26 @@ SmartExecutor is designed to reduce the sequence explosion of symbolic execution
 $ docker pull 23278942/smartexecutor
 ```
 
-Example to run in a Docker container:
-
 Create and enter the docker container. 
 ```
 sudo docker run -it --rm -v solidity_file_path_in_host:/home/smartExecutor/contracts --entrypoint /bin/bash docker_image_id 
 ```
 
-Run the following command to execute contract **contract_name** in the container
+Run the following command to execute contract **contract_name** in the container.
 ```
 semyth analyze ./contracts/solidity_file_name.sol:contract_name -fdg
 ```
+
+
+Example of executing Crowdsale.sol locating in the host in the Docker container:
+
+![img.png](img.png)
+
+_/home/wei/PycharmProjects/Contracts/\_wei/_: the host directory where Crowdsale.sol resides in it.
+
+_/home/smartExecutor/contracts_: the directory in a container, no need to change it.
+
+_e2591427e5c5_: the Docker image id of smartexecutor.
 
 ### Run SmartExecutor in Pycharm IDE: ###
 
