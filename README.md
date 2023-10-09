@@ -18,13 +18,13 @@ Create and enter the docker container.
 sudo docker run -it --rm -v solidity_file_path_in_host:/home/smartExecutor/contracts --entrypoint /bin/bash docker_image_id 
 ```
 
-Run the following command to execute contract **contract_name** in the container.
+Run the following command to execute contract **contract_name** in solidity_file_name.sol in the container.
 ```
 semyth analyze ./contracts/solidity_file_name.sol:contract_name -fdg
 ```
 
 
-Example of executing Crowdsale.sol locating in the host in the Docker container:
+Example of executing contract Crowdsale in Crowdsale.sol in the Docker container:
 
 ![](images/exampleUsingDockerImage.png)
 
