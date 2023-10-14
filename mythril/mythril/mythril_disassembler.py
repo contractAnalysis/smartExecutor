@@ -244,7 +244,9 @@ class MythrilDisassembler:
         contracts = []
         for file in solidity_files:
             if ":" in file:
-                file, contract_name = file.split(":")
+                #file, contract_name = file.split(":")
+                file, contract_name = file.split(".sol:") # in case the path contains colon. e.g., "c:\xxx\
+                file+=".sol"
             else:
                 contract_name = None
 

@@ -244,7 +244,8 @@ class Instruction:
         """
         # Generalize some ops
         log.debug("Evaluating %s at %i", self.op_code, global_state.mstate.pc)
-
+        if global_state.mstate.pc==536:
+            print(f'xx')
         op = self.op_code.lower()
         if self.op_code.startswith("PUSH"):
             op = "push"
