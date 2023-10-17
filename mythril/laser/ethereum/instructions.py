@@ -1,6 +1,7 @@
 """This module contains a representation class for EVM instructions and
 transitions between them."""
 import logging
+import time
 
 from copy import copy, deepcopy
 from typing import cast, Callable, List, Union, Tuple
@@ -244,8 +245,7 @@ class Instruction:
         """
         # Generalize some ops
         log.debug("Evaluating %s at %i", self.op_code, global_state.mstate.pc)
-        if global_state.mstate.pc==536:
-            print(f'xx')
+
         op = self.op_code.lower()
         if self.op_code.startswith("PUSH"):
             op = "push"
@@ -1058,31 +1058,35 @@ class Instruction:
 
         if len(data_list) > 1:
             data = simplify(Concat(data_list))
-            # # @wei
-            # print(f'_=_=_')
-            # print(f'in sha3_() of instructions.py: ')
-            # print(f'slot index: {data_list[-1]} ')
-            # print(f'simplified data: {data}\n')
-
-            if fdg.global_config.flag_preprocessing or fdg.global_config.tx_len == 0:
-                fdg.preprocessing.slot_location.map_key_to_slot(Concat(data_list), data_list)
-
+            # # # @wei
+            # # print(f'_=_=_')
+            # # print(f'in sha3_() of instructions.py: ')
+            # # print(f'slot index: {data_list[-1]} ')
+            # # print(f'simplified data: {data}\n')
+            #
+            # seconds_start = time.time()
+            #
+            # if fdg.global_config.flag_preprocessing or fdg.global_config.tx_len == 0:
+            #     fdg.preprocessing.slot_location.map_key_to_slot(Concat(data_list), data_list)
+            # seconds_end = time.time()
+            # print(f'#@time sha3')
+            # print(f'time used(s):{seconds_end - seconds_start}')
 
         elif len(data_list) == 1:
             data = data_list[0]
-            # # @wei
-            # print(f'_=_=_')
-            # print(f'in sha3_() of instructions.py: ')
-            # print(f'slot index: {data_list[-1]} ')
-            # print(f'simplified data: {data}')
-
-            if fdg.global_config.flag_preprocessing or fdg.global_config.tx_len == 0:
-                try:
-                    # sim_data = simplify_yes(data_list[0])
-                    fdg.preprocessing.slot_location.map_key_to_slot(data_list[0], data_list)
-                    print(f'instructions.py: sim_data: {data_list[0]}')
-                except:
-                    print(f'instructions.py: has a problem to collect data')
+            # # # @wei
+            # # print(f'_=_=_')
+            # # print(f'in sha3_() of instructions.py: ')
+            # # print(f'slot index: {data_list[-1]} ')
+            # # print(f'simplified data: {data}')
+            #
+            # if fdg.global_config.flag_preprocessing or fdg.global_config.tx_len == 0:
+            #     try:
+            #         # sim_data = simplify_yes(data_list[0])
+            #         fdg.preprocessing.slot_location.map_key_to_slot(data_list[0], data_list)
+            #         print(f'instructions.py: sim_data: {data_list[0]}')
+            #     except:
+            #         print(f'instructions.py: has a problem to collect data')
 
         else:
             # @wei
@@ -1095,8 +1099,8 @@ class Instruction:
 
 
         result = keccak_function_manager.create_keccak(data)
-        if fdg.global_config.flag_preprocessing or fdg.global_config.tx_len == 0:
-            fdg.preprocessing.slot_location.map_key_to_slot(result, data_list)
+        # if fdg.global_config.flag_preprocessing or fdg.global_config.tx_len == 0:
+        #     fdg.preprocessing.slot_location.map_key_to_slot(result, data_list)
 
         state.stack.append(result)
 

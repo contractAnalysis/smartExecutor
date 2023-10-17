@@ -16,6 +16,7 @@ actors=None
 max_value_of_address='1461501637330902918203684832716283019655932542975'
 
 sender_in_condition_pattern=r'.*Extract\s*\(\s*159\s*,\s*0\s*,\s*sender\_\d+\s*\)\s*\=\=\s*\d+\s*,\s*.*'
+
 def collect_value_for_sender(condition:str):
     match = re.match(sender_in_condition_pattern, condition)
     if match is not None:

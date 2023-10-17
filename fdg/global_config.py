@@ -64,7 +64,7 @@ sequences=[]
 # currently, does not support to change them through command line
 #----------------------------------------------
 global output_path
-output_path='/media/sf___share_vms/test/'
+output_path='C:\\Users\\18178\\Desktop\\temp\\'
 
 # set maximum number of iterations of the symbolic execution engine
 global transaction_count

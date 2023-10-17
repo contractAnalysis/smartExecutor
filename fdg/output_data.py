@@ -1,8 +1,9 @@
 import fdg.global_config
-from fdg.utils import str_without_space_line
+
+from mythril.laser.smt.expression import simplify_yes
 
 flag_basic=False
-flag_detail=False
+flag_detail=True
 flag_exp=False
 
 
@@ -133,16 +134,11 @@ def print_coverage(contrart_cov:float,functions_cov:dict,description:str):
 #========================
 # in slot_location.py
 #------------------------
-def output_key_to_slot(key_to_slot:dict, hash_key_to_slot:dict, file_name:str, description:str):
+def output_key_to_slot(hash_key_to_slot:dict, file_name:str, description:str):
 
     if not flag_detail:return
     with open(fdg.global_config.output_path+file_name,'w') as fw:
         fw.write(f'\n==============={description}======================\n')
-
-        for key,value in key_to_slot.items():
-            fw.write(f'\n-----------------------\n')
-            fw.write(f'key: {key}\n')
-            fw.write(f'value: {value}\n')
         fw.write(f'\n=====================================\n')
         fw.write(f'\nmap hash keys to slots\n')
         for key, value in hash_key_to_slot.items():
@@ -150,6 +146,7 @@ def output_key_to_slot(key_to_slot:dict, hash_key_to_slot:dict, file_name:str, d
             fw.write(f'key: {key}\n')
             fw.write(f'value: {value}\n')
     fw.close()
+
 
 #========================
 # in write_read_info.py
@@ -161,12 +158,12 @@ def output_write_read_data(read_slots:dict,write_slots:dict,read_slot_order:dict
     with open(fdg.global_config.output_path+file_name,'w') as fw:
         fw.write(f'\n====== {description} ======\n')
         fw.write(f'\n-------------------------\n')
-        fw.write('function reads\n')
+        fw.write('slots read by functions\n')
         for ftn, slots in read_slots.items():
             fw.write(f'{ftn}:{slots}\n')
 
         fw.write(f'\n-------------------------\n')
-        fw.write('function writes\n')
+        fw.write('slots written by functions\n')
         for ftn, slots in write_slots.items():
             fw.write(f'{ftn}:{slots}\n')
 
@@ -175,19 +172,21 @@ def output_write_read_data(read_slots:dict,write_slots:dict,read_slot_order:dict
         for ftn, slots in read_slot_order.items():
             fw.write(f'{ftn}:{slots}\n')
 
+
         fw.write(f'\n-------------------------\n')
-        fw.write('function write addresses and locations\n')
+        fw.write('addresses and locations read by functions\n')
+        for ftn, reads in reads_addr_location.items():
+            fw.write(f'\tfunction {ftn}:\n')
+            for addr,locations in reads.items():
+                fw.write(f'\taddress {addr}:{locations}\n')
+
+        fw.write(f'\n-------------------------\n')
+        fw.write('addresses and locations written by functions\n')
         for ftn, writes in writes_addr_location.items():
             fw.write(f'\tfunction {ftn}:\n')
             for addr,locations in writes.items():
                 fw.write(f'\taddress {addr}:{locations}\n')
 
-        fw.write(f'\n-------------------------\n')
-        fw.write('function read addresses and locations\n')
-        for ftn, reads in reads_addr_location.items():
-            fw.write(f'\tfunction {ftn}:\n')
-            for addr,locations in reads.items():
-                fw.write(f'\taddress {addr}:{locations}\n')
 
         fw.close()
 
@@ -219,29 +218,16 @@ def output_reads_in_conditions(reads_in_conditions:dict,read_slots_in_conditions
 
     fw.close()
 
-def output_reads_in_conditions_1(reads_in_conditions:dict,read_slots_in_conditions:dict,read_addr_slots_in_conditions:dict,function_conditions:dict,file_name:str,description:str):
+def output_reads_in_conditions_1(read_slots_in_conditions:dict,function_conditions:dict,file_name:str,description:str):
 
     if not flag_detail:return
 
     with open(fdg.global_config.output_path + file_name , 'w') as fw:
-        fw.write(f'\n====== reads in conditions in functions ======\n')
-
-
-        for ftn,read_info in reads_in_conditions.items():
-            fw.write(f'\n-----{ftn}--------\n')
-            fw.write(f'\tread slots: {read_info}\n')
-
-        fw.write(f'\n====== read slots with address conditions in functions ======\n')
-        for ftn, read_info in read_addr_slots_in_conditions.items():
-            for addr, info in read_info.items():
-                fw.write(f'\n-----{ftn}--------\n')
-                fw.write(f'\taddress {addr}: slots {info}\n')
 
         fw.write(f'\n====== read slots in conditions in functions ======\n')
         for ftn,read_info in read_slots_in_conditions.items():
             fw.write(f'\n-----{ftn}--------\n')
             fw.write(f'\tread slots: {read_info}\n')
-
 
 
         fw.write(f'\n====== conditions for each function ======\n')
@@ -250,7 +236,8 @@ def output_reads_in_conditions_1(reads_in_conditions:dict,read_slots_in_conditio
             for addr, cond_list in conditions.items():
                 fw.write(f'\n-----{addr}--------\n')
                 for cond in cond_list:
-                    fw.write(f'\t{cond}\n')
+                    fw.write(f'\toriginal:{cond}\n')
+                    fw.write(f'\tsimplified:{simplify_yes(cond)}\n')
     fw.close()
 
 

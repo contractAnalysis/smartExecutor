@@ -1,11 +1,10 @@
+from mythril.laser.smt.bitvec import BitVec
 
-
-import fdg
+from fdg.expression_utils import get_slot_from_location_expression, max_length
 from fdg.output_data import output_write_read_data
-from fdg.preprocessing.slot_location import Slot_Location
 from fdg.utils import str_without_space_line
+
 from mythril.laser.ethereum.state.global_state import GlobalState
-from mythril.laser.smt import BitVec
 
 
 class Function_Write_Read_Info():
@@ -41,17 +40,23 @@ class Function_Write_Read_Info():
         function = state.environment.active_function_name
         address = state.instruction['address']
         location = state.mstate.stack[-1]
-        # if function in ['finishMinting()', 'setDestroyer(address)']:
-        #     print(f'{function}:{address}:sload location {location}')
+        try:
+            location.__str__()[max_length]
+        except IndexError:
+            # length = len(location.__str__())
+            # print(f'location length:{length}')
+            # # not consider for locations that are too long
+            # if length >= max_length: return
 
-        if function not in self.reads_addr_location.keys():
-            self.reads_addr_location[function] = {}
-        if address not in self.reads_addr_location[function].keys():
-            # only record one location
-            self.reads_addr_location[function][address] = [location]
-        else:
-            if location not in self.reads_addr_location[function][address]:
-                self.reads_addr_location[function][address] += [location]
+            if function not in self.reads_addr_location.keys():
+                self.reads_addr_location[function] = {}
+            if address not in self.reads_addr_location[function].keys():
+                # only record one location
+                self.reads_addr_location[function][address] = [location]
+            else:
+                if location not in self.reads_addr_location[function][address]:
+                    self.reads_addr_location[function][address] += [location]
+
 
     def update_sstore(self, state:GlobalState):
         """
@@ -64,53 +69,54 @@ class Function_Write_Read_Info():
         function = state.environment.active_function_name
         address = state.instruction['address']
         location = state.mstate.stack[-1]
+        try:
+            location.__str__()[max_length]
+        except IndexError:
+            length = len(location.__str__())
+            print(f'location length:{length}')
+            # not consider for locations that are too long
+            if length >= max_length: return
 
-        # if function in  ['finishMinting()','setDestroyer(address)']:
-        #     print(f'{function}:{address}:sstore location {location}')
+            if function not in self.writes_addr_location.keys():
+                self.writes_addr_location[function]={}
 
-        if function not in self.writes_addr_location.keys():
-            self.writes_addr_location[function]={}
+            if address not in self.writes_addr_location[function].keys():
+                # at each address, only record one location, the other locations are related to the first one
+                self.writes_addr_location[function][address]=[location]
+            else:
+                if location not in self.writes_addr_location[function][address]:
+                    self.writes_addr_location[function][address] += [location]
 
-        if address not in self.writes_addr_location[function].keys():
-            # at each address, only record one location, the other locations are related to the first one
-            self.writes_addr_location[function][address]=[location]
-        else:
-            if location not in self.writes_addr_location[function][address]:
-                self.writes_addr_location[function][address] += [location]
-
-
-    def map_locations_to_slots(self,slot_location:Slot_Location):
-
+    def refine_read_write_slots(self):
         for ftn_name,writes in self.writes_addr_location.items():
             my_slots=[]
             locations_all=[]
             for addr,locations in writes.items():
-                if len(locations)>0:
-                    locations_all+=locations
-            locations_all=list(set(locations_all))
+                for loc in locations:
+                    if loc not in locations_all:
+                        locations_all.append(loc)
 
             for loc in locations_all:
-                re_slots=slot_location.map_location_to_slot(loc)
-                for slot in re_slots:
-                    if slot not in my_slots:
-                        my_slots.append(slot)
-
+                re_slot=get_slot_from_location_expression(loc)
+                if len(re_slot)>0:
+                    if re_slot not in my_slots:
+                        my_slots.append(re_slot)
             self.write_slots[ftn_name]=my_slots
 
         for ftn_name,reads in self.reads_addr_location.items():
             my_slots=[]
             locations_all = []
             for addr, locations in reads.items():
-                if len(locations) > 0:
-                    locations_all += locations
-            locations_all = list(set(locations_all))
+                for loc in locations:
+                    if loc not in locations_all:
+                        locations_all.append(loc)
 
             for loc in locations_all:
-                re_slots=slot_location.map_location_to_slot(loc)
-                for slot in re_slots:
-                    if slot not in my_slots:
-                        my_slots.append(slot)
-            self.read_slots[ftn_name]=my_slots
+                re_slot=get_slot_from_location_expression(loc)
+                if len(re_slot) > 0:
+                    if re_slot not in my_slots:
+                        my_slots.append(re_slot)
 
+            self.read_slots[ftn_name]=my_slots
 
 

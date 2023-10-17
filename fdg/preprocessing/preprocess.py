@@ -2,12 +2,13 @@ import time
 from copy import deepcopy, copy
 
 import fdg.global_config
-import mythril
+from fdg.output_data import output_key_to_slot
 
 from fdg.preprocessing.instruction_coverage import InstructionCoverage
 
 from fdg.preprocessing.read_in_conditions import ReadInCondition
-from fdg.preprocessing.slot_location import Slot_Location
+from fdg.preprocessing.slot_location import hash_key_to_slot
+
 from fdg.preprocessing.write_read_info import Function_Write_Read_Info
 from mythril.laser.ethereum.function_managers.keccak_function_manager import keccak_function_manager
 from mythril.laser.ethereum.strategy.basic import DepthFirstSearchStrategy, BreadthFirstSearchStrategy
@@ -19,7 +20,17 @@ import logging
 from mythril.laser.ethereum.transaction.symbolic import execute_message_call_preprocessing
 
 log = logging.getLogger(__name__)
+"""
+For each function:
+    need to collect conditions
+    instruction indices
+    read/write slots
 
+expression to slot map (can not simplify expression, because the slot information can be lost if the expression can simplified to a concrete value.
+
+concrete addresses used in the contract, which may be used to check against msg.sender which is implemented an array of three concrete addresses by default
+
+"""
 class Preprocessing():
     def __init__(self,method_identifiers:dict,state,contract_address):
         self.function_to_signature=method_identifiers
@@ -30,7 +41,7 @@ class Preprocessing():
         self.write_read_info=Function_Write_Read_Info(list(method_identifiers.keys()))
 
         self.instruction_cov=InstructionCoverage(list(method_identifiers.keys()))
-        self.slot_location = Slot_Location()
+
 
         self.timeout=False
         self.coverage=0
@@ -40,6 +51,7 @@ class Preprocessing():
     def main_preprocessing_start(self,iteration:int,laserEVM):
         fdg.global_config.tx_len = 1  # temporarily used as a flag
         log.info(f'start_iteration preprocessing.')
+
         # save keccak_function_manager
         self.save_keccak_function_manager=deepcopy(keccak_function_manager)
 
@@ -56,24 +68,25 @@ class Preprocessing():
         # set back the save data
         keccak_function_manager.set_data(self.save_keccak_function_manager)
 
-        self.slot_location.get_data()
-
         self.timeout = fdg.global_config.flag_preprocess_timeout
         self.coverage=self.instruction_cov.call_at_end_of_preprocessing()
 
-        # seconds_start = time.time()
+        seconds_start = time.time()
 
-        self.write_read_info.map_locations_to_slots(self.slot_location)
+        output_key_to_slot(hash_key_to_slot,'key_to_slot.txt','hash values to the corresponding slots')
+        self.write_read_info.refine_read_write_slots()
         self.write_read_info.print_write_read_info()  #output
 
-        # seconds_end = time.time()
-        # print(f'self.write_read_info.map_locations_to_slots:{seconds_end - seconds_start}')
+        seconds_end = time.time()
+        print(f'self.write_read_info time(s):{seconds_end - seconds_start}')
 
-        # seconds_start = time.time()
-        self.read_in_conditions.get_read_slots(self.slot_location)
+        seconds_start = time.time()
+
+        self.read_in_conditions.extract_read_slots_in_conditions()
         self.read_in_conditions.print_read_slot_info()
-        # seconds_end = time.time()
-        # print(f'self.read_in_conditions.get_read_slots:{seconds_end - seconds_start}')
+
+        seconds_end = time.time()
+        print(f'self.read_in_conditions time(s):{seconds_end - seconds_start}')
 
 
         log.info(f'end preprocessing.')
@@ -83,8 +96,8 @@ class Preprocessing():
 
 
 def execute_preprocessing(address, laserEVM):
-    from time import time
-    begin = time()
+
+    begin = time.time()
     print("Starting preprocessing.")
     fdg.global_config.flag_preprocessing = True
 
@@ -104,6 +117,6 @@ def execute_preprocessing(address, laserEVM):
     fdg.global_config.flag_preprocessing = False
 
     print("Ending preprocessing.")#
-    end = time()
+    end = time.time()
     print(f"preprocessing time(s): {end - begin}")
 

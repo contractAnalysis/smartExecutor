@@ -307,7 +307,7 @@ class FDG_pruner(LaserPlugin):
             :param state:
             :return:
             """
-            self.preprocess.read_in_conditions.extract_from_condition(state)
+            self.preprocess.read_in_conditions.collect_conditions(state)
 
 
         @symbolic_vm.pre_hook("SSTORE")
@@ -334,30 +334,6 @@ class FDG_pruner(LaserPlugin):
         def post_execute_state_hook(opcode,new_states:[GlobalState]):
             self.state_hash_check.record_post_hash(opcode,new_states)
 
-        # @symbolic_vm.laser_hook("branch_check")
-        # def branch_check_jumpi(state:GlobalState,new_states:[GlobalState]):
-        #
-        #     if len(new_states) == 0: return
-        #     function = state.environment.active_function_name
-        #     address = state.instruction['address']
-        #
-        #     if function in ['fallback','constructor']: return
-        #     if function not in self.condi_cov.fun_condi_cov.keys(): return
-        #     if address not in self.condi_cov.fun_condi_cov[function].keys(): return
-        #
-        #     for n_state in new_states:
-        #         instr = n_state.instruction
-        #         if instr['opcode'] in ['JUMPDEST']:  # only one branch which does not lead to revert
-        #             annotation = get_dependency_annotation(state)
-        #             if function not in annotation.condition_status.keys():
-        #                 annotation.condition_status[function] = {address: True}
-        #             else:
-        #                 annotation.condition_status[function][address] = True
-        #             print(f'\n{function}:{address}:{True}')
-        #
-        #
-
-
 
         @symbolic_vm.pre_hook("STOP")
         def stop_hook(state: GlobalState):
@@ -374,6 +350,7 @@ class FDG_pruner(LaserPlugin):
 
             :param state:
             """
+
             pass
 
 
