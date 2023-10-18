@@ -43,10 +43,6 @@ class Function_Write_Read_Info():
         try:
             location.__str__()[max_length]
         except IndexError:
-            # length = len(location.__str__())
-            # print(f'location length:{length}')
-            # # not consider for locations that are too long
-            # if length >= max_length: return
 
             if function not in self.reads_addr_location.keys():
                 self.reads_addr_location[function] = {}
@@ -72,10 +68,6 @@ class Function_Write_Read_Info():
         try:
             location.__str__()[max_length]
         except IndexError:
-            length = len(location.__str__())
-            print(f'location length:{length}')
-            # not consider for locations that are too long
-            if length >= max_length: return
 
             if function not in self.writes_addr_location.keys():
                 self.writes_addr_location[function]={}

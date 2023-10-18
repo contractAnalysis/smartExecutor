@@ -3,7 +3,7 @@ import fdg.global_config
 from mythril.laser.smt.expression import simplify_yes
 
 flag_basic=False
-flag_detail=True
+flag_detail=False
 flag_exp=False
 
 

@@ -48,11 +48,6 @@ class ReadInCondition():
             except IndexError:
                 self.add_conditions(function, address, condition)
 
-                # length = len(condition.__str__())
-                # print(f'condition length:{length}')
-                # # not consider for locations that are too long
-                # if length >= max_length: return
-
 
 
 
