@@ -150,6 +150,8 @@ def get_ftn_seq_from_key_1(key:str)->list:
     else:
         return [key]
 
+
+
 if __name__ == '__main__':
     # import numpy as np
     # print(get_binary(7,16))

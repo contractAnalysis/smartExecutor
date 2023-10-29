@@ -1,4 +1,6 @@
+
 import fdg.global_config
+from fdg.control.weight_computation import compute, compute_mine
 
 from mythril.laser.smt.expression import simplify_yes
 
@@ -35,32 +37,55 @@ def print_dict(data,description:str=''):
 
 def print_function_assignmnets(data:dict):
 
-    if not flag_basic:return
-    if flag_exp: return
-    print(f'\n====== function assignment times ======')
-    for k,v in data.items():
-        print(f'{k}:{v}')
+    # if not flag_basic:return
+    # if flag_exp: return
+    # print(f'\n====== function assignment times ======')
+    # for k,v in data.items():
+    #     print(f'{k}:{v}')
+    pass
 
 
 #========================
 # in ftn_search_strategy.py
 #------------------------
-def print_data_for_mine_strategy(cur_queue, d1, d2, d3, state_write_slots:dict, state_priority:dict, state_storage:dict, ):
+def print_data_for_mine_strategy(queue, state_write_slots:dict, state_priority:dict, state_storage:dict, ):
+    if not flag_basic: return
+    if flag_exp: return
+    print(f'\n==============================')
+    print(f'queue:')
+    for item in queue:
+        print(f'\t{item}')
+
+    # print(f'\n==== write slots of states ==== ')
+    # for k, v in state_write_slots.items():
+    #     if isinstance(v,dict):
+    #         print(f'{k}')
+    #         for k1,v1 in v.items():
+    #             print(f'\tdepth:{k1}')
+    #             for item in v1:
+    #                 print(f'\t\t{str_without_space_line(item)}')
+
+    print(f'\n======  weights of states ======')
+    for k, v in state_priority.items():
+        # only print the weights of the states in the queue
+        if k in queue:
+            print(f'{k}:{v}:{compute_mine(v)}')
+
+    # print(f'\n==== storage ====')
+    # for k,v in self.state_storage.items():
+    #     if isinstance(v,dict):
+    #         print(f'{k}')
+    #         for k1,v1 in v.items():
+    #             print(f'\t{str_without_space_line(k1)}:\n\t\t{str_without_space_line(v1)}')
+
+
+def print_data_for_mine_strategy_1(queue, state_write_slots:dict, state_priority:dict, state_storage:dict, ):
 
     if not flag_basic:return
     if flag_exp: return
     print(f'\n==============================')
-    print(f'd1__queue:')
-    for item in d1:
-        print(f'\t{item}')
-    print(f'd2__queue:')
-    for item in d2:
-        print(f'\t{item}')
-    print(f'd3__queue:')
-    for item in d3:
-        print(f'\t{item}')
-    print(f'cur_queue:')
-    for item in cur_queue:
+    print(f'queue:')
+    for item in queue:
         print(f'\t{item}')
 
 
@@ -73,9 +98,11 @@ def print_data_for_mine_strategy(cur_queue, d1, d2, d3, state_write_slots:dict, 
     #             for item in v1:
     #                 print(f'\t\t{str_without_space_line(item)}')
 
-    print(f'\n======  priority of states ======')
+    print(f'\n======  weights of states ======')
     for k, v in state_priority.items():
-        print(f'{k}:{v}')
+        # only print the weights of the states in the queue
+        if k in queue:
+            print(f'{k}:{v}:{compute(v)}')
 
     # print(f'\n==== storage ====')
     # for k,v in self.state_storage.items():
@@ -121,7 +148,7 @@ def print_assigned_functions(state_and_assigned_funtions:dict):
 def print_coverage(contrart_cov:float,functions_cov:dict,description:str):
 
     if not flag_basic:return
-    # print(f'\n====== {description} ======')
+    print(f'\n====== {description} ======')
     print("contract coverage: {:.2f}%".format(contrart_cov))
     if flag_exp: return
     if len(functions_cov)==0:

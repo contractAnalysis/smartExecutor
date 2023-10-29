@@ -1,5 +1,7 @@
 from copy import copy
 
+from fdg.expression_utils import expression_str_to_slot_normal, \
+    map_concrete_hash_key_to_slot_normal
 from mythril.laser.smt import (
     BitVec,
     Function,
@@ -120,6 +122,10 @@ class KeccakFunctionManager:
             # @wei
             if fdg.global_config.flag_preprocessing or fdg.global_config.tx_len == 0:
                 fdg.preprocessing.slot_location.map_concrete_hash_key_to_slot(data, concrete_hash)
+            # @wei
+            if not fdg.global_config.flag_preprocessing:
+                # collect the map from data to concrete hash in the normal execution
+                map_concrete_hash_key_to_slot_normal(data,concrete_hash)
 
             return concrete_hash
 

@@ -19,8 +19,18 @@ after saving the results: 6
 
 """
 
-max_length=10000
-expression_str_to_slot={}
+max_length=10000 # refers the length of the str version of a symbolic expression
+expression_str_to_slot={} # used in the preprocessing
+
+expression_str_to_slot_normal={} # used in the normal execution process
+def map_concrete_hash_key_to_slot_normal(data:BitVec,concrete_hash:BitVec):
+    """
+    pplied in create_keccak(self, data: BitVec) n keccak_function_manager.py module
+    """
+    concrete_hash_str = str_without_space_line(concrete_hash)
+    if concrete_hash_str not in expression_str_to_slot_normal.keys():
+        expression_str_to_slot_normal[concrete_hash_str] = data
+
 
 def get_slot_from_location_expression(concat_expr:BitVec)->str:
     """
@@ -30,6 +40,7 @@ def get_slot_from_location_expression(concat_expr:BitVec)->str:
         need to think about the case of array
 
     also consider the case of concrete hash, the location info is collected in a place where it is created.
+    used in preprocessing
     """
 
     if isinstance(concat_expr,BitVec) :
@@ -56,7 +67,8 @@ def get_slot_from_location_expression(concat_expr:BitVec)->str:
 
     last_parameter=""
     try:
-        sim_data = simplify_yes(concat_expr)
+        # sim_data = simplify_yes(concat_expr)
+        sim_data=concat_expr
         str_data = str_without_space_line(sim_data)
 
         # handle the case below:
@@ -70,34 +82,28 @@ def get_slot_from_location_expression(concat_expr:BitVec)->str:
 
         # check if it is already considered once
         if str_data in expression_str_to_slot.keys():
-            return expression_str_to_slot[str_data]
-
-        if str_data.startswith('keccak256_512'):
-            # Use regular expressions to find the last parameter within the keccak256_512 function
-            last_parameter = re.search(r'keccak256_512\(.*?,(\d+)\)',
-                                       str_data)
+            last_parameter= expression_str_to_slot[str_data]
         else:
-            # Use regular expressions to find the last parameter within the Concat function
-            last_parameter = re.search(r'Concat\(.*?,(\d+)\)', str_data)
+            if str_data.startswith('keccak256_512'):
+                # Use regular expressions to find the last parameter within the keccak256_512 function
+                last_parameter = re.search(r'keccak256_512\(.*?,(\d+)\)',
+                                           str_data)
+            else:
+                # Use regular expressions to find the last parameter within the Concat function
+                last_parameter = re.search(r'Concat\(.*?,(\d+)\)', str_data)
 
-        if last_parameter is None:
-            return ""
-        else:
-            last_parameter=last_parameter.group(1)
-            print(f'(new) exp:{str_data}')
-            print(f'(new) slot:{last_parameter}')
+            if last_parameter is not None:
+                last_parameter=last_parameter.group(1)
+                # print(f'(new) exp:{str_data}')
+                # print(f'(new) slot:{last_parameter}')
 
-            # save the result
-            if str_data not in expression_str_to_slot.keys():
+                # save the result
                 expression_str_to_slot[str_data] = str(last_parameter)
-            return str(last_parameter)
+
     except Z3Exception as ze:
         print(f'Have Z3Exception: {concat_expr}')
     finally:
         return  last_parameter
-
-
-
 
 def extract_locations_read_in_storage_in_a_condition(condition: BitVec)->list:
     """
@@ -110,8 +116,6 @@ def extract_locations_read_in_storage_in_a_condition(condition: BitVec)->list:
 
     simplified_condition = simplify_yes(copy(condition))
     simplified_condi_str = str_without_space_line(str(simplified_condition))
-
-
 
 
     # select which condition to consider
@@ -156,30 +160,81 @@ def extract_locations_read_in_storage_in_a_condition(condition: BitVec)->list:
     return locations
 
 
-def represent_array_exp(data:str):
+def identify_slot_from_symbolic_slot_expression(concat_expr: BitVec) -> str:
+    """
+    get the locations of storage from expressions:
+        Concat(0,x,location)
+        keccak256_512(Concat(0,x,location))
+        need to think about the case of array
 
-    # Use regular expressions to extract the numbers following "1_calldata["
-    matches = re.findall(r'calldata\[(\d+)\]', data)
+    also consider the case of concrete hash, the location info is collected in a place where it is created.
+    """
+    if isinstance(concat_expr,BitVec):
+        if not concat_expr.symbolic:
+            return str(concat_expr)
+    last_parameter = ""
+    try:
+        str_data = str_without_space_line(concat_expr)
 
-    # Extract the numbers from the matches and generate the desired output
-    output = "calldata_" + "_".join(matches)
+        # handle the case below:
+        # 1+keccak256_512(Concat(If(1_calldatasize<=4...)
+        # 2+keccak256_512(Concat(If(1_calldatasize<=4...)
+        pattern = r"^(\d+\+)\w+"
+        results = re.search(pattern, str_data)
+        if results:
+            # get the str that
+            str_data = str_data.split(results.group(1))[-1]
 
-    return output
+        # check if it is already considered once
+        if str_data in expression_str_to_slot_normal.keys():
+            last_parameter = expression_str_to_slot_normal[str_data]
+        else:
+            if str_data.startswith('keccak256_512'):
+                # Use regular expressions to find the last parameter within the keccak256_512 function
+                last_parameter = re.search(r'keccak256_512\(.*?,(\d+)\)',
+                                           str_data)
+            else:
+                # Use regular expressions to find the last parameter within the Concat function
+                last_parameter = re.search(r'Concat\(.*?,(\d+)\)', str_data)
+
+            if last_parameter is not None:
+                last_parameter = last_parameter.group(1)
+                # print(f'(new) exp:{str_data}')
+                # print(f'(new) slot:{last_parameter}')
+                # save the result
+                expression_str_to_slot_normal[str_data] = str(last_parameter)
+
+    except Z3Exception as ze:
+        print(f'Have Z3Exception: {concat_expr}')
+    finally:
+        return last_parameter
 
 
+def is_slot_in_a_list(slot, slot_list: list) -> bool:
+    """
+    pay special attention to slot that is symbolic. need to find the original slot, i.e., where the dynamic state variable is declared
+    """
+    if slot.symbolic:
+        slot_str = identify_slot_from_symbolic_slot_expression(slot)
 
-def rename_array_exp(data:BitVec):
-    data= simplify_yes(copy(data))
-    if isinstance(data,BitVec):
-        data=str(data.raw)
+        if len(slot_str) == 0:
+            print(f'slot_str:{slot_str}')
+            print(
+                f'Check why original slot can not be identified for {slot}.')
+            return False
     else:
-        data=str(data)
-    # Use regular expressions to extract the numbers following "1_calldata["
-    matches = re.findall(r'calldata\[(\d+)\]', data)
+        slot_str = str(slot)
 
-    # Extract the numbers from the matches and generate the desired output
-    output = "calldata_" + "_".join(matches)
+    slot_str_list = [identify_slot_from_symbolic_slot_expression(s) for s in slot_list]
+    # print(f'slot: {slot_str} ==== slots: {slot_str_list}')
+    if slot_str in slot_str_list:
+        return True
+    else:
+        return False
 
-    print(f'(new) from {data}\nto {output}')
+
+
+
+
 
 

@@ -124,12 +124,16 @@ class UpdateFWRG():
 
 
         self.construct_fwrg_targets()
+
         self.print_graphs(self.fwrg_targets,'fwrg_targets_data.txt')
 
 
         self.fwrg_targets_augmented=copy(self.fwrg_targets)
         self.add_edges_1()
         self.print_graphs(self.fwrg_targets_augmented,'fwrg_targets_augmented_data_update.txt')
+
+        self.dk_not_reachable=[]
+        self.identity_dk_function_not_reachable()
 
     def print_graphs(self,data:dict,file_name:str):
         output_fwrg_data(data, file_name, 'funtion write-read graph data')
@@ -267,14 +271,23 @@ class UpdateFWRG():
                         for f,t in edges:
                             self.add_edge_to_graph(f, t)
 
+    def identity_dk_function_not_reachable(self):
+        for dk in self.acyclicPaths.dk_functions:
+            if dk not in self.acyclicPaths.paths_df.keys():
+                self.dk_not_reachable.append(dk)
+                print(f'{dk} is not reachable')
+            else:
+                if len(self.acyclicPaths.paths_df[dk])==0:
+                    self.dk_not_reachable.append(dk)
+                    print(f'{dk} is not reachable')
 class FWRG_manager():
-    def __init__(self,start_functions:list,deef_functions:list,preprocess:Preprocessing):
+    def __init__(self, start_functions:list, dk_functions:list, preprocess:Preprocessing):
         self.fwrg=FWRG(preprocess.read_in_conditions.read_slots_in_conditions,
                        preprocess.write_read_info.write_slots)
         self.fwrg_all_reads={}
         self.generate_graph_all_reads(preprocess.write_read_info.write_slots,preprocess.write_read_info.read_slots)
 
-        self.acyclicPaths=AcyclicPath(start_functions, deef_functions, self.fwrg)
+        self.acyclicPaths=AcyclicPath(start_functions, dk_functions, self.fwrg)
         self.updateFWRG=UpdateFWRG(self.fwrg, self.acyclicPaths)
 
     def generate_graph_all_reads(self,writes:dict,all_reads:dict):

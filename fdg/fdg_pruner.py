@@ -1,8 +1,9 @@
 
 # support FDG-guided execution and sequence execution
+from fdg.control.mine import Mine, Mine1
 from fdg.preprocessing.address_collection import collect_addresses_in_constructor
 
-from fdg.control.ftn_search_strategy import BFS, RandomBaseline, DFS, Mine,  Seq
+from fdg.control.ftn_search_strategy import BFS, RandomBaseline, DFS, Seq
 from fdg.control.guider import Guider
 
 from fdg.function_coverage import FunctionCoverage
@@ -37,7 +38,6 @@ class FDG_prunerBuilder(PluginBuilder):
 
 
 
-
 class FDG_pruner(LaserPlugin):
     """ """
     def __init__(self,instructionCoveragePlugin:InstructionCoveragePlugin):
@@ -60,6 +60,8 @@ class FDG_pruner(LaserPlugin):
             self.search_stragety=DFS()
         elif fdg.global_config.function_search_strategy=='mine':
             self.search_stragety=Mine()
+        elif fdg.global_config.function_search_strategy=='mine1':
+            self.search_stragety=Mine1()
         elif fdg.global_config.function_search_strategy=='seq':
             self.search_stragety=Seq()
         else:
@@ -203,6 +205,7 @@ class FDG_pruner(LaserPlugin):
                 if self._iteration_==1 and len(laserEVM.open_states) == 1:
                     # in case that there are one state
                     self.search_stragety.initialize(True)
+
                 # termination based on the coverage of the contract
                 if self.functionCoverage.coverage >= fdg.global_config.function_coverage_threshold:
                     if not self.search_stragety.flag_one_state_at_depth1:
@@ -271,10 +274,17 @@ class FDG_pruner(LaserPlugin):
 
             # termination based on the coverage of the contract
             if self.functionCoverage.coverage>=fdg.global_config.function_coverage_threshold:
-                if not self.search_stragety.flag_one_state_at_depth1:
-                    # make sure that when there is only one state generated at depth1,
-                    # the execution does not terminate
-                    fdg.global_config.transaction_count = self._iteration_
+                if self.search_stragety.name in ['mine', 'mine1']:
+                    if self.functionCoverage.coverage>=fdg.global_config.function_coverage_threshold+1:
+                        if not self.search_stragety.flag_one_state_at_depth1:
+                            # make sure that when there is only one state generated at depth1,
+                            # the execution does not terminate
+                            fdg.global_config.transaction_count = self._iteration_
+                else:
+                    if not self.search_stragety.flag_one_state_at_depth1:
+                        # make sure that when there is only one state generated at depth1,
+                        # the execution does not terminate
+                        fdg.global_config.transaction_count = self._iteration_
 
         # record the instructions visited
         @symbolic_vm.laser_hook("preprocessing_execute_state")

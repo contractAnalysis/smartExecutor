@@ -78,7 +78,7 @@ class Preprocessing():
         self.write_read_info.print_write_read_info()  #output
 
         seconds_end = time.time()
-        print(f'self.write_read_info time(s):{seconds_end - seconds_start}')
+        # print(f'self.write_read_info time(s):{seconds_end - seconds_start}')
 
         seconds_start = time.time()
 
@@ -86,7 +86,7 @@ class Preprocessing():
         self.read_in_conditions.print_read_slot_info()
 
         seconds_end = time.time()
-        print(f'self.read_in_conditions time(s):{seconds_end - seconds_start}')
+        # print(f'self.read_in_conditions time(s):{seconds_end - seconds_start}')
 
 
         log.info(f'end preprocessing.')

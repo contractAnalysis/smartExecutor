@@ -467,7 +467,7 @@ def add_fwrg_analysis_args(options):
     options.add_argument(
         "-fss",
         "--function-search-strategy",
-        choices=["dfs", "bfs", "mine", 'seq'],
+        choices=["dfs", "bfs", "mine", 'seq','mine1'],
         default="bfs",
         help="Function data flow graph search strategy",
     )
@@ -509,6 +509,7 @@ def add_fwrg_analysis_args(options):
         default=0,  # 0 means the baseline is inactive
         help=" with values from  0 to 10. indicate the percent of functions to be considered",
     )
+
 def add_fwrg_arguments(args: Namespace):
     # @wei
     fdg.global_config.function_coverage_threshold = args.function_coverage_threshold
