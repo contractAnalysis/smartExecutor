@@ -135,7 +135,7 @@ class FDG_pruner(LaserPlugin):
 
                 # it means no contract is deployed as no valid contracts are given
                 if isinstance(fdg.global_config.contract_address,str): return
-                   
+
                 self.guider.instructionModification.feed_instructions(
                     laserEVM.open_states[0], fdg.global_config.contract_address)
 

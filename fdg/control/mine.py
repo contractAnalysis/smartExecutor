@@ -22,7 +22,7 @@ def my_print(data:str):
 
 class Mine(FunctionSearchStrategy):
     def __init__(self):
-        self.proprocess_timeout=False
+        self.preprocess_timeout=False
         self.preprocess_coverage=0
 
         self.state_storage={}
@@ -474,7 +474,7 @@ class Mine(FunctionSearchStrategy):
 
 class Mine1(FunctionSearchStrategy):
     def __init__(self):
-        self.proprocess_timeout=False
+        self.preprocess_timeout=False
         self.preprocess_coverage=0
 
         self.state_storage={}
