@@ -166,25 +166,31 @@ def extract_locations_read_in_storage_in_a_condition(condition: BitVec)->list:
 
     # collect the locations of the storage that are read.
     locations = []
-    if isinstance(temp_condi, BitVec):
-        def go_deep(item: BitVecRef):
-            if isinstance(item, BitVecNumRef):
-                return
-            elif str(item.decl()) == 'Select':
-                children = item.children()
-                if str(children[0].decl()) == 'Store':
-                    if children[1] not in locations:
-                        # the second child is the position of the storage
-                        # raw = z3.BitVecVal(value, size)
-                        # return BitVec(raw, annotations)
-                        locations.append(BitVec(children[1]))
-                return
-            else:
-                for child in item.children():
-                    go_deep(child)
+    try:
+        if isinstance(temp_condi, BitVec):
+            def go_deep(item: BitVecRef):
+                if isinstance(item, BitVecNumRef):
+                    return
+                elif str(item.decl()) == 'Select':
+                    children = item.children()
+                    if str(children[0].decl()) == 'Store':
+                        if children[1] not in locations:
+                            # the second child is the position of the storage
+                            # raw = z3.BitVecVal(value, size)
+                            # return BitVec(raw, annotations)
+                            locations.append(BitVec(children[1]))
+                    return
+                else:
+                    for child in item.children():
+                        go_deep(child)
 
-        condi_raw = temp_condi.raw
-        for item in condi_raw.children():
-            go_deep(item)
-    return locations
+            condi_raw = temp_condi.raw
+            for item in condi_raw.children():
+                go_deep(item)
+    except:
+        pass
+    finally:
+        return locations
+
+
 
