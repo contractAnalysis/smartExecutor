@@ -7,7 +7,7 @@ from fdg.output_data import output_key_to_slot
 from fdg.preprocessing.instruction_coverage import InstructionCoverage
 
 from fdg.preprocessing.read_in_conditions import ReadInCondition
-from fdg.preprocessing.slot_location import hash_key_to_slot
+from fdg.preprocessing.slot_location import expression_str_to_slot
 
 from fdg.preprocessing.write_read_info import Function_Write_Read_Info
 from mythril.laser.ethereum.function_managers.keccak_function_manager import keccak_function_manager
@@ -73,7 +73,8 @@ class Preprocessing():
 
         seconds_start = time.time()
 
-        output_key_to_slot(hash_key_to_slot,'key_to_slot.txt','hash values to the corresponding slots')
+        output_key_to_slot(expression_str_to_slot,'key_to_slot.txt','hash values to the corresponding slots')
+
         self.write_read_info.refine_read_write_slots()
         self.write_read_info.print_write_read_info()  #output
 
@@ -88,6 +89,10 @@ class Preprocessing():
         seconds_end = time.time()
         # print(f'self.read_in_conditions time(s):{seconds_end - seconds_start}')
 
+        # print(f'\n==== hash_key_to_slot ====')
+        # for key,value in hash_key_to_slot.items():
+        #     print(f'\texpression: {key}')
+        #     print(f'\tslot: {value}')
 
         log.info(f'end preprocessing.')
         return

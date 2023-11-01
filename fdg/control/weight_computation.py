@@ -43,14 +43,24 @@ def turn_write_features_to_a_value(data:[bool])->float:
                 value += 1 * 2 ** i
         return value
 
-    # def turn_a_list_to_value_diff_weight_1(data: [bool]) -> int:
-    #     assert len(data)==3
-    #     return data[0]
-    #     value = 0
-    #     for index, i in enumerate(range(len(data) - 1, -1, -1)):
-    #         if data[index]:
-    #             value += 1 * 2 ** i
-    #     return value
+    def turn_a_list_to_value_diff_weight_1(data: [bool]) -> int:
+        assert len(data)==3
+        # order: p,c,n (primitive type, concrete value, new value)
+        # value=0
+        # if data[2]:value+=3
+        # if data[1]:value+=1
+        # if data[0]:value+=2
+
+        value = 0
+        if data[2]:
+            if data[0]:
+                value+=3
+            else:
+                value+=2
+
+        if data[1]: value += 1
+        if data[0]: value += 2
+        return value
 
     def turn_a_list_to_value_equal_weight(data: [bool]) -> int:
         value = 0
@@ -59,7 +69,8 @@ def turn_write_features_to_a_value(data:[bool])->float:
                 value += 1
         return value
 
-    value=turn_a_list_to_value_equal_weight(data)
-    # value=turn_a_list_to_value_diff_weight(data)
+    # value=turn_a_list_to_value_equal_weight(data)
+    value=turn_a_list_to_value_diff_weight_1(data)
     return value
+
 

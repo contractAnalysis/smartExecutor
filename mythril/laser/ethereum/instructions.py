@@ -6,6 +6,7 @@ import time
 from copy import copy, deepcopy
 from typing import cast, Callable, List, Union, Tuple
 
+from fdg.expression_slot import map_concrete_hash_key_to_slot_normal
 from mythril.exceptions import UnsatError
 from mythril.laser.smt import (
     Extract,
@@ -1058,6 +1059,17 @@ class Instruction:
 
         if len(data_list) > 1:
             data = simplify(Concat(data_list))
+            # still need to collect the data when data is a concrete value.
+            # @wei
+            if fdg.global_config.flag_preprocessing or fdg.global_config.tx_len == 0:
+                fdg.preprocessing.slot_location.map_concrete_hash_key_to_slot(
+                    data,data_list[-1])
+
+            # @wei
+            if not fdg.global_config.flag_preprocessing:
+                # collect the map from data to concrete hash in the normal execution
+                map_concrete_hash_key_to_slot_normal(data, data_list[-1])
+
             # # # @wei
             # # print(f'_=_=_')
             # # print(f'in sha3_() of instructions.py: ')

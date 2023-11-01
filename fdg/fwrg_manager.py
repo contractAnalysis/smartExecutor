@@ -46,6 +46,10 @@ class FWRG():
                                 self.frwg_dict[ftn]+=[ftn_write]
                         break
 
+    def get_reads_in_conditions(self,ftn_name:str):
+        if ftn_name in self.ftn_reads_in_condition.keys():
+            return self.ftn_reads_in_condition[ftn_name]
+        else:return []
 
 class AcyclicPath():
     def __init__(self, start_functions:list, dk_functions:list, fwrg:FWRG):

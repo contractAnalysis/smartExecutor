@@ -106,7 +106,7 @@ class Guider():
             return
 
         # =============== bfs,dfs,mine=============================
-        # parepare for depth 1 execution for deep function collection
+        # prepare for depth 1 execution for deep function collection
         if iteration==2 :
             laserEVM.open_states=self.genesis_states
             sequences=[[ftn] for ftn in self.all_functions]
@@ -205,7 +205,10 @@ class Guider():
         self.genesis_states=deepcopy(states)
         if self.ftn_search_strategy.name in ['mine','mine1']:
             states_dict=self.organize_states(states)
+            if len(states_dict)>=2:
+                print('Check when two or more genesis states are generated (guider.py)')
             self.ftn_search_strategy.update_states(states_dict)
+            self.ftn_search_strategy.state_key_assigned_at_last =list(states_dict.keys())[0]
 
 
 

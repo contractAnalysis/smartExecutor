@@ -1,6 +1,7 @@
 
 import fdg.global_config
 from fdg.control.weight_computation import compute, compute_mine
+from fdg.expression_slot import expression_str_to_slot_normal
 
 from mythril.laser.smt.expression import simplify_yes
 
@@ -48,7 +49,7 @@ def print_function_assignmnets(data:dict):
 #========================
 # in ftn_search_strategy.py
 #------------------------
-def print_data_for_mine_strategy(queue, state_write_slots:dict, state_priority:dict, state_storage:dict, ):
+def print_data_for_mine_strategy(queue, state_priority:dict ):
     if not flag_basic: return
     if flag_exp: return
     print(f'\n==============================')
@@ -65,11 +66,11 @@ def print_data_for_mine_strategy(queue, state_write_slots:dict, state_priority:d
     #             for item in v1:
     #                 print(f'\t\t{str_without_space_line(item)}')
 
-    print(f'\n======  weights of states ======')
-    for k, v in state_priority.items():
-        # only print the weights of the states in the queue
-        if k in queue:
-            print(f'{k}:{v}:{compute_mine(v)}')
+    # print(f'\n======  weights of states ======')
+    # for k, v in state_priority.items():
+    #     # only print the weights of the states in the queue
+    #     if k in queue:
+    #         print(f'{k}:{v}')
 
     # print(f'\n==== storage ====')
     # for k,v in self.state_storage.items():
@@ -103,6 +104,7 @@ def print_data_for_mine_strategy_1(queue, state_write_slots:dict, state_priority
         # only print the weights of the states in the queue
         if k in queue:
             print(f'{k}:{v}:{compute(v)}')
+
 
     # print(f'\n==== storage ====')
     # for k,v in self.state_storage.items():

@@ -1,20 +1,10 @@
-import time
-from copy import copy
 
-from z3 import BitVecRef, BitVecNumRef
-
-import fdg
-from fdg.expression_utils import get_slot_from_location_expression, \
-    extract_locations_read_in_storage_in_a_condition, max_length
-from fdg.preprocessing.address_collection import collect_value_for_sender
 from fdg.output_data import output_reads_in_conditions_1
-
-
-
-from fdg.utils import str_without_space_line
+from fdg.preprocessing.slot_location import max_length, \
+    extract_locations_read_in_storage_in_a_condition, \
+    get_slot_from_location_expression
 from mythril.laser.ethereum.state.global_state import GlobalState
 from mythril.laser.smt import BitVec
-from mythril.laser.smt.expression import simplify_yes
 
 
 class ReadInCondition():
@@ -25,9 +15,6 @@ class ReadInCondition():
         self.read_slots_in_conditions = {}
 
         self.function_conditions={ftn:{} for ftn in functions}
-
-
-
 
 
 
@@ -47,9 +34,6 @@ class ReadInCondition():
                 condition.__str__()[max_length]
             except IndexError:
                 self.add_conditions(function, address, condition)
-
-
-
 
 
 

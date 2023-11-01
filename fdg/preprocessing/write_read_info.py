@@ -1,8 +1,8 @@
-from mythril.laser.smt.bitvec import BitVec
 
-from fdg.expression_utils import get_slot_from_location_expression, max_length
+
 from fdg.output_data import output_write_read_data
-from fdg.utils import str_without_space_line
+from fdg.preprocessing.slot_location import max_length, \
+    get_slot_from_location_expression
 
 from mythril.laser.ethereum.state.global_state import GlobalState
 
@@ -105,6 +105,7 @@ class Function_Write_Read_Info():
 
             for loc in locations_all:
                 re_slot=get_slot_from_location_expression(loc)
+                # if re_slot is not None:
                 if len(re_slot) > 0:
                     if re_slot not in my_slots:
                         my_slots.append(re_slot)
