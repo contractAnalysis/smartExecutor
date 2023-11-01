@@ -78,7 +78,7 @@ class Mine(FunctionSearchStrategy):
         :return: a state and the functions to be executed on it
         a flag indicating whether this state can be deleted or not.
         """
-
+        if len(dk_functions)==0:return {}, None
         if len(states_dict) > 0:
 
             # save the new states
@@ -293,7 +293,7 @@ class Mine(FunctionSearchStrategy):
             my_print(f'evaluation value:{v}')
             return v
 
-        def get_storage_written_slots_str(state_key:str)->list[str]:
+        def get_storage_written_slots_str(state_key:str)->[str]:
             my_print(f'-- {state_key} --')
 
             # ------------------------

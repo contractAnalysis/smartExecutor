@@ -164,12 +164,15 @@ class FunctionAssignment():
         """
         unreachable: the reads in a condition are not recognized, or no reads in a condition.
         handle: consider all the reads in a function
+
+        symbol(),name(),version() are functions that are not reachable.
         """
         if len(self.fwrg_manager.updateFWRG.dk_not_reachable)==0:
             return []
         # consider it until the execution times reach the limits (on the first several states)
         considers=[]
         for ftn in self.fwrg_manager.updateFWRG.dk_not_reachable:
+            # if ftn in ['symbol()','name()','version()']:continue
             if self.assignment_times[ftn] < self.times_limit:
                 considers.append(ftn)
 
