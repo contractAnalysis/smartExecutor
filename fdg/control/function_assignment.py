@@ -82,6 +82,19 @@ class FunctionAssignment():
         self.record_assignment(self.all_functions)
         return self.all_functions
 
+    def select_functions_randomly(self,percentage:int)->list:
+        to_consider_functions = self.all_functions
+        select_num = math.ceil(
+            (percentage/ 10) * len(to_consider_functions))
+
+        select_indices = random_indices(0, len(to_consider_functions) - 1,
+                                        select_num)
+        selected_functions = [ftn for idx, ftn in
+                              enumerate(to_consider_functions) if
+                              idx in select_indices]
+
+        return selected_functions
+
     def record_assignment(self,assigned_functions:list):
         for ftn in assigned_functions:
             if ftn in self.assignment_times.keys():
@@ -235,6 +248,52 @@ class FunctionAssignment():
                                       idx in select_indices]
 
         assigned_functions= list(set(selected_functions + children))
+
+        if len(assigned_functions)>0:
+            self.record_assignment(assigned_functions)
+
+        return assigned_functions
+
+    def assign_functions_timeout_mine(self, state_key: str,dk_functions:list,randomly_selected_functions:list):
+        print_function_assignmnets(self.assignment_times)
+
+        ftn_seq = get_ftn_seq_from_key_1(state_key)
+        fallback_case = self.fallback_case(ftn_seq)
+        if len(fallback_case) > 0:
+            return fallback_case
+
+        # identify the functions to be considered
+        to_be_considered_functions = []
+        for ftn, cov in dk_functions:
+            # if ftn=='fallback':continue
+            if self.assignment_times[ftn] < self.times_limit:
+                to_be_considered_functions.append(ftn)
+                continue
+            if self.assignment_times[ftn] >= 2 * self.times_limit:
+                continue
+            if cov < 70:
+                to_be_considered_functions.append(ftn)
+
+        # get children when all reads are considered due to preprocessing timeout,read/write info is partly obtained. so, consider all reads
+        children = self.fwrg_manager.get_children_all_reads(ftn_seq[-1])
+
+        # consider children that are target or can reach a target
+        children = [child for child in children if
+                    self.can_reach_targets(child,
+                                           to_be_considered_functions,
+                                           fdg.global_config.seq_len_limit - len(
+                                               ftn_seq) - 1
+                                           )
+                    ]
+
+        # permit self dependency once
+        if len(ftn_seq) >= 2:
+            children = [child for child in children if
+                        child not in ftn_seq[0:-1]]
+
+        # select functions from to be considered functions
+
+        assigned_functions= list(set(randomly_selected_functions + children))
 
         if len(assigned_functions)>0:
             self.record_assignment(assigned_functions)

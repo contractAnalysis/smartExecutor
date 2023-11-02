@@ -89,8 +89,8 @@ class Preprocessing():
         seconds_end = time.time()
         # print(f'self.read_in_conditions time(s):{seconds_end - seconds_start}')
 
-        # print(f'\n==== hash_key_to_slot ====')
-        # for key,value in hash_key_to_slot.items():
+        # print(f'\n==== expression_str_to_slot ====')
+        # for key,value in expression_str_to_slot.items():
         #     print(f'\texpression: {key}')
         #     print(f'\tslot: {value}')
 

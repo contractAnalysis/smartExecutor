@@ -83,7 +83,7 @@ class Mine(FunctionSearchStrategy):
 
             # save the new states
             self.update_states(states_dict)
-
+            self.add_states_to_queue(states_dict.keys())
 
         # ---------------
         print_data_for_mine_strategy(self.queue,self.state_priority)
@@ -110,7 +110,8 @@ class Mine(FunctionSearchStrategy):
             flag_can_be_deleted=True
 
             # pick up a state from the queue
-            state_key = self.pickup_a_state(dk_functions)  # order the states in self.queue and pick up the one has the highest weight
+            targets=[dk for dk,_ in dk_functions]
+            state_key = self.pickup_a_state(targets)  # order the states in self.queue and pick up the one has the highest weight
 
             ftn_seq=get_ftn_seq_from_key_1(state_key)
 
@@ -170,9 +171,8 @@ class Mine(FunctionSearchStrategy):
         if len(states_dict) > 0:
             # save the new states
             self.update_states(states_dict)
-            # # compute the weights for the new states
-            # self.compute_weights_for_states_from_same_seq(
-            #     list(states_dict.keys()))
+            self.add_states_to_queue(states_dict.keys())
+
 
         # ---------------
         print_data_for_mine_strategy(self.queue, self.state_priority)
@@ -195,10 +195,17 @@ class Mine(FunctionSearchStrategy):
                 return {}, None
 
             # pick up a state from the queue
-            state_key = self.pickup_a_state(dk_functions)  # order the states in self.queue and pick up the one has the highest weight
+            targets=[dk for dk,_ in dk_functions]
+            random_selected_functions=self.functionAssignment.select_functions_randomly(percent_of_functions)
+            for func in random_selected_functions:
+                if func not in targets:
+                    targets.append(func)
+            print(f'randomly selected functions: {random_selected_functions}')
+
+            state_key = self.pickup_a_state(targets)  # order the states in self.queue and pick up the one has the highest weight
 
             # assign functions
-            assigned_functions=self.functionAssignment.assign_functions_timeout(state_key, dk_functions, percent_of_functions)
+            assigned_functions=self.functionAssignment.assign_functions_timeout_mine(state_key, dk_functions,random_selected_functions)
             if len(assigned_functions)>0:
                 self.state_key_assigned_at_last = state_key
                 return {state_key: assigned_functions},True
@@ -222,7 +229,7 @@ class Mine(FunctionSearchStrategy):
                 ftn_seq=get_ftn_seq_from_key_1(key)
                 if 'constructor' not in ftn_seq:
                     self.world_states[key]=[deepcopy(state)]
-                    self.queue.append(key)
+
                     self.state_storage[key] = state.accounts[
                         address].storage.printable_storage
 
@@ -240,7 +247,7 @@ class Mine(FunctionSearchStrategy):
 
                     # get the current writes from the dependency pruner
                     written_slots=get_writes_annotation_from_ws(state)
-                    self.state_write_slots[key]= written_slots
+                    # self.state_write_slots[key]= written_slots
 
                     writes_str=[]
                     if len(ftn_seq) in written_slots.keys():
@@ -264,6 +271,63 @@ class Mine(FunctionSearchStrategy):
 
                     self.state_storage[key] = state.accounts[address].storage.printable_storage
 
+    def add_states_to_queue(self, state_keys:list):
+        """
+        for states generated from the same function sequence, only one is considered if two or more write the same state variables in the last step
+        """
+        def two_list_equal(lst1:list,lst2:list)->bool:
+            if len([e for e in lst1 if e not in lst2])>0:
+                return False
+            elif len([e for e in lst2 if e not in lst1])>0:
+                return False
+            else:
+                return True
+
+        # count based on the key prefix
+        count = {}
+        for key in state_keys:
+            key_prefix = get_key_1_prefix(key)
+            if key_prefix.startswith('fallback') and key_prefix.endswith('fallback'):
+                all_writes = self.written_slots_in_depth_str[key]
+                ftn_seq = get_ftn_seq_from_key_1(key)
+                if len(all_writes[len(ftn_seq)]) == 0 and len(all_writes[1]) == 0:
+                    continue
+            else:
+                if key_prefix.endswith('fallback#fallback'):
+                    all_writes = self.written_slots_in_depth_str[key]
+                    ftn_seq = get_ftn_seq_from_key_1(key)
+                    if len(all_writes[len(ftn_seq)]) == 0 and len(
+                        all_writes[len(ftn_seq)-1]) == 0:
+                        continue
+            if key_prefix not in count.keys():
+                count[key_prefix] = [key]
+            else:
+                count[key_prefix] += [key]
+
+        # compute priority values
+        for key_prefix, keys in count.items():
+            if len(keys) == 1:
+                self.queue.append(keys[0])
+            else:
+                # get state keys with different priority values that share the same function sequence (key prefix)
+                key_recent_writes_pairs = []
+                for key in keys:
+                    recent_writes=self.written_slots_in_depth_str[key][len(get_ftn_seq_from_key_1(key))]
+
+                    key_recent_writes_pairs.append((key, recent_writes))
+
+                # sort the based on weights in descending order
+                key_recent_writes_pairs.sort(key=lambda x: len(x[1]), reverse=True)
+
+                # only keep states that have different weight values
+                cur_writes = key_recent_writes_pairs[0][1]
+                self.queue.append(key_recent_writes_pairs[0][0])
+
+                for key, recent_writes in key_recent_writes_pairs[1:]:
+                    # only keep keys that have weights different than -1
+                    if not two_list_equal(cur_writes,recent_writes):
+                        self.queue.append(key)
+                        cur_writes = recent_writes   # update cur_writes
 
     def get_written_slots_in_depth_str(self, state_key:str):
         if state_key not in self.written_slots_in_depth_str.keys():
@@ -272,7 +336,7 @@ class Mine(FunctionSearchStrategy):
             return self.written_slots_in_depth_str[state_key]
 
 
-    def pickup_a_state(self,dk_functions:list):
+    def pickup_a_state(self,targets:list):
         """
         order states in self.queue
         return the first state in self.queue
@@ -307,8 +371,9 @@ class Mine(FunctionSearchStrategy):
 
             return written_slots_str
 
+        if len(self.queue)==1:
+            return self.queue.pop(0)
 
-        targets=[dk for dk,_ in dk_functions]
         reads_in_conditions_of_targets = {
             dk: self.fwrg_manager.fwrg.get_reads_in_conditions(dk) for
             dk in targets}
