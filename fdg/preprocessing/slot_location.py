@@ -60,40 +60,55 @@ def get_slot_from_location_expression(concat_expr:BitVec)->str:
     also consider the case of concrete hash, the location info is collected in a place where it is created.
     used in preprocessing
     """
+    def map_expr_str_to_slot(expr_str:str)->str:
+        matched_expr = find_matched_expr(expr_str,
+                                         expression_str_to_slot.keys())
+        if matched_expr is not None:
+            temp = expression_str_to_slot[matched_expr]
+            if temp in expression_str_to_slot.keys():
+                return expression_str_to_slot[temp]
+            else:
+                return temp
 
+        slot = expr_str
+        # save the result
+        if expr_str not in expression_str_to_slot.keys():
+            expression_str_to_slot[expr_str] = slot
+        return slot
+
+    def find_matched_expr(expr:str, expr_list:list)->str:
+        if len(expr)>=10:
+            expr_prefix=expr[0:len(expr)-2]
+            for e in expr_list:
+                if str(e[0:len(e)-2]).__eq__(expr_prefix):
+                    return e
+            return None
+        else:
+            if expr in expr_list:
+                return expr
+            else:
+                return None
     if isinstance(concat_expr,BitVec):
         if not concat_expr.symbolic:
             # in case of a concrete hash, find it corresponding slot from a map
             expr_str= str_without_space_line(concat_expr)
             # check if it is already considered once
-            if expr_str in expression_str_to_slot.keys():
-                temp= expression_str_to_slot[expr_str]
-                if temp in expression_str_to_slot.keys():
-                    return expression_str_to_slot[temp]
-                else:
-                    return temp
-            else:
-                slot= expr_str
+            return map_expr_str_to_slot(expr_str)
 
-            # save the result
-            if expr_str not in expression_str_to_slot.keys():
-                expression_str_to_slot[expr_str] = slot
-            return slot
 
     if isinstance(concat_expr, str):
         if concat_expr.isdigit():
-            return concat_expr
+            return map_expr_str_to_slot(concat_expr)
 
     str_data = str_without_space_line(concat_expr)
     # handle the case: 62514009886607029107290561805838585334079798074568712924583230797734656856475 +
     # Concat(If(1_calldatasize <= 4, 0, 1_calldata[4]),
     if str_data.count('+')==1:
         items=str_data.split('+')
-        if len(items[0])>=10:
-            if items[0] in expression_str_to_slot.keys():
-                return expression_str_to_slot[items[0]]
-            else:
-                str_data=items[1]
+        if items[0].isdigit() and len(items[0]) >= 10:
+            return map_expr_str_to_slot(items[0])
+        else:
+            str_data = items[1]
 
     last_parameter = ""
     try:
@@ -126,7 +141,7 @@ def get_slot_from_location_expression(concat_expr:BitVec)->str:
                 # save the result
                 expression_str_to_slot[str_data] = str(last_parameter)
             else:
-                print(f'Failed to identify a slot from {concat_expr}')
+                # print(f'Failed to identify a slot from {concat_expr}')
                 last_parameter=""
 
     except Z3Exception as ze:

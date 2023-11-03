@@ -31,6 +31,8 @@ class Guider():
             self.ftn_search_strategy.initialize(fwrg_manager.acyclicPaths.main_paths_sf, fwrg_manager.updateFWRG.main_paths_df, fwrg_manager)
         elif self.ftn_search_strategy.name in ['mine','bfs','dfs','mine1']:
             flag_one_state_depth1=True if len(start_functions)==1 else False
+            if preprocess.coverage is None:
+                preprocess.coverage=0
             self.ftn_search_strategy.initialize(flag_one_state_depth1,preprocess.timeout,preprocess.coverage,preprocess.write_read_info.all_functions,fwrg_manager)
 
 
@@ -205,8 +207,8 @@ class Guider():
         self.genesis_states=deepcopy(states)
         if self.ftn_search_strategy.name in ['mine','mine1']:
             states_dict=self.organize_states(states)
-            if len(states_dict)>=2:
-                print('Check when two or more genesis states are generated (guider.py)')
+            # if len(states_dict)>=2:
+            #     print('Check when two or more genesis states are generated (guider.py)')
             self.ftn_search_strategy.update_states(states_dict)
             self.ftn_search_strategy.state_key_assigned_at_last =list(states_dict.keys())[0]
 

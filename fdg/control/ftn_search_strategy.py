@@ -5,14 +5,11 @@ from copy import deepcopy
 
 import fdg.global_config
 from fdg.control.function_assignment import FunctionAssignment
-from fdg.control.weight_computation import compute
-from fdg.fwrg_manager import FWRG_manager
-from fdg.output_data import print_data_for_mine_strategy, \
-    print_data_for_bfs_strategy, print_data_for_dfs_strategy, \
-    print_data_for_mine_strategy_1
-from fdg.utils import get_ftn_seq_from_key_1, get_key_1_prefix, random_select_from_list
 
-from mythril.laser.plugin.plugins.dependency_pruner import get_writes_annotation_from_ws
+from fdg.fwrg_manager import FWRG_manager
+from fdg.output_data import print_data_for_bfs_strategy, print_data_for_dfs_strategy
+
+from fdg.utils import get_ftn_seq_from_key_1
 
 
 

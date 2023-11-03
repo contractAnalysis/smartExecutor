@@ -4,6 +4,8 @@ from fdg.fwrg_manager import FWRG_manager
 from fdg.output_data import print_function_assignmnets
 from fdg.utils import get_ftn_seq_from_key_1, random_indices
 
+
+
 class FunctionAssignment():
     def __init__(self,all_functions:list,fwrg_manager:FWRG_manager,select_percent:int=0):
 

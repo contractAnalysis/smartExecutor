@@ -1,7 +1,7 @@
 
 import fdg.global_config
-from fdg.control.weight_computation import compute, compute_mine
-from fdg.expression_slot import expression_str_to_slot_normal
+from fdg.control.weight_computation import compute
+
 
 from mythril.laser.smt.expression import simplify_yes
 
@@ -11,7 +11,9 @@ flag_exp=False
 
 
 
-
+def my_print(data:str):
+    if flag_basic:
+        print(data)
 
 def print_list(sequences,description:str=''):
     if not flag_basic:return

@@ -4,21 +4,19 @@ import fdg
 from fdg.control.ftn_search_strategy import FunctionSearchStrategy
 from fdg.control.function_assignment import FunctionAssignment
 from fdg.control.weight_computation import compute, \
-    turn_write_features_to_a_value, compute_mine
+    turn_write_features_to_a_value
 from fdg.expression_slot import is_slot_in_a_list, \
     identify_slot_from_symbolic_slot_expression, common_elements
 
 from fdg.fwrg_manager import FWRG_manager
 from fdg.output_data import print_data_for_mine_strategy_1, \
-    print_data_for_mine_strategy
+    print_data_for_mine_strategy, my_print
 from fdg.utils import get_ftn_seq_from_key_1, get_key_1_prefix, \
     random_select_from_list
 from mythril.laser.plugin.plugins.dependency_pruner import \
     get_writes_annotation_from_ws
 
-def my_print(data:str):
-    if fdg.output_data.flag_basic:
-        print(data)
+
 
 class Mine(FunctionSearchStrategy):
     def __init__(self):
@@ -197,9 +195,9 @@ class Mine(FunctionSearchStrategy):
             # pick up a state from the queue
             targets=[dk for dk,_ in dk_functions]
             random_selected_functions=self.functionAssignment.select_functions_randomly(percent_of_functions)
-            for func in random_selected_functions:
-                if func not in targets:
-                    targets.append(func)
+            # for func in random_selected_functions:
+            #     if func not in targets:
+            #         targets.append(func)
             print(f'randomly selected functions: {random_selected_functions}')
 
             state_key = self.pickup_a_state(targets)  # order the states in self.queue and pick up the one has the highest weight
@@ -253,7 +251,7 @@ class Mine(FunctionSearchStrategy):
                     if len(ftn_seq) in written_slots.keys():
                         writes=written_slots[len(ftn_seq)]
                         writes_str=[identify_slot_from_symbolic_slot_expression(s) for s in writes]
-
+                        writes_str=list(set(writes_str))
                     assert len(ftn_seq) not in written_slots_all_steps.keys()
                     written_slots_all_steps[len(ftn_seq)]=writes_str
                     self.written_slots_in_depth_str[key]=written_slots_all_steps
@@ -283,22 +281,19 @@ class Mine(FunctionSearchStrategy):
             else:
                 return True
 
+        # for key in state_keys:
+        #     self.queue.append(key)
         # count based on the key prefix
         count = {}
         for key in state_keys:
             key_prefix = get_key_1_prefix(key)
-            if key_prefix.startswith('fallback') and key_prefix.endswith('fallback'):
-                all_writes = self.written_slots_in_depth_str[key]
-                ftn_seq = get_ftn_seq_from_key_1(key)
-                if len(all_writes[len(ftn_seq)]) == 0 and len(all_writes[1]) == 0:
+            if '#' in key_prefix: # a state at depth 2 or deeper
+                if key_prefix.startswith('fallback') and key_prefix.endswith('fallback'):
                     continue
-            else:
-                if key_prefix.endswith('fallback#fallback'):
-                    all_writes = self.written_slots_in_depth_str[key]
-                    ftn_seq = get_ftn_seq_from_key_1(key)
-                    if len(all_writes[len(ftn_seq)]) == 0 and len(
-                        all_writes[len(ftn_seq)-1]) == 0:
+                else:
+                    if key_prefix.endswith('fallback#fallback'):
                         continue
+
             if key_prefix not in count.keys():
                 count[key_prefix] = [key]
             else:
@@ -320,14 +315,17 @@ class Mine(FunctionSearchStrategy):
                 key_recent_writes_pairs.sort(key=lambda x: len(x[1]), reverse=True)
 
                 # only keep states that have different weight values
-                cur_writes = key_recent_writes_pairs[0][1]
-                self.queue.append(key_recent_writes_pairs[0][0])
-
-                for key, recent_writes in key_recent_writes_pairs[1:]:
-                    # only keep keys that have weights different than -1
-                    if not two_list_equal(cur_writes,recent_writes):
+                cur_writes = []
+                for idx,(key, recent_writes) in enumerate(key_recent_writes_pairs):
+                    if idx<=1:
                         self.queue.append(key)
-                        cur_writes = recent_writes   # update cur_writes
+                        cur_writes = recent_writes  # update cur_writes
+                    else:
+                        # only keep keys that have weights different than -1
+                        if not two_list_equal(cur_writes,recent_writes):
+                            self.queue.append(key)
+                            cur_writes = recent_writes   # update cur_writes
+
 
     def get_written_slots_in_depth_str(self, state_key:str):
         if state_key not in self.written_slots_in_depth_str.keys():

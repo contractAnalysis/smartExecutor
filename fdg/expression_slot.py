@@ -1,4 +1,6 @@
 import re
+
+from fdg.output_data import my_print
 from fdg.utils import str_without_space_line
 from mythril.laser.smt import BitVec
 from z3 import  Z3Exception
@@ -28,9 +30,12 @@ def map_concrete_hash_key_to_slot_normal(expression:BitVec, data:BitVec):
             if data_str in expression_str_to_slot_normal.keys():
                 final_data_str=expression_str_to_slot_normal[data_str]
                 expression_str_to_slot_normal[expr_str] = final_data_str
+                print(f'map: {expr_str}')
+                print(f'to: {final_data_str}')
             else:
                 expression_str_to_slot_normal[expr_str] = data_str
-
+                print(f'map: {expr_str}')
+                print(f'to: {data_str}')
 
 
 def identify_slot_from_symbolic_slot_expression(concat_expr: BitVec) -> str:
@@ -42,37 +47,56 @@ def identify_slot_from_symbolic_slot_expression(concat_expr: BitVec) -> str:
 
     also consider the case of concrete hash, the location info is collected in a place where it is created.
     """
+
+    def map_expr_str_to_slot(expr_str:str)->str:
+        matched_expr = find_matched_expr(expr_str,
+                                         expression_str_to_slot_normal.keys())
+        if matched_expr is not None:
+            temp = expression_str_to_slot_normal[matched_expr]
+            if temp in expression_str_to_slot_normal.keys():
+                return expression_str_to_slot_normal[temp]
+            else:
+                return temp
+
+        slot = expr_str
+        # save the result
+        if expr_str not in expression_str_to_slot_normal.keys():
+            expression_str_to_slot_normal[expr_str] = slot
+        return slot
+
+    def find_matched_expr(expr:str, expr_list:list)->str:
+        if len(expr)>=10:
+            expr_prefix=expr[0:len(expr)-2]
+            for e in expr_list:
+                if str(e[0:len(e)-2]).__eq__(expr_prefix):
+                    return e
+            return None
+        else:
+            if expr in expr_list:
+                return expr
+            else:
+                return None
+
     if isinstance(concat_expr,BitVec):
         if not concat_expr.symbolic:
             expr_str = str_without_space_line(concat_expr)
             # check if it is already considered once
-            if expr_str in expression_str_to_slot_normal.keys():
-                temp = expression_str_to_slot_normal[expr_str]
-                if temp in expression_str_to_slot_normal.keys():
-                    return expression_str_to_slot_normal[temp]
-                else:
-                    return temp
-            else:
-                slot = expr_str
-            # save the result
-            if expr_str not in expression_str_to_slot_normal.keys():
-                expression_str_to_slot_normal[expr_str] = slot
-            return slot
+            return map_expr_str_to_slot(expr_str)
 
     if isinstance(concat_expr, str):
         if concat_expr.isdigit():
-            return concat_expr
+            return map_expr_str_to_slot(concat_expr)
 
     str_data = str_without_space_line(concat_expr)
     # handle the case: 62514009886607029107290561805838585334079798074568712924583230797734656856475 +
     # Concat(If(1_calldatasize <= 4, 0, 1_calldata[4]),
     if str_data.count('+')==1:
         items=str_data.split('+')
-        if len(items[0])>=10:
-            if items[0] in expression_str_to_slot_normal.keys():
-                return expression_str_to_slot_normal[items[0]]
-            else:
-                str_data=items[1]
+        if items[0].isdigit() and len(items[0])>=10:
+            return map_expr_str_to_slot(items[0])
+        else:
+            str_data=items[1]
+
 
     last_parameter = ""
     try:
@@ -123,8 +147,8 @@ def is_slot_in_a_list(slot, slot_list: list) -> bool:
         slot_str = identify_slot_from_symbolic_slot_expression(slot)
 
         if len(slot_str) == 0:
-            print(f'slot_str:{slot_str}')
-            print(
+            my_print(f'slot_str:{slot_str}')
+            my_print(
                 f'Check why original slot can not be identified for {slot}.')
             return False
     else:
@@ -132,12 +156,12 @@ def is_slot_in_a_list(slot, slot_list: list) -> bool:
 
     slot_str_list = [identify_slot_from_symbolic_slot_expression(s) for s in slot_list]
 
-    print(f'is slot {slot_str} in slots {slot_str_list}?')
+    my_print(f'is slot {slot_str} in slots {slot_str_list}?')
     if slot_str in slot_str_list:
-        print(f'\t yes')
+        my_print(f'\t yes')
         return True
     else:
-        print(f'\t no')
+        my_print(f'\t no')
         return False
 
 
@@ -145,7 +169,7 @@ def common_elements(lst_1:list,lst_2_str:list)->list:
     lst_1_str = [identify_slot_from_symbolic_slot_expression(s) for s in
                      lst_1]
 
-    print(f'\tread slots:{lst_1_str}')
+    my_print(f'\tread slots:{lst_1_str}')
 
     common_ele=[]
     for ele in lst_1_str:
