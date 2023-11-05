@@ -1,4 +1,4 @@
-from copy import copy
+from copy import copy, deepcopy
 
 import fdg.global_config
 
@@ -116,9 +116,6 @@ class AcyclicPath():
                             if t_path not in self.paths_df[ftn][len(t_path)-1]:
                                 self.paths_df[ftn][len(t_path)-1] += [t_path]
 
-
-
-
 class UpdateFWRG():
     def __init__(self, fdg:FWRG, paths:AcyclicPath):
         self.fwrg=fdg
@@ -132,7 +129,7 @@ class UpdateFWRG():
         self.print_graphs(self.fwrg_targets,'fwrg_targets_data.txt')
 
 
-        self.fwrg_targets_augmented=copy(self.fwrg_targets)
+        self.fwrg_targets_augmented=deepcopy(self.fwrg_targets)
         self.add_edges_1()
         self.print_graphs(self.fwrg_targets_augmented,'fwrg_targets_augmented_data_update.txt')
 
@@ -284,6 +281,7 @@ class UpdateFWRG():
                 if len(self.acyclicPaths.paths_df[dk])==0:
                     self.dk_not_reachable.append(dk)
                     print(f'{dk} is not reachable')
+
 class FWRG_manager():
     def __init__(self, start_functions:list, dk_functions:list, preprocess:Preprocessing):
         self.fwrg=FWRG(preprocess.read_in_conditions.read_slots_in_conditions,

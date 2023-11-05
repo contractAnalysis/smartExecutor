@@ -78,7 +78,7 @@ class FunctionAssignment():
 
     def assign_all_functions(self):
         if len(self.all_functions)==0:
-            print(f'keep the original instruction list in function_assignment.py')
+            # print(f'keep the original instruction list in function_assignment.py')
 
             return ['original_instruction_list']
         self.record_assignment(self.all_functions)
@@ -156,9 +156,7 @@ class FunctionAssignment():
                                                fdg.global_config.seq_len_limit - len(ftn_seq)-1
                                                )
                         ]
-            # permit self dependency once
-            if len(ftn_seq) >= 2:
-                children=[child for child in children if child not in ftn_seq[0:-1]]
+
 
             #----------------
             # to-do list
@@ -171,6 +169,11 @@ class FunctionAssignment():
             for ftn in considered:
                 if ftn not in children:
                     children.append(ftn)
+
+            # permit self dependency once
+            if len(ftn_seq) >= 2:
+                children = [child for child in children if
+                            child not in ftn_seq[0:-1]]
 
             self.record_assignment(children)
             return children

@@ -81,7 +81,7 @@ class Mine(FunctionSearchStrategy):
 
             # save the new states
             self.update_states(states_dict)
-            self.add_states_to_queue(states_dict.keys())
+            self.filter_states()
 
         # ---------------
         print_data_for_mine_strategy(self.queue,self.state_priority)
@@ -111,47 +111,6 @@ class Mine(FunctionSearchStrategy):
             targets=[dk for dk,_ in dk_functions]
             state_key = self.pickup_a_state(targets)  # order the states in self.queue and pick up the one has the highest weight
 
-            ftn_seq=get_ftn_seq_from_key_1(state_key)
-
-            if len(ftn_seq)==1:
-                if state_key in self.save_half_considered_states.keys():
-                    # the second time to assign this state
-                    to_execute_children = self.save_half_considered_states[state_key]['to_execute']
-                    not_to_execute =  self.save_half_considered_states[state_key]['not_to_execute']
-
-                else:
-                    # the first time to assign this state
-                    children = self.fwrg_manager.get_children_fwrg_T_A( ftn_seq[-1])
-
-                    # only consider children that are targets or can lead to target
-                    children=[child for child in children if self.functionAssignment.can_reach_targets(child,[dk for dk,_ in dk_functions],fdg.global_config.seq_len_limit-1-1)]
-                    if len(children)>3:
-                        to_execute_children_w_cov=[(dk,cov) for dk,cov in dk_functions if dk in children]
-                        if len(to_execute_children_w_cov)>3:
-                            # select the fi
-                            to_execute_children_w_cov.sort(key=lambda x:x[1],reverse=True)
-                            to_execute_children=[child for child,_ in to_execute_children_w_cov[0:3]]
-                        else:
-                            to_execute_children=[child for child,_ in to_execute_children_w_cov]
-                    else:
-                        to_execute_children=children
-
-                    not_to_execute = [child for child in children if
-                                      child not in to_execute_children]
-                    if len(not_to_execute) > 0:
-                        self.save_half_considered_states[state_key] = {
-                            "to_execute": not_to_execute,
-                            "not_to_execute": to_execute_children
-                        }
-                        # # reduce 1 from the weight of this state
-                        # self.state_priority[state_key] = [weight - 2 for weight
-                        #                                   in
-                        #                                   self.state_priority[
-                        #                                       state_key]]
-                        self.queue.append(
-                            state_key)  # add the state back to self.queue
-                        flag_can_be_deleted = False
-
             # assign functions
             assigned_children=self.functionAssignment.assign_functions(state_key,dk_functions,to_execute_children,not_to_execute)
             if len(assigned_children)>0:
@@ -169,7 +128,7 @@ class Mine(FunctionSearchStrategy):
         if len(states_dict) > 0:
             # save the new states
             self.update_states(states_dict)
-            self.add_states_to_queue(states_dict.keys())
+            self.filter_states()
 
 
         # ---------------
@@ -227,7 +186,7 @@ class Mine(FunctionSearchStrategy):
                 ftn_seq=get_ftn_seq_from_key_1(key)
                 if 'constructor' not in ftn_seq:
                     self.world_states[key]=[deepcopy(state)]
-
+                    self.queue.append(key)
                     self.state_storage[key] = state.accounts[
                         address].storage.printable_storage
 
@@ -269,7 +228,7 @@ class Mine(FunctionSearchStrategy):
 
                     self.state_storage[key] = state.accounts[address].storage.printable_storage
 
-    def add_states_to_queue(self, state_keys:list):
+    def filter_states(self):
         """
         for states generated from the same function sequence, only one is considered if two or more write the same state variables in the last step
         """
@@ -285,7 +244,7 @@ class Mine(FunctionSearchStrategy):
         #     self.queue.append(key)
         # count based on the key prefix
         count = {}
-        for key in state_keys:
+        for key in self.queue:
             key_prefix = get_key_1_prefix(key)
             if '#' in key_prefix: # a state at depth 2 or deeper
                 if key_prefix.startswith('fallback') and key_prefix.endswith('fallback'):
@@ -299,6 +258,7 @@ class Mine(FunctionSearchStrategy):
             else:
                 count[key_prefix] += [key]
 
+        self.queue=[]
         # compute priority values
         for key_prefix, keys in count.items():
             if len(keys) == 1:
@@ -314,10 +274,10 @@ class Mine(FunctionSearchStrategy):
                 # sort the based on weights in descending order
                 key_recent_writes_pairs.sort(key=lambda x: len(x[1]), reverse=True)
 
-                # only keep states that have different weight values
+                # only keep states that have different writes
                 cur_writes = []
                 for idx,(key, recent_writes) in enumerate(key_recent_writes_pairs):
-                    if idx<=1:
+                    if idx<=2:
                         self.queue.append(key)
                         cur_writes = recent_writes  # update cur_writes
                     else:

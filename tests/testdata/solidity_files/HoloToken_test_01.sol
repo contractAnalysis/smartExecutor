@@ -40,15 +40,7 @@ library SafeMath {
 
 
 contract HoloToken_test_01{
-  string public constant name = "HoloToken";
-  string public constant symbol = "HOT";
-  uint8 public constant decimals = 18;
-  //string public name = "HoloToken";
-  //string public symbol = "HOT";
-  //uint8 public decimals = 18;
-
   using SafeMath for uint256;
-
   address public owner;
   uint256 public totalSupply;  
   mapping(address => uint256) public balances;
