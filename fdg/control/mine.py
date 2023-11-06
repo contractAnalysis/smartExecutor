@@ -24,16 +24,11 @@ class Mine(FunctionSearchStrategy):
         self.preprocess_coverage=0
 
         self.state_storage={}
-        self.write_slots_genesis_states=[]
-        self.state_write_slots={} # the writes from dependency pruner( from depth 1 to ...)
-        self.state_priority={}
-
         self.written_slots_in_depth_str={} # the writes from all depths in str version
 
         self.queue=[]
         self.state_key_assigned_at_last=""
-        self.save_half_considered_states={} # the states that are assigned but not fully considered. (some children are not considered yet)
-        self.parent_state_keys = {}
+        # self.parent_state_keys = {}
         self.flag_one_state_at_depth1=False
         super().__init__('mine')
 
@@ -62,9 +57,12 @@ class Mine(FunctionSearchStrategy):
             elif self.preprocess_coverage<80:
                 # execute 50% of functions+ functions assigned based on the partial graph
                 return self.assign_states_timeout(dk_functions, states_dict, 5)
-            else:
-                # execute 30% of functions + functions assigned based on the partial graph
+            elif self.preprocess_coverage<90:
+                # execute 50% of functions+ functions assigned based on the partial graph
                 return self.assign_states_timeout(dk_functions, states_dict, 3)
+            else:
+                # execute 10% of functions + functions assigned based on the partial graph
+                return self.assign_states_timeout(dk_functions, states_dict, 1)
         return self.assign_states_normal(dk_functions, states_dict)
 
     def assign_states_normal(self, dk_functions: list = None, states_dict: dict = {}) -> list:
@@ -84,7 +82,7 @@ class Mine(FunctionSearchStrategy):
             self.filter_states()
 
         # ---------------
-        print_data_for_mine_strategy(self.queue,self.state_priority)
+        print_data_for_mine_strategy(self.queue)
 
         # --------------
         # case 1
@@ -132,7 +130,7 @@ class Mine(FunctionSearchStrategy):
 
 
         # ---------------
-        print_data_for_mine_strategy(self.queue, self.state_priority)
+        print_data_for_mine_strategy(self.queue)
 
         # --------------
         # case 1
@@ -190,13 +188,13 @@ class Mine(FunctionSearchStrategy):
                     self.state_storage[key] = state.accounts[
                         address].storage.printable_storage
 
-                    # save the parent state key for a state
-                    if len(self.state_key_assigned_at_last) > 0:
-                        if key not in self.parent_state_keys.keys():
-                            self.parent_state_keys[key] = self.state_key_assigned_at_last
-                        else:
-                            my_print(f'Why a state has two or more parent state keys')
-                            self.parent_state_keys[key] = self.state_key_assigned_at_last
+                    # # save the parent state key for a state
+                    # if len(self.state_key_assigned_at_last) > 0:
+                    #     if key not in self.parent_state_keys.keys():
+                    #         self.parent_state_keys[key] = self.state_key_assigned_at_last
+                    #     else:
+                    #         my_print(f'Why a state has two or more parent state keys')
+                    #         self.parent_state_keys[key] = self.state_key_assigned_at_last
 
                     # get written slots for this state
                     # get written slots from its parent, the key of which is saved in self.state_key_assigned_at_last
@@ -211,10 +209,14 @@ class Mine(FunctionSearchStrategy):
                         writes=written_slots[len(ftn_seq)]
                         writes_str=[identify_slot_from_symbolic_slot_expression(s) for s in writes]
                         writes_str=list(set(writes_str))
-                    assert len(ftn_seq) not in written_slots_all_steps.keys()
-                    written_slots_all_steps[len(ftn_seq)]=writes_str
-                    self.written_slots_in_depth_str[key]=written_slots_all_steps
 
+                    if len(ftn_seq) not in written_slots_all_steps.keys():
+                        written_slots_all_steps[len(ftn_seq)]=writes_str
+                        self.written_slots_in_depth_str[key]=written_slots_all_steps
+                    else:
+                        written_slots_all_steps[len(ftn_seq)] = writes_str
+                        self.written_slots_in_depth_str[
+                            key] = written_slots_all_steps
 
 
                 else:
@@ -267,7 +269,11 @@ class Mine(FunctionSearchStrategy):
                 # get state keys with different priority values that share the same function sequence (key prefix)
                 key_recent_writes_pairs = []
                 for key in keys:
-                    recent_writes=self.written_slots_in_depth_str[key][len(get_ftn_seq_from_key_1(key))]
+                    seq_len=len(get_ftn_seq_from_key_1(key))
+                    if seq_len in self.written_slots_in_depth_str[key].keys():
+                        recent_writes = self.written_slots_in_depth_str[key][seq_len]
+                    else:
+                        recent_writes=[]
 
                     key_recent_writes_pairs.append((key, recent_writes))
 
@@ -286,13 +292,11 @@ class Mine(FunctionSearchStrategy):
                             self.queue.append(key)
                             cur_writes = recent_writes   # update cur_writes
 
-
     def get_written_slots_in_depth_str(self, state_key:str):
         if state_key not in self.written_slots_in_depth_str.keys():
             return {}
         else:
             return self.written_slots_in_depth_str[state_key]
-
 
     def pickup_a_state(self,targets:list):
         """
@@ -360,12 +364,12 @@ class Mine(FunctionSearchStrategy):
         win_idx=self.break_a_tie(state_key_value_pairs_candi,targets)
         return self.queue.pop(win_idx)
 
-
     def break_a_tie(self,index_key_pairs:list,targets:list)->int:
         def most_recent_new_writes(state_key:str):
             written_slots_str=self.get_written_slots_in_depth_str(state_key)
             func_seq=get_ftn_seq_from_key_1(state_key)
-            recent_writes=written_slots_str[len(func_seq)]
+
+            recent_writes=written_slots_str[len(func_seq)] if len(func_seq) in written_slots_str.keys() else []
             previous_writes=[]
             for depth, writes in written_slots_str.items():
                 if depth==len(func_seq):continue
@@ -380,7 +384,12 @@ class Mine(FunctionSearchStrategy):
             my_print(f'-- {state_key} --')
             written_slots_str = self.get_written_slots_in_depth_str(state_key)
             my_print(f'\trecent writes:{written_slots_str}')
-            return written_slots_str[len(get_ftn_seq_from_key_1(state_key))]
+            func_seq=get_ftn_seq_from_key_1(state_key)
+            if len(func_seq) in written_slots_str.keys():
+                return written_slots_str[len(func_seq)]
+            else:
+                return []
+
 
         def evaluate_recent_writes(state_key: str, reads_in_conditions_of_targets: dict):
             recent_writes=most_recent_writes(state_key)
@@ -465,6 +474,24 @@ class Mine(FunctionSearchStrategy):
             else:
                 return None,idx_key_depth_candi
 
+        def break_num_reached_dk_functions(idx_key_pairs:list,targets:list):
+            def num_reached_dk_functions(state_key:str,targets:list)->int:
+                return self.functionAssignment.get_num_targets_be_reached(get_ftn_seq_from_key_1(state_key)[-1],targets,1)
+
+
+            idx_key_num_dk = [(idx, key, num_reached_dk_functions(key,targets)) for idx,key in idx_key_pairs]
+            idx_key_num_dk.sort(key=lambda x:x[2],reverse=True)
+            max_num=idx_key_num_dk[0][2]
+            if max_num==0:
+                return None,[(idx,key) for idx,key,num in idx_key_num_dk]
+
+            idx_key_num_dk_candi=[(idx,key) for idx,key,num in idx_key_num_dk if num==max_num]
+            if len(idx_key_num_dk_candi)==1:
+                my_print(f'select {idx_key_num_dk_candi[0][1]} based on the number of dk functions that can be reached directly')
+                return idx_key_num_dk_candi[0][0],idx_key_num_dk_candi
+            else:
+                return None,idx_key_num_dk_candi
+
         def select_randomly(idx_key_pairs: list) -> int:
             # randomly select one
             selected = random_select_from_list(
@@ -488,9 +515,11 @@ class Mine(FunctionSearchStrategy):
         win_idx, depth_candi = break_by_depth(recent_writes_candi)
         if win_idx is not None: return win_idx
 
-        # -------------- random policy ----------------
-        return select_randomly(depth_candi)
+        win_idx, num_dk_candi=break_num_reached_dk_functions(depth_candi,targets)
+        if win_idx is not None: return win_idx
 
+        # -------------- random policy ----------------
+        return select_randomly(num_dk_candi)
 
 
 

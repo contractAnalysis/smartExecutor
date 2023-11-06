@@ -1,8 +1,5 @@
 import fdg.global_config
 from fdg.constraint_check_time import constraint_check_time_flags
-
-
-
 from mythril.laser.ethereum.state.global_state import GlobalState
 
 

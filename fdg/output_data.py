@@ -51,7 +51,7 @@ def print_function_assignmnets(data:dict):
 #========================
 # in ftn_search_strategy.py
 #------------------------
-def print_data_for_mine_strategy(queue, state_priority:dict ):
+def print_data_for_mine_strategy(queue):
     if not flag_basic: return
     if flag_exp: return
     print(f'\n==============================')
@@ -151,7 +151,9 @@ def print_assigned_functions(state_and_assigned_funtions:dict):
 #------------------------
 def print_coverage(contrart_cov:float,functions_cov:dict,description:str):
 
-    if not flag_basic:return
+    if not flag_basic:
+        print("contract coverage: {:.2f}%".format(contrart_cov))
+        return
     print(f'\n====== {description} ======')
     print("contract coverage: {:.2f}%".format(contrart_cov))
     if flag_exp: return

@@ -16,7 +16,6 @@ class FunctionCoverage():
         self.deep_functions=[]
         self.deep_functions_1st_time = []  # record how many deep functions are there
 
-
     def feed_function_indices(self,function_indices:dict):
         self.function_instruction_indices=function_indices
         # initialize coverage for each function except constructor
@@ -32,10 +31,8 @@ class FunctionCoverage():
     def print_coverage(self):
         print_coverage(self.coverage,self.function_coverage,'coverage')
 
-
     def get_deep_functions_1st_time(self):
         return [ftn for ftn,_ in self.deep_functions_1st_time]
-
 
     def compute_contract_coverage(self,runtime_bytecode:str):
         if runtime_bytecode in self.coverage_plugin.coverage.keys():
@@ -67,25 +64,6 @@ class FunctionCoverage():
 
     def get_contract_coverage(self):
         return self.coverage
-
-
-    def is_a_deep_function(self,ftn_name:str):
-        """
-        compute the coverage of the function ftn_idx
-        if cov < 100%, yes;
-        otherwise, no
-
-        :param ftn_idx:
-        :return:
-        """
-
-        if ftn_name in self.function_coverage.keys():
-            if self.function_coverage[ftn_name]>=fdg.global_config.function_coverage_threshold:
-                return False,self.function_coverage[ftn_name]
-            else:
-                return True, self.function_coverage[ftn_name]
-
-        return True,None
 
 
     def get_coverage_for_a_function(self,ftn_name:str):

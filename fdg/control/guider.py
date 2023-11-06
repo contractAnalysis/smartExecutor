@@ -168,28 +168,24 @@ class Guider():
 
 
     def end_iteration(self,laserEVM:LaserEVM,iteration:int):
-        state_chaning_seq = []
+        state_changing_seq = []
         len_seq=0
         for state in laserEVM.open_states:
             seq = get_ftn_seq_annotation_from_ws(state)
+            if seq is None:continue
             len_seq=len(seq)
-            if seq not in state_chaning_seq:
-                state_chaning_seq.append(seq)
-        print_list(state_chaning_seq, f'current state changing sequence(s):')
+            if len_seq==0:continue
+            if seq not in state_changing_seq:
+                state_changing_seq.append(seq)
+        print_list(state_changing_seq, f'current state changing sequence(s):')
 
-        # len_seq = 0
-        # for state in laserEVM.open_states:
-        #     seq = get_ftn_seq_annotation_from_ws(state)
-        #     len_seq = len(seq)
-        #     break
+
 
         self.termination=self.ftn_search_strategy.termination(
             states_num=len(laserEVM.open_states),
             current_seq_length=len_seq,
             sequence_depth_limit=fdg.global_config.seq_len_limit,
             iteration=iteration)
-        # print(f'termination:{self.termination}')
-
 
     def get_start_sequence(self,laserEVM:LaserEVM):
         state_chaning_seq = []

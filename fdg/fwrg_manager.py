@@ -87,6 +87,9 @@ class AcyclicPath():
                     else:
                         for child in children:
                             if child in path:
+                                # think of the case [A(),A()](self dependency)
+                                if child==path[0] and len(path)==1:
+                                    path.append(child)
                                 if path not in all_paths:
                                     all_paths.append(path)
                             else:
@@ -123,11 +126,9 @@ class UpdateFWRG():
 
         self.fwrg_targets={}
 
-
         self.construct_fwrg_targets()
 
         self.print_graphs(self.fwrg_targets,'fwrg_targets_data.txt')
-
 
         self.fwrg_targets_augmented=deepcopy(self.fwrg_targets)
         self.add_edges_1()

@@ -16,7 +16,7 @@ after saving the results: 6
 """
 
 
-
+max_length=10000
 expression_str_to_slot_normal={} # used in the normal execution process
 
 def map_concrete_hash_key_to_slot_normal(expression:BitVec, data:BitVec):
@@ -30,12 +30,12 @@ def map_concrete_hash_key_to_slot_normal(expression:BitVec, data:BitVec):
             if data_str in expression_str_to_slot_normal.keys():
                 final_data_str=expression_str_to_slot_normal[data_str]
                 expression_str_to_slot_normal[expr_str] = final_data_str
-                print(f'map: {expr_str}')
-                print(f'to: {final_data_str}')
+                # print(f'map: {expr_str}')
+                # print(f'to: {final_data_str}')
             else:
                 expression_str_to_slot_normal[expr_str] = data_str
-                print(f'map: {expr_str}')
-                print(f'to: {data_str}')
+                # print(f'map: {expr_str}')
+                # print(f'to: {data_str}')
 
 
 def identify_slot_from_symbolic_slot_expression(concat_expr: BitVec) -> str:
@@ -88,6 +88,10 @@ def identify_slot_from_symbolic_slot_expression(concat_expr: BitVec) -> str:
             return map_expr_str_to_slot(concat_expr)
 
     str_data = str_without_space_line(concat_expr)
+    if len(str_data)>=max_length:
+        # print(f'reach max length')
+        return ""
+
     # handle the case: 62514009886607029107290561805838585334079798074568712924583230797734656856475 +
     # Concat(If(1_calldatasize <= 4, 0, 1_calldata[4]),
     if str_data.count('+')==1:
@@ -129,7 +133,7 @@ def identify_slot_from_symbolic_slot_expression(concat_expr: BitVec) -> str:
                 # save the result
                 expression_str_to_slot_normal[str_data] = str(last_parameter)
             else:
-                print(f'Failed to identify a slot from {concat_expr}')
+                # print(f'Failed to identify a slot from {concat_expr}')
                 last_parameter=""
 
     except Z3Exception as ze:
