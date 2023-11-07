@@ -44,7 +44,7 @@ class FunctionAssignment():
         # if not end after while statement, return False
         return False
 
-    def get_num_targets_be_reached(self,ftn:str,targets:list,max_depth:int)->int:
+    def get_targets_be_reached(self, ftn:str, targets:list, max_depth:int)->int:
         targets_be_reached=[]
         if ftn in targets:
             targets_be_reached.append(ftn)

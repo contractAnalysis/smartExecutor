@@ -476,7 +476,7 @@ class Mine(FunctionSearchStrategy):
 
         def break_num_reached_dk_functions(idx_key_pairs:list,targets:list):
             def num_reached_dk_functions(state_key:str,targets:list)->int:
-                return self.functionAssignment.get_num_targets_be_reached(get_ftn_seq_from_key_1(state_key)[-1],targets,1)
+                return len(self.functionAssignment.get_targets_be_reached(get_ftn_seq_from_key_1(state_key)[-1], targets, 1))
 
 
             idx_key_num_dk = [(idx, key, num_reached_dk_functions(key,targets)) for idx,key in idx_key_pairs]
@@ -1021,7 +1021,7 @@ class Mine1(FunctionSearchStrategy):
         # break a tie based on nodk
         targets = [dk for dk, _ in dk_functions]
         nodk_states=[(idx, item,
-                      self.functionAssignment.get_num_targets_be_reached(
+                      self.functionAssignment.get_targets_be_reached(
                           get_ftn_seq_from_key_1(item)[-1],
                           targets,
                           fdg.global_config.seq_len_limit - len(

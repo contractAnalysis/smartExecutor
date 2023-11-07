@@ -2,7 +2,7 @@
  *Submitted for verification at Etherscan.io on 2018-02-01
 */
 
-pragma solidity ^0.4.18;
+pragma solidity ^0.4.25;
 
 
 /**
@@ -39,12 +39,14 @@ library SafeMath {
 }
 
 
-contract HoloToken_test_01{
+contract HoloToken_test_02{
   using SafeMath for uint256;
-  address public owner;
-uint256 public totalSupply; 
-  mapping(address => uint256) public balances;
   bool public mintingFinished = false;
+  
+  uint256 public totalSupply;  
+  address public owner;
+  mapping(address => uint256) public balances;
+  
   address public destroyer;
   address public minter;
 
@@ -68,7 +70,7 @@ uint256 public totalSupply;
     _;
   }
 
- function HoloToken_test_01() public {
+ constructor() public {
     owner = msg.sender;
   }  
 
