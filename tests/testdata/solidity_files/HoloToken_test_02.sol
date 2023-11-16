@@ -41,8 +41,7 @@ library SafeMath {
 
 contract HoloToken_test_02{
   using SafeMath for uint256;
-  bool public mintingFinished = false;
-  
+  bool public mintingFinished = false;  
   uint256 public totalSupply;  
   address public owner;
   mapping(address => uint256) public balances;
