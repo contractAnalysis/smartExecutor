@@ -19,7 +19,7 @@ DESCRIPTION = "Security analysis tool for Ethereum smart contracts"
 URL = "https://github.com/contractAnalysis/smartExecutor"
 AUTHOR = "contractAnalysis"
 AUTHOR_MAIL = None
-REQUIRES_PYTHON = ">=3.6.0"
+REQUIRES_PYTHON = ">=3.8.0"
 here = os.path.abspath(os.path.dirname(__file__))
 
 # What packages are required for this module to be executed?
@@ -56,7 +56,7 @@ TESTS_REQUIRE = ["mypy==0.782", "pytest>=3.6.0", "pytest_mock", "pytest-cov"]
 EXTRAS = {}
 
 # If version is set to None then it will be fetched from __version__.py
-VERSION = "v0.2"
+VERSION = "v0.3"
 
 
 # Import the README and use it as the long-description.

@@ -10,7 +10,7 @@ SmartExecutor is designed to reduce the sequence explosion of symbolic execution
 
 Download the Docker image of SmartExecutor.
 ```bash
-$ docker pull 23278942/smartexecutor
+$ docker pull 23278942/smartexecutor:v0.3
 ```
 
 Create and enter the docker container. 
