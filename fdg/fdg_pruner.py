@@ -65,7 +65,7 @@ class FDG_pruner(LaserPlugin):
         elif fdg.global_config.function_search_strategy=='seq':
             self.search_stragety=Seq()
         else:
-            self.search_stragety = BFS()
+            self.search_stragety = Mine()
 
         self.guider=Guider(self.search_stragety,list(fdg.global_config.method_identifiers.keys()))
 

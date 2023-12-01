@@ -444,7 +444,7 @@ def add_fwrg_analysis_args(options):
     options.add_argument(
         "--optimization",
         type=int,
-        default=0,
+        default=1,
         help="optimization, current support: 1(yes),0(no)",
     )
     # @wei
