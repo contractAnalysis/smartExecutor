@@ -3,7 +3,7 @@
 
 SmartExecutor is built on top of [Mythril](https://github.com/ConsenSys/mythril), a symbolic-execution-based security analysis tool for EVM bytecode that can detect security vulnerabilities in smart contracts built for Ethereum, Hedera, Quorum, Vechain, Roostock, Tron and other EVM-compatible blockchains.
 
-SmartExecutor is designed to reduce the sequence explosion of symbolic execution on smart contracts. It provides a scalable solution to symbolic execution while still keeping the basic features of Mythril.
+SmartExecutor is designed to reduce the sequence explosion of symbolic execution on smart contracts. It provides a scalable solution to symbolic execution while still keeping the basic features of Mythril. Here is the [SmartExecutor paper](https://ieeexplore.ieee.org/document/10316942).
 
 
 ###  Run SmartExecutor in Docker Container: ###
@@ -141,3 +141,18 @@ For this reason, here show some useful documents of Mythril:
 - [Instructions for using Mythril](https://mythril-classic.readthedocs.io/en/master/)
 - [Mythril's documentation](https://mythril-classic.readthedocs.io/en/develop/)
 - [Vulnerability Remediation](https://swcregistry.io/)
+
+If you find this tool helpful, we would appreciate it if you could cite it.
+```json
+@INPROCEEDINGS{10316942,
+  author={Wei, Qiping and Sikder, Fadul and Feng, Huadong and Lei, Yu and Kacker, Raghu and Kuhn, Richard},
+  booktitle={2023 5th Conference on Blockchain Research & Applications for Innovative Networks and Services (BRAINS)}, 
+  title={SmartExecutor: Coverage-Driven Symbolic Execution Guided by a Function Dependency Graph}, 
+  year={2023},
+  volume={},
+  number={},
+  pages={1-8},
+  keywords={Codes;Limiting;Smart contracts;Explosions;Ethereum smart contract;symbolic execution;vulnerability detection;sequence explosion;function dependency},
+  doi={10.1109/BRAINS59668.2023.10316942}}
+
+```
