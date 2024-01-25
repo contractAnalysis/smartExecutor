@@ -29,7 +29,7 @@ class Guider():
         fwrg_manager=FWRG_manager(start_functions, depth_k_functions, preprocess)
         if self.ftn_search_strategy.name in ['seq']:
             self.ftn_search_strategy.initialize(fwrg_manager.acyclicPaths.main_paths_sf, fwrg_manager.updateFWRG.main_paths_df, fwrg_manager)
-        elif self.ftn_search_strategy.name in ['mine','bfs','dfs','mine1']:
+        elif self.ftn_search_strategy.name in ['mine','bfs','dfs','mine1','exeDataCollection']:
             flag_one_state_depth1=True if len(start_functions)==1 else False
             if preprocess.coverage is None:
                 preprocess.coverage=0
@@ -45,9 +45,11 @@ class Guider():
             if ftn_seq is None or len(ftn_seq) == 0:
                 key = get_key_1(['constructor'], self.state_index)
             else:
+
                 # do not save states that are generated at maximum depth
                 if len(ftn_seq) >= fdg.global_config.seq_len_limit:
-                    continue
+                    if self.ftn_search_strategy.name not in ['exeDataCollection']:
+                        continue
                 key = get_key_1(ftn_seq, self.state_index)
 
             # save state
@@ -123,7 +125,7 @@ class Guider():
                 self.termination=True
 
             # get the states for the state keys in data states_functions returned from assign_states
-            if self.ftn_search_strategy.name in ['dfs','mine','bfs','mine1']:
+            if self.ftn_search_strategy.name in ['dfs','mine','bfs','mine1','exeDataCollection']:
                 organize_states_dict = {}
                 for key,function in states_functions.items():
                     if len(function)>0:
@@ -201,7 +203,7 @@ class Guider():
 
     def save_genesis_states(self,states:list):
         self.genesis_states=deepcopy(states)
-        if self.ftn_search_strategy.name in ['mine','mine1']:
+        if self.ftn_search_strategy.name in ['mine','mine1','exeDataCollection']:
             states_dict=self.organize_states(states)
             # if len(states_dict)>=2:
             #     print('Check when two or more genesis states are generated (guider.py)')

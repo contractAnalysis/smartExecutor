@@ -1,5 +1,6 @@
 
 # support FDG-guided execution and sequence execution
+from fdg.control.execution_data_collection import ExeDataCollection
 from fdg.control.mine import Mine, Mine1
 from fdg.preprocessing.address_collection import collect_addresses_in_constructor
 
@@ -64,6 +65,8 @@ class FDG_pruner(LaserPlugin):
             self.search_stragety=Mine1()
         elif fdg.global_config.function_search_strategy=='seq':
             self.search_stragety=Seq()
+        elif fdg.global_config.function_search_strategy=='exeDataCollection':
+            self.search_stragety= ExeDataCollection()
         else:
             self.search_stragety = Mine()
 
@@ -254,15 +257,12 @@ class FDG_pruner(LaserPlugin):
                 if flag_termination:
                     fdg.global_config.transaction_count=self._iteration_
                     return
-                if self.search_stragety.name in ['bfs','dfs','mine','mine1']:
+                if self.search_stragety.name in ['bfs','dfs','mine','mine1','exeDataCollection']:
                     self.get_depth_k_functions()
                     start_functions = [seq[-1] for seq in sequences if len(seq)>0 ]
                     start_functions = list(set(start_functions))
                     self.guider.init(start_functions,self.depth_k,self.preprocess)
-
-
             else:
-
                 self.guider.end_iteration(laserEVM,self._iteration_)
 
             flag_termination=self.guider.should_terminate()
@@ -283,6 +283,9 @@ class FDG_pruner(LaserPlugin):
                             # make sure that when there is only one state generated at depth1,
                             # the execution does not terminate
                             fdg.global_config.transaction_count = self._iteration_
+                elif self.search_stragety.name in ['exeDataCollection']:
+                    # for execution data collection, stops when all the possible function sequences reach the length of 4.
+                    pass
                 else:
                     if not self.search_stragety.flag_one_state_at_depth1:
                         # make sure that when there is only one state generated at depth1,

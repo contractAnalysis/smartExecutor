@@ -467,7 +467,7 @@ def add_fwrg_analysis_args(options):
     options.add_argument(
         "-fss",
         "--function-search-strategy",
-        choices=["dfs", "bfs", "mine", 'seq','mine1'],
+        choices=["dfs", "bfs", "mine", 'seq','mine1','exeDataCollection'],
         default="bfs",
         help="Function data flow graph search strategy",
     )
