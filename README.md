@@ -142,7 +142,7 @@ For this reason, here show some useful documents of Mythril:
 - [Mythril's documentation](https://mythril-classic.readthedocs.io/en/develop/)
 - [Vulnerability Remediation](https://swcregistry.io/)
 
-If you find this tool helpful, we would appreciate it if you could cite it.
+If you find this tool helpful, we would appreciate it if you could cite it. Here is the BibTex:
 ```json
 @INPROCEEDINGS{10316942,
   author={Wei, Qiping and Sikder, Fadul and Feng, Huadong and Lei, Yu and Kacker, Raghu and Kuhn, Richard},
