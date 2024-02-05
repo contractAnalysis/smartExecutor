@@ -21,12 +21,12 @@ class ExeDataCollection(FunctionSearchStrategy):
         self.queue=[]
         self.state_key_assigned_at_last=""
         # self.parent_state_keys = {}
-        self.flag_one_state_at_depth1=False
+
         super().__init__('exeDataCollection')
 
 
     def initialize(self,flag_one_state_depth1:bool,preprocess_timeout:bool, preprocess_coverage:float,all_functions:list,fwrg_manager:FWRG_manager):
-        self.flag_one_state_at_depth1=flag_one_state_depth1
+
         self.preprocess_timeout=preprocess_timeout
         self.preprocess_coverage=preprocess_coverage
 
@@ -67,12 +67,16 @@ class ExeDataCollection(FunctionSearchStrategy):
         while True:
             if len(self.queue) == 0:
                 return {}, None
-
+            # print(f'queue')
+            # for item in self.queue:
+            #     print(f'\t{item}')
             state_key=self.queue.pop(-1)
             ftn_seq=get_ftn_seq_from_key_1(state_key)
+            print(f'popped key:{state_key}:{ftn_seq}')
             if len(ftn_seq)>=4:continue
             flag_can_be_deleted = True
-            assigned_children=self.all_functions
+            assigned_children=['original_instruction_list']
+            print(f'assigned functions:{assigned_children}')
             return {state_key: assigned_children}, flag_can_be_deleted
 
 

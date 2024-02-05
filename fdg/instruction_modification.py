@@ -1,4 +1,4 @@
-from copy import copy
+from copy import copy, deepcopy
 
 from fdg.output_data import print_list, print_dict
 from mythril.laser.ethereum.state.world_state import WorldState
@@ -267,8 +267,8 @@ class InstructionModification():
 
     def modity_on_multiple_states(self,states:[WorldState],functions:list):
         if 'original_instruction_list' in functions:
-            final_instructions = self.instruction_list
-            print(f'keep the original instruction list in instruction_modification.py')
+            final_instructions = deepcopy( self.instruction_list)
+            # print(f'keep the original instruction list in instruction_modification.py')
             for state in states:
                 state.accounts[self.contract_address.value].code.instruction_list = final_instructions
             return

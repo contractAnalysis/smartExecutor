@@ -157,7 +157,6 @@ class Guider():
 
         # update the open states so that the states having no children nodes are removed
         laserEVM.open_states = modified_states
-
         if flag_wd_del:
             # delete states
             # print(f'\nbefore state delete:{self.ftn_search_strategy.world_states.keys()}')

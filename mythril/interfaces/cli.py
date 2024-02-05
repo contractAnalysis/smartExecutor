@@ -514,6 +514,7 @@ def add_fwrg_arguments(args: Namespace):
     # @wei
     fdg.global_config.function_coverage_threshold = args.function_coverage_threshold
     fdg.global_config.function_search_strategy = args.function_search_strategy
+
     fdg.global_config.sequences = args.sequences
     fdg.global_config.random_baseline = args.random_baseline
 
