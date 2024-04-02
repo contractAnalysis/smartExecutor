@@ -7,7 +7,8 @@ from fdg.output_data import output_key_to_slot
 from fdg.preprocessing.instruction_coverage import InstructionCoverage
 
 from fdg.preprocessing.read_in_conditions import ReadInCondition
-from fdg.preprocessing.slot_location import expression_str_to_slot
+from fdg.preprocessing.slot_location import expression_str_to_slot, \
+    dynamic_svars, static_svars
 
 from fdg.preprocessing.write_read_info import Function_Write_Read_Info
 from mythril.laser.ethereum.function_managers.keccak_function_manager import keccak_function_manager
@@ -93,6 +94,10 @@ class Preprocessing():
         # for key,value in expression_str_to_slot.items():
         #     print(f'\texpression: {key}')
         #     print(f'\tslot: {value}')
+
+        print(f'dynamic svars:{dynamic_svars}')
+        print(f'static svars:{static_svars}')
+
 
         log.info(f'end preprocessing.')
         return

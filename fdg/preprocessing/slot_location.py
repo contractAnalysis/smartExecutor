@@ -32,6 +32,8 @@ expression_str_to_slot={}
 
 max_length=10000 # refers the length of the str version of a symbolic expression
 
+dynamic_svars=[]
+static_svars=[]
 
 def map_concrete_hash_key_to_slot(expression:BitVec, data:BitVec):
     """
@@ -45,8 +47,14 @@ def map_concrete_hash_key_to_slot(expression:BitVec, data:BitVec):
             if data_str in expression_str_to_slot.keys():
                 final_data_str =expression_str_to_slot[data_str]
                 expression_str_to_slot[expr_str] = final_data_str
+                # print(f'slot_location:map {expr_str} to {final_data_str}')
+                if final_data_str not in dynamic_svars:
+                    dynamic_svars.append(final_data_str)
             else:
                 expression_str_to_slot[expr_str] = data_str
+                # print(f'slot_location:map {expr_str} to {data_str}')
+                if data_str not in dynamic_svars:
+                    dynamic_svars.append(data_str)
 
 
 def get_slot_from_location_expression(concat_expr:BitVec)->str:
@@ -93,7 +101,10 @@ def get_slot_from_location_expression(concat_expr:BitVec)->str:
             # in case of a concrete hash, find it corresponding slot from a map
             expr_str= str_without_space_line(concat_expr)
             # check if it is already considered once
-            return map_expr_str_to_slot(expr_str)
+            slot=map_expr_str_to_slot(expr_str)
+            if slot not in static_svars and slot not in dynamic_svars:
+                static_svars.append(slot)
+            return slot
 
 
     if isinstance(concat_expr, str):
@@ -129,9 +140,13 @@ def get_slot_from_location_expression(concat_expr:BitVec)->str:
                 # Use regular expressions to find the last parameter within the keccak256_512 function
                 last_parameter = re.search(r'keccak256_512\(.*?,(\d+)\)',
                                            str_data)
+                if str(last_parameter.group(1)) not in dynamic_svars:
+                    dynamic_svars.append(str(last_parameter.group(1)))
             else:
                 # Use regular expressions to find the last parameter within the Concat function
                 last_parameter = re.search(r'Concat\(.*?,(\d+)\)', str_data)
+                if str(last_parameter.group(1)) not in static_svars and str(last_parameter.group(1)) not in dynamic_svars :
+                    static_svars.append(str(last_parameter.group(1)))
 
             if last_parameter is not None:
                 last_parameter=last_parameter.group(1)

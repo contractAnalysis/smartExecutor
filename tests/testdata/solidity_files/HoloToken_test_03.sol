@@ -39,13 +39,12 @@ library SafeMath {
 }
 
 
-contract HoloToken_test_02{
+contract HoloToken_test_03{
   using SafeMath for uint256;
-  bool public mintingFinished = false;  
-  uint256 public totalSupply;  
   address public owner;
+uint256 public totalSupply;
   mapping(address => uint256) public balances;
-  
+  bool public mintingFinished = false;
   address public destroyer;
   address public minter;
 
@@ -53,7 +52,7 @@ contract HoloToken_test_02{
     require(!mintingFinished);
     _;
   }
- 
+
   modifier onlyMinter() {
     require(msg.sender == minter);
     _;
@@ -69,29 +68,33 @@ contract HoloToken_test_02{
     _;
   }
 
-   function HoloToken_test_02()public {
+ function HoloToken_test_03() public {
     owner = msg.sender;
-  }  
+  }
+    function finishMinting() external onlyMinter returns (bool) {
+    mintingFinished = true;
+    return true;
+  }
 
   function setMinter(address _minter) external onlyOwner {
     minter = _minter;
   }
 
-  function mint(address _to, uint256 _amount) external 
-	onlyMinter canMint  returns (bool) {  
+  function mint(address _to, uint256 _amount) external
+	onlyMinter canMint  returns (bool) {
     totalSupply = totalSupply.add(_amount);
-    balances[_to] = balances[_to].add(_amount);   
+    balances[_to] = balances[_to].add(_amount);
     return true;
   }
- 
+
   function setDestroyer(address _destroyer) external onlyOwner {
     destroyer = _destroyer;
   }
 
   function burn(uint256 _amount) external onlyDestroyer {
-    require(balances[destroyer] >=_amount && _amount > 0);   
+    require(balances[destroyer] >=_amount && _amount > 0);
     balances[destroyer] = balances[destroyer].sub(_amount);
-    totalSupply = totalSupply.sub(_amount);   
+    totalSupply = totalSupply.sub(_amount);
   }
 }
 

@@ -61,6 +61,7 @@ class ReadInCondition():
             all_locations=[]
             for condi in all_conditions:
                 locations=extract_locations_read_in_storage_in_a_condition(condi)
+                # print(f'read_in_condition: condition{condi} \nlocations:{locations}')
                 for loc in locations:
                     if loc not in all_locations:
                         all_locations.append(loc)
