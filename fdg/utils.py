@@ -3,6 +3,8 @@ import itertools as it
 import string
 import time
 import numpy as np
+import os
+import json
 # from ethereum import utils
 
 # solve case 6: msg.sender must be a particular value
@@ -11,6 +13,22 @@ from z3 import BitVecNumRef
 
 import fdg.global_config
 from mythril.laser.smt import BitVec
+
+def load_a_json_file(file_path:str):
+    data = {}
+    if os.path.exists(file_path):
+        try:
+            with open(file_path, "r") as file:
+                data = json.load(file)
+
+        except json.JSONDecodeError as e:
+            print(f"Error loading JSON from {file_path}: {e}")
+        finally:
+            return data
+
+    else:
+        print(f"File does not exist: {file_path}")
+        return data
 
 
 def str_without_space_line(data:str)->str:

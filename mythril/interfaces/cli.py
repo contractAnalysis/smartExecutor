@@ -526,6 +526,14 @@ def add_fwrg_arguments(args: Namespace):
 
     fdg.global_config.flag_fwrg=args.function_wr_graph
 
+    if len(args.solidity_files)>0:
+        # take the first solidity file
+        solidty_file_contract=args.solidity_files[0]
+        if '.sol:' in solidty_file_contract:
+            items=solidty_file_contract.split('.sol:')
+            fdg.global_config.solidity_name=items[0].split(f'/')[-1]+".sol"
+            fdg.global_config.contract_name=items[1]
+
     if args.v>=3:
         fdg.output_data.flag_basic=True
 

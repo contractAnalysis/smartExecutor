@@ -123,3 +123,8 @@ time_temp=0
 
 global count
 count=0
+
+global contract_name
+contract_name=''
+global solidity_name
+solidity_name=''

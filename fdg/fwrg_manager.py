@@ -284,14 +284,31 @@ class UpdateFWRG():
                     print(f'{dk} is not reachable')
 
 class FWRG_manager():
-    def __init__(self, start_functions:list, dk_functions:list, preprocess:Preprocessing):
-        self.fwrg=FWRG(preprocess.read_in_conditions.read_slots_in_conditions,
-                       preprocess.write_read_info.write_slots)
-        self.fwrg_all_reads={}
-        self.generate_graph_all_reads(preprocess.write_read_info.write_slots,preprocess.write_read_info.read_slots)
+    def __init__(self, start_functions:list, dk_functions:list, preprocess:Preprocessing,contract_rw_data:dict={}):
+        def remove_contract_name(function_name:str)->str:
+            if function_name.count('.')==1:
+                return function_name.split('.')[-1]
+            else:
+                return function_name.split(f'{fdg.global_config.contract_name}.')[-1]
+        if len(contract_rw_data)==0:
+            self.fwrg=FWRG(preprocess.read_in_conditions.read_slots_in_conditions,
+                           preprocess.write_read_info.write_slots)
+            self.fwrg_all_reads={}
+            self.generate_graph_all_reads(preprocess.write_read_info.write_slots,preprocess.write_read_info.read_slots)
 
-        self.acyclicPaths=AcyclicPath(start_functions, dk_functions, self.fwrg)
-        self.updateFWRG=UpdateFWRG(self.fwrg, self.acyclicPaths)
+            self.acyclicPaths=AcyclicPath(start_functions, dk_functions, self.fwrg)
+            self.updateFWRG=UpdateFWRG(self.fwrg, self.acyclicPaths)
+        else:
+            func_reads_in_conditions={remove_contract_name(func):rw_data['state_variables_read_in_BC']  for func, rw_data in contract_rw_data.items() if func not in ['stateVariables']}
+            func_writes={remove_contract_name(func):rw_data['state_variables_written']  for func, rw_data in contract_rw_data.items() if func not in ['stateVariables']}
+
+            self.fwrg = FWRG(func_reads_in_conditions,func_writes)
+            self.fwrg_all_reads = {}
+            self.generate_graph_all_reads(func_writes,func_reads_in_conditions) # temporarily use state variables read in conditions
+
+            self.acyclicPaths = AcyclicPath(start_functions, dk_functions,
+                                            self.fwrg)
+            self.updateFWRG = UpdateFWRG(self.fwrg, self.acyclicPaths)
 
     def generate_graph_all_reads(self,writes:dict,all_reads:dict):
         for ftn,writes in writes.items():

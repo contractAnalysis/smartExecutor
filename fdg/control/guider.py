@@ -1,3 +1,4 @@
+import os
 from copy import deepcopy
 
 import fdg.global_config
@@ -6,7 +7,7 @@ from fdg.fwrg_manager import FWRG_manager
 from fdg.output_data import print_list, print_assigned_functions
 from fdg.instruction_modification import InstructionModification
 from fdg.preprocessing.preprocess import Preprocessing
-from fdg.utils import get_key_1, get_ftn_seq_from_key_1
+from fdg.utils import get_key_1, get_ftn_seq_from_key_1, load_a_json_file
 from mythril.laser.ethereum.state.world_state import WorldState
 from mythril.laser.ethereum.svm import LaserEVM
 from mythril.laser.plugin.plugins.dependency_pruner import get_ftn_seq_annotation_from_ws
@@ -26,16 +27,44 @@ class Guider():
 
 
     def init(self, start_functions:list, depth_k_functions:list, preprocess:Preprocessing):
-        fwrg_manager=FWRG_manager(start_functions, depth_k_functions, preprocess)
+        
+        # load contract rw data
+
+        # current path: C:\Users\18178\PycharmProjects\smartExecutor\fdg\control\guider.py
+        current_path = os.path.abspath(__file__)
+        contracts_rw_data_file_name='contract_rw_data_gt.json'
+        contracts_rw_data_file_path=current_path.split('control\guider.py')[0]+'contract_rw_data\\'
+        contracts_rw_data=load_a_json_file(f'{contracts_rw_data_file_path}{contracts_rw_data_file_name}')
+        # key: f'{solidity_name}{contract_name}'
+        contract_key=f'{fdg.global_config.solidity_name}{fdg.global_config.contract_name}'
+        if contract_key not in contracts_rw_data.keys():
+            print(f'{contract_key} does not have prepared rw data')
+            contract_data={}
+        else:
+            print(f'{contract_key}  have prepared rw data')
+            contract_data=contracts_rw_data[contract_key]
+            print(f'{contract_data}')
+
+
+        if len(contract_data)==0:
+            fwrg_manager=FWRG_manager(start_functions, depth_k_functions, preprocess)
+        else:
+            fwrg_manager = FWRG_manager(start_functions, depth_k_functions, preprocess,contract_rw_data=contract_data)
         if self.ftn_search_strategy.name in ['seq']:
-            self.ftn_search_strategy.initialize(fwrg_manager.acyclicPaths.main_paths_sf, fwrg_manager.updateFWRG.main_paths_df, fwrg_manager)
-        elif self.ftn_search_strategy.name in ['mine','bfs','dfs','mine1']:
-            flag_one_state_depth1=True if len(start_functions)==1 else False
+            self.ftn_search_strategy.initialize(
+                fwrg_manager.acyclicPaths.main_paths_sf,
+                fwrg_manager.updateFWRG.main_paths_df, fwrg_manager)
+        elif self.ftn_search_strategy.name in ['mine', 'bfs', 'dfs',
+                                               'mine1']:
+            flag_one_state_depth1 = True if len(
+                start_functions) == 1 else False
             if preprocess.coverage is None:
-                preprocess.coverage=0
-            self.ftn_search_strategy.initialize(flag_one_state_depth1,preprocess.timeout,preprocess.coverage,preprocess.write_read_info.all_functions,fwrg_manager)
-
-
+                preprocess.coverage = 0
+            self.ftn_search_strategy.initialize(flag_one_state_depth1,
+                                                preprocess.timeout,
+                                                preprocess.coverage,
+                                                preprocess.write_read_info.all_functions,
+                                                fwrg_manager)
 
     def organize_states(self, states:[WorldState]):
         all_states = {}
