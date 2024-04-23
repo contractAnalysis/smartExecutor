@@ -309,6 +309,7 @@ class Mine(FunctionSearchStrategy):
             data = []
             for dk, reads in reads_in_conditions_of_targets.items():
                 if len(reads) > 0:
+                    my_print(f'\tfor function {dk}:')
                     count_common = common_elements(reads,written_slot_by_state)
                     data.append(len(count_common) / len(reads))
 
