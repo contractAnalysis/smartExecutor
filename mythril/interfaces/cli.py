@@ -490,6 +490,14 @@ def add_fwrg_analysis_args(options):
     )
 
     options.add_argument(
+        "-p1dl",
+        "--phase1-depth-limit",
+        type=int,
+        default=1,
+        help="determine the depth limit of the sequences in Phase 1"
+    )
+
+    options.add_argument(
         "--preprocess-timeout",
         type=int,
         default=100,
@@ -518,7 +526,7 @@ def add_fwrg_arguments(args: Namespace):
     fdg.global_config.random_baseline = args.random_baseline
 
     fdg.global_config.print_function_coverage = args.print_function_coverage
-
+    fdg.global_config.p1_dl=args.phase1_depth_limit
     fdg.global_config.preprocess_timeout = args.preprocess_timeout
     fdg.global_config.optimization = args.optimization
     fdg.global_config.flag_consider_all_reads = args.consider_all_reads

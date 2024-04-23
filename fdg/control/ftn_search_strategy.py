@@ -133,11 +133,11 @@ class DFS(FunctionSearchStrategy):
         self.stack=[]
         self.preprocess_timeout = False
         self.preprocess_coverage = 0
-        self.flag_one_state_at_depth1=False
+        self.flag_one_start_function=False
         super().__init__('dfs')
 
-    def initialize(self,flag_one_state_depth1:bool,preprocess_timeout:bool, preprocess_coverage:float,all_functions:list,fwrg_manager:FWRG_manager):
-        self.flag_one_state_at_depth1=flag_one_state_depth1
+    def initialize(self, flag_one_start_function:bool, preprocess_timeout:bool, preprocess_coverage:float, all_functions:list, fwrg_manager:FWRG_manager):
+        self.flag_one_start_function=flag_one_start_function
         self.preprocess_timeout = preprocess_timeout
         self.preprocess_coverage = preprocess_coverage
         self.functionAssignment=FunctionAssignment(all_functions,fwrg_manager)
@@ -175,8 +175,8 @@ class DFS(FunctionSearchStrategy):
 
         print_data_for_dfs_strategy(self.stack)
 
-        if self.flag_one_state_at_depth1:
-            self.flag_one_state_at_depth1=False
+        if self.flag_one_start_function:
+            self.flag_one_start_function=False
             state_key = self.stack.pop()
             assign_functions = self.functionAssignment.assign_all_functions()
 
@@ -215,21 +215,21 @@ class BFS(FunctionSearchStrategy):
     no need to save states
     """
     def __init__(self):
-        self.flag_one_state_at_depth1=False
+        self.flag_one_start_function=False
         self.preprocess_timeout = False
         self.preprocess_coverage = 0
         self.queue=[]
         super().__init__('bfs')
         pass
 
-    def initialize(self,flag_one_state_depth1:bool,preprocess_timeout:bool, preprocess_coverage:float,all_functions:list,fwrg_manager:FWRG_manager):
-        self.flag_one_state_at_depth1=flag_one_state_depth1
+    def initialize(self, flag_one_start_function:bool, preprocess_timeout:bool, preprocess_coverage:float, all_functions:list, fwrg_manager:FWRG_manager):
+        self.flag_one_start_function=flag_one_start_function
         self.preprocess_timeout = preprocess_timeout
         self.preprocess_coverage = preprocess_coverage
         self.functionAssignment=FunctionAssignment(all_functions,fwrg_manager)
 
     def termination(self,states_num:int=0, current_seq_length: int = 0, sequence_depth_limit: int = 0,iteration:int=0)->bool:
-        if iteration <= 2:
+        if iteration <= fdg.global_config.p1_dl+1:
             if states_num == 0: return True
         return False
 
@@ -267,8 +267,8 @@ class BFS(FunctionSearchStrategy):
 
         print_data_for_bfs_strategy(self.queue)
 
-        if self.flag_one_state_at_depth1:
-            self.flag_one_state_at_depth1 = False
+        if self.flag_one_start_function:
+            self.flag_one_start_function = False
             state_key = self.queue.pop(0)
             assign_functions = self.functionAssignment.assign_all_functions()
 
@@ -308,12 +308,12 @@ class RandomBaseline(FunctionSearchStrategy):
     """
     def __init__(self,percent_of_functions:int,functions:list):
         self.functionAssignment=FunctionAssignment(functions,None,select_percent=percent_of_functions)
-        self.flag_one_state_at_depth1=False
+        self.flag_one_start_function=False
         self.queue=[]
         super().__init__('baseline')
 
-    def initialize(self, flag_one_state_depth1: bool):
-        self.flag_one_state_at_depth1 = flag_one_state_depth1
+    def initialize(self, flag_one_start_function: bool):
+        self.flag_one_start_function = flag_one_start_function
 
     def assign_states(self, dk_functions: list=None, states_dict: dict = {}) -> list:
         """
@@ -335,8 +335,8 @@ class RandomBaseline(FunctionSearchStrategy):
 
         print_data_for_bfs_strategy(self.queue)
 
-        if self.flag_one_state_at_depth1:
-            self.flag_one_state_at_depth1 = False
+        if self.flag_one_start_function:
+            self.flag_one_start_function = False
             state_key = self.queue.pop(0)
             assign_functions = self.functionAssignment.assign_all_functions()
 

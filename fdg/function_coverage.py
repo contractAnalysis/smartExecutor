@@ -16,8 +16,8 @@ class FunctionCoverage():
         self.deep_functions=[]
         self.deep_functions_1st_time = []  # record how many deep functions are there
 
-    def feed_function_indices(self,function_indices:dict):
-        self.function_instruction_indices=function_indices
+    def feed_function_intruction_indices(self, function_instruction_indices:dict):
+        self.function_instruction_indices=function_instruction_indices
         # initialize coverage for each function except constructor
         for ftn, ftn_instr_list in self.function_instruction_indices.items():
             # if ftn=='constructor' or ftn=='fallback':continue
