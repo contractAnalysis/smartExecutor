@@ -365,6 +365,163 @@ class Mine(FunctionSearchStrategy):
         win_idx=self.break_a_tie(state_key_value_pairs_candi,targets)
         return self.queue.pop(win_idx)
 
+    # def break_a_tie(self,index_key_pairs:list,targets:list)->int:
+    #     def most_recent_new_writes(state_key:str):
+    #         written_slots_str=self.get_written_slots_in_depth_str(state_key)
+    #         func_seq=get_ftn_seq_from_key_1(state_key)
+    #
+    #         recent_writes=written_slots_str[len(func_seq)] if len(func_seq) in written_slots_str.keys() else []
+    #         previous_writes=[]
+    #         for depth, writes in written_slots_str.items():
+    #             if depth==len(func_seq):continue
+    #             for w in writes:
+    #                 if w not in previous_writes:
+    #                     previous_writes.append(w)
+    #
+    #         new_recent_writes=[w for w in recent_writes if w not in previous_writes]
+    #         return new_recent_writes
+    #
+    #     def most_recent_writes(state_key:str):
+    #         my_print(f'-- {state_key} --')
+    #         written_slots_str = self.get_written_slots_in_depth_str(state_key)
+    #         my_print(f'\trecent writes:{written_slots_str}')
+    #         func_seq=get_ftn_seq_from_key_1(state_key)
+    #         if len(func_seq) in written_slots_str.keys():
+    #             return written_slots_str[len(func_seq)]
+    #         else:
+    #             return []
+    #
+    #
+    #     def evaluate_recent_writes(state_key: str, reads_in_conditions_of_targets: dict):
+    #         recent_writes=most_recent_writes(state_key)
+    #
+    #         data = []
+    #         for dk, reads in reads_in_conditions_of_targets.items():
+    #             if len(reads) > 0:
+    #                 count_common = common_elements(reads, recent_writes)
+    #                 data.append(len(count_common) / len(reads))
+    #
+    #         my_print(f'evaluation raw data:{data}')
+    #         v = 0
+    #         for ele in data:
+    #             v += ele
+    #         my_print(f'evaluation value:{v}')
+    #         return v
+    #
+    #     # begin tie break
+    #
+    #     def break_by_new_recent_writes(idx_key_pairs:list):
+    #         # check based on the new recent writes
+    #         idx_key_new_recent_writes = [(idx, key, most_recent_new_writes(key))
+    #                                      for
+    #                                      idx, key in idx_key_pairs]
+    #         idx_key_new_recent_writes.sort(key=lambda x: len(x[2]),
+    #                                        reverse=True)
+    #
+    #         my_print(f'\n==== new recent writes ====')
+    #         for idx, key, new_recent_writes in idx_key_new_recent_writes:
+    #             my_print(f'\t{key}: {new_recent_writes}')
+    #
+    #         max_new_writes = len(idx_key_new_recent_writes[0][2])
+    #         idx_key_new_recent_writes_candi = [(idx, key) for
+    #                                            idx, key, new_writes in
+    #                                            idx_key_new_recent_writes if
+    #                                            len(new_writes) == max_new_writes]
+    #         if len(idx_key_new_recent_writes_candi) == 1:
+    #             my_print(f'select {idx_key_new_recent_writes_candi[0][1]} based on new recent writes')
+    #             return idx_key_new_recent_writes_candi[0][0],idx_key_new_recent_writes_candi
+    #         elif len(idx_key_new_recent_writes_candi) == 0:
+    #             idx_key_new_recent_writes_candi = [(idx, key) for idx, key, _ in
+    #                                                idx_key_new_recent_writes]
+    #         return None,idx_key_new_recent_writes_candi
+    #
+    #     def break_by_recent_writes(idx_key_pairs:list, targets):
+    #         # evaluate the recent writes to targets (a way to consider repeated writes)
+    #         reads_in_conditions_of_targets = {
+    #             dk: self.fwrg_manager.fwrg.get_reads_in_conditions(dk) for
+    #             dk in targets}
+    #
+    #         my_print(f'\n==== evaluation on the recent writes ====')
+    #         idx_key_recent_writes = [(idx, key, evaluate_recent_writes(key,
+    #                                                                    reads_in_conditions_of_targets))
+    #                                  for idx, key in idx_key_pairs]
+    #         idx_key_recent_writes.sort(key=lambda x: x[2], reverse=True)
+    #         # print
+    #         my_print(f'-- summary --')
+    #         for idx, key, value in idx_key_recent_writes:
+    #             my_print(f'\t{key}: {value}')
+    #
+    #         max_value = idx_key_recent_writes[0][2]
+    #         idx_key_recent_writes_candi = [(idx, key) for idx, key, value in
+    #                                        idx_key_recent_writes if
+    #                                        value == max_value]
+    #         if len(idx_key_recent_writes_candi) == 1:
+    #             my_print(f'select {idx_key_recent_writes_candi[0][1]} based on the evaluation of the recent writes')
+    #             return idx_key_recent_writes_candi[0][0],idx_key_recent_writes_candi
+    #         else:
+    #             return None,idx_key_recent_writes_candi
+    #
+    #     def break_by_depth(idx_key_pairs:list):
+    #         def state_depth(state_key:str)->int:
+    #             return len(get_ftn_seq_from_key_1(state_key))
+    #
+    #         idx_key_depth = [(idx, key, state_depth(key)) for idx,key in idx_key_pairs]
+    #         idx_key_depth.sort(key=lambda x:x[2],reverse=False)
+    #         small_depth=idx_key_depth[0][2]
+    #         idx_key_depth_candi=[(idx,key) for idx,key,depth in idx_key_depth if depth==small_depth]
+    #         if len(idx_key_depth_candi)==1:
+    #             my_print(f'select {idx_key_depth_candi[0][1]} based on depth')
+    #             return idx_key_depth_candi[0][0],idx_key_depth_candi
+    #         else:
+    #             return None,idx_key_depth_candi
+    #
+    #     def break_num_reached_dk_functions(idx_key_pairs:list,targets:list):
+    #         def num_reached_dk_functions(state_key:str,targets:list)->int:
+    #             return len(self.functionAssignment.get_targets_be_reached(get_ftn_seq_from_key_1(state_key)[-1], targets, 1))
+    #
+    #
+    #         idx_key_num_dk = [(idx, key, num_reached_dk_functions(key,targets)) for idx,key in idx_key_pairs]
+    #         idx_key_num_dk.sort(key=lambda x:x[2],reverse=True)
+    #         max_num=idx_key_num_dk[0][2]
+    #         if max_num==0:
+    #             return None,[(idx,key) for idx,key,num in idx_key_num_dk]
+    #
+    #         idx_key_num_dk_candi=[(idx,key) for idx,key,num in idx_key_num_dk if num==max_num]
+    #         if len(idx_key_num_dk_candi)==1:
+    #             my_print(f'select {idx_key_num_dk_candi[0][1]} based on the number of dk functions that can be reached directly')
+    #             return idx_key_num_dk_candi[0][0],idx_key_num_dk_candi
+    #         else:
+    #             return None,idx_key_num_dk_candi
+    #
+    #     def select_randomly(idx_key_pairs: list) -> int:
+    #         # randomly select one
+    #         selected = random_select_from_list(
+    #             [idx for idx, _ in idx_key_pairs], 1)
+    #         # print
+    #         for idx, key in idx_key_pairs:
+    #             if idx == selected[0]:
+    #                 my_print(f'select {key} based on random policy')
+    #         return selected[0]
+    #
+    #     # ------------- new recent writes -----------------
+    #     win_idx,new_recent_writes_candi=break_by_new_recent_writes(index_key_pairs)
+    #     if win_idx is not None: return win_idx
+    #
+    #     # ------------- recent writes -----------------
+    #     win_idx, recent_writes_candi = break_by_recent_writes(
+    #         new_recent_writes_candi, targets)
+    #     if win_idx is not None: return win_idx
+    #
+    #     # ------------- depth -----------------
+    #     win_idx, depth_candi = break_by_depth(recent_writes_candi)
+    #     if win_idx is not None: return win_idx
+    #
+    #     win_idx, num_dk_candi=break_num_reached_dk_functions(depth_candi,targets)
+    #     if win_idx is not None: return win_idx
+    #
+    #     # -------------- random policy ----------------
+    #     return select_randomly(num_dk_candi)
+
     def break_a_tie(self,index_key_pairs:list,targets:list)->int:
         def most_recent_new_writes(state_key:str):
             written_slots_str=self.get_written_slots_in_depth_str(state_key)
@@ -503,8 +660,12 @@ class Mine(FunctionSearchStrategy):
                     my_print(f'select {key} based on random policy')
             return selected[0]
 
+        # ------------- num of dk functions that can reach -----------------
+        win_idx, num_dk_candi=break_num_reached_dk_functions(index_key_pairs,targets)
+        if win_idx is not None: return win_idx
+
         # ------------- new recent writes -----------------
-        win_idx,new_recent_writes_candi=break_by_new_recent_writes(index_key_pairs)
+        win_idx,new_recent_writes_candi=break_by_new_recent_writes(num_dk_candi)
         if win_idx is not None: return win_idx
 
         # ------------- recent writes -----------------
@@ -516,11 +677,8 @@ class Mine(FunctionSearchStrategy):
         win_idx, depth_candi = break_by_depth(recent_writes_candi)
         if win_idx is not None: return win_idx
 
-        win_idx, num_dk_candi=break_num_reached_dk_functions(depth_candi,targets)
-        if win_idx is not None: return win_idx
-
         # -------------- random policy ----------------
-        return select_randomly(num_dk_candi)
+        return select_randomly(depth_candi)
 
 
 
