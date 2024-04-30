@@ -113,6 +113,9 @@ tx_len=0
 global flag_fallback
 flag_fallback=False
 
+global p1_dl
+p1_dl=1
+
 #===============================================
 
 global temp_count

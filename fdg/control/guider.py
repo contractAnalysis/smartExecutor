@@ -29,11 +29,11 @@ class Guider():
         fwrg_manager=FWRG_manager(start_functions, depth_k_functions, preprocess)
         if self.ftn_search_strategy.name in ['seq']:
             self.ftn_search_strategy.initialize(fwrg_manager.acyclicPaths.main_paths_sf, fwrg_manager.updateFWRG.main_paths_df, fwrg_manager)
-        elif self.ftn_search_strategy.name in ['mine','bfs','dfs','mine1']:
-            flag_one_state_depth1=True if len(start_functions)==1 else False
+        elif self.ftn_search_strategy.name in ['mine','bfs','dfs']:
+            flag_one_start_function=True if len(start_functions)==1 else False  #to-do: how to update flag_one_state_dpeht1
             if preprocess.coverage is None:
                 preprocess.coverage=0
-            self.ftn_search_strategy.initialize(flag_one_state_depth1,preprocess.timeout,preprocess.coverage,preprocess.write_read_info.all_functions,fwrg_manager)
+            self.ftn_search_strategy.initialize(flag_one_start_function,preprocess.timeout,preprocess.coverage,preprocess.write_read_info.all_functions,fwrg_manager)
 
 
 
@@ -188,6 +188,9 @@ class Guider():
             iteration=iteration)
 
     def get_start_sequence(self,laserEVM:LaserEVM):
+        """
+        get the sequences used to annotate the states (world states) at the end of Phase 1
+        """
         state_chaning_seq = []
         for state in laserEVM.open_states:
             seq = get_ftn_seq_annotation_from_ws(state)
@@ -199,14 +202,14 @@ class Guider():
     def should_terminate(self):
         return self.termination
 
-    def save_genesis_states(self,states:list):
-        self.genesis_states=deepcopy(states)
-        if self.ftn_search_strategy.name in ['mine','mine1']:
-            states_dict=self.organize_states(states)
-            # if len(states_dict)>=2:
-            #     print('Check when two or more genesis states are generated (guider.py)')
-            self.ftn_search_strategy.update_states(states_dict)
-            self.ftn_search_strategy.state_key_assigned_at_last =list(states_dict.keys())[0]
+    # def save_genesis_states(self,states:list):
+    #     self.genesis_states=deepcopy(states)
+    #     if self.ftn_search_strategy.name in ['mine']:
+    #         states_dict=self.organize_states(states)
+    #         # if len(states_dict)>=2:
+    #         #     print('Check when two or more genesis states are generated (guider.py)')
+    #         self.ftn_search_strategy.update_states(states_dict)
+    #         self.ftn_search_strategy.state_key_assigned_at_last =list(states_dict.keys())[0]
 
 
 
