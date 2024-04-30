@@ -309,8 +309,12 @@ class Mine(FunctionSearchStrategy):
             data = []
             for dk, reads in reads_in_conditions_of_targets.items():
                 if len(reads) > 0:
-                    my_print(f'\tfor function {dk}')
-                    count_common = common_elements(reads,written_slot_by_state)
+                    my_print(f'\tfor function {dk}:')
+                    reads_str = [identify_slot_from_symbolic_slot_expression(s)
+                                 for s in
+                                 reads]
+                    my_print(f'\t\tread slots:{reads_str}')
+                    count_common = common_elements(reads_str,written_slot_by_state)
                     data.append(len(count_common) / len(reads))
 
             my_print(f'evaluation raw data:{data}')
@@ -327,10 +331,10 @@ class Mine(FunctionSearchStrategy):
             # consider all the writes without repeated elements
             written_slots_str= [identify_slot_from_symbolic_slot_expression(s) for s in
                      self.state_storage[state_key].keys()]
-            my_print(f'\thave slots written:{written_slots_str}')
+            my_print(f'\twrite slots:{written_slots_str}')
 
             written_slots_str_all=self.get_written_slots_in_depth_str(state_key)
-            my_print(f'\thave slots written:{written_slots_str_all}')
+            my_print(f'\twrite slots:{written_slots_str_all} (writes at each depth)')
 
             return written_slots_str
 
@@ -398,7 +402,12 @@ class Mine(FunctionSearchStrategy):
             data = []
             for dk, reads in reads_in_conditions_of_targets.items():
                 if len(reads) > 0:
-                    count_common = common_elements(reads, recent_writes)
+                    my_print(f'\tfor function {dk}:')
+                    reads_str = [identify_slot_from_symbolic_slot_expression(s)
+                                 for s in
+                                 reads]
+                    my_print(f'\t\tread slots:{reads_str}')
+                    count_common = common_elements(reads_str, recent_writes)
                     data.append(len(count_common) / len(reads))
 
             my_print(f'evaluation raw data:{data}')

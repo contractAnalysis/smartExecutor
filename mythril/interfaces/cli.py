@@ -469,6 +469,7 @@ def add_fwrg_analysis_args(options):
         "--function-search-strategy",
         choices=["dfs", "bfs", "mine", 'seq'],
         default="mine",
+
         help="Function data flow graph search strategy",
     )
 
@@ -519,7 +520,9 @@ def add_fwrg_analysis_args(options):
     )
 
 def add_fwrg_arguments(args: Namespace):
-    # @wei
+    """
+    collect the values for the global parameters defined in fdg.global_config.py.
+    """
     fdg.global_config.function_coverage_threshold = args.function_coverage_threshold
     fdg.global_config.function_search_strategy = args.function_search_strategy
     fdg.global_config.sequences = args.sequences
@@ -531,9 +534,11 @@ def add_fwrg_arguments(args: Namespace):
     fdg.global_config.optimization = args.optimization
     fdg.global_config.flag_consider_all_reads = args.consider_all_reads
     fdg.global_config.execution_times_limit = args.execution_times_limit
-
-    fdg.global_config.flag_fwrg=args.function_wr_graph
-
+    if args.no_guidance:
+        fdg.global_config.flag_fwrg=False
+    else:
+        fdg.global_config.flag_fwrg=True
+    # fdg.global_config.flag_fwrg=args.function_wr_graph
     if args.v>=3:
         fdg.output_data.flag_basic=True
 
@@ -546,6 +551,13 @@ def add_analysis_args(options):
     options.add_argument(
         "-fdg",
         "--function-wr-graph",
+        default=True,
+        action="store_true", #
+        help="use guided exploration",
+    )
+    options.add_argument(
+
+        "--no-guidance",
         default=False,
         action="store_true",
         help="use guided exploration",

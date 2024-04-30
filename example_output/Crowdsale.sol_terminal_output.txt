@@ -1,0 +1,70 @@
+Starting preprocessing.
+number of genesis states: 1
+total instructions: 476
+preprocessing: Achieved 99.79% coverage.
+Ending preprocessing.
+preprocessing time(s): 3.2145028114318848
+contract coverage: 68.91%
+contract coverage: 68.91%
+contract coverage: 87.82%
+contract coverage: 99.79%
+#@statespace
+113 nodes, 112 edges, 965 total states
+#@coverage
+Achieved 10.34% coverage for code: 608060405269152d02c7e14af6800000600055600060015534801561002357600080fd5b50624f1a00420160038190555033600460006101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff1602179055506103b4806100806000396000f30060806040526004361061006d576000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff16806313af4035146100725780632cc82655146100b55780633ccfd60b146100e2578063590e1ae3146100f9578063e8b5e51f14610110575b600080fd5b34801561007e57600080fd5b506100b3600480360381019080803573ffffffffffffffffffffffffffffffffffffffff16906020019092919050505061011a565b005b3480156100c157600080fd5b506100e06004803603810190808035906020019092919050505061015e565b005b3480156100ee57600080fd5b506100f76101ae565b005b34801561010557600080fd5b5061010e61022b565b005b610118610309565b005b80600460006101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff16021790555050565b600181148015610172575060005460025410155b80610199575060028114801561018b5750600054600254105b8015610198575060035442115b5b15156101a457600080fd5b8060018190555050565b600180541415156101be57600080fd5b600460009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff166108fc6002549081150290604051600060405180830381858888f19350505050158015610228573d6000803e3d6000fd5b50565b600260015414151561023c57600080fd5b3373ffffffffffffffffffffffffffffffffffffffff166108fc600560003373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001908152602001600020549081150290604051600060405180830381858888f193505050501580156102c1573d6000803e3d6000fd5b506000600560003373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002081905550565b600060015414801561031e5750600054600254105b151561032957600080fd5b34600560003373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002060008282540192505081905550346002600082825401925050819055505600a165627a7a72305820df9dfb2f36512d320fe26236c83162e5c1bd4c405fc7c5a32b121f9831f6c2690029
+#@coverage
+Achieved 99.79% coverage for code: 60806040526004361061006d576000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff16806313af4035146100725780632cc82655146100b55780633ccfd60b146100e2578063590e1ae3146100f9578063e8b5e51f14610110575b600080fd5b34801561007e57600080fd5b506100b3600480360381019080803573ffffffffffffffffffffffffffffffffffffffff16906020019092919050505061011a565b005b3480156100c157600080fd5b506100e06004803603810190808035906020019092919050505061015e565b005b3480156100ee57600080fd5b506100f76101ae565b005b34801561010557600080fd5b5061010e61022b565b005b610118610309565b005b80600460006101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff16021790555050565b600181148015610172575060005460025410155b80610199575060028114801561018b5750600054600254105b8015610198575060035442115b5b15156101a457600080fd5b8060018190555050565b600180541415156101be57600080fd5b600460009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff166108fc6002549081150290604051600060405180830381858888f19350505050158015610228573d6000803e3d6000fd5b50565b600260015414151561023c57600080fd5b3373ffffffffffffffffffffffffffffffffffffffff166108fc600560003373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001908152602001600020549081150290604051600060405180830381858888f193505050501580156102c1573d6000803e3d6000fd5b506000600560003373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002081905550565b600060015414801561031e5750600054600254105b151561032957600080fd5b34600560003373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002060008282540192505081905550346002600082825401925050819055505600a165627a7a72305820df9dfb2f36512d320fe26236c83162e5c1bd4c405fc7c5a32b121f9831f6c2690029
+==== Integer Arithmetic Bugs ====
+SWC ID: 101
+Severity: High
+Contract: Crowdsale
+Function name: constructor
+PC address: 42
+Estimated Gas Usage: 21038 - 103767
+The arithmetic operator can overflow.
+It is possible to cause an integer overflow or underflow in the arithmetic operation. 
+--------------------
+In file: ./tests/testdata/solidity_files/Crowdsale.sol:10
+
+now+60 days
+
+--------------------
+Initial State:
+
+Account: [CREATOR], balance: 0x0, nonce:0, storage:{}
+Account: [ATTACKER], balance: 0x0, nonce:0, storage:{}
+
+Transaction Sequence:
+
+Caller: [CREATOR], calldata: , decoded_data: , value: 0x0
+
+==== Dependence on predictable environment variable ====
+SWC ID: 116
+Severity: Low
+Contract: Crowdsale
+Function name: setPhase(uint256)
+PC address: 415
+Estimated Gas Usage: 2729 - 2824
+A control flow decision is made based on The block.timestamp environment variable.
+The block.timestamp environment variable is used to determine a control flow decision. Note that the values of variables like coinbase, gaslimit, block number and timestamp are predictable and can be manipulated by a malicious miner. Also keep in mind that attackers know hashes of earlier blocks. Don't use any of those environment variables as sources of randomness and be aware that use of these variables introduces a certain level of trust into miners.
+--------------------
+In file: ./tests/testdata/solidity_files/Crowdsale.sol:19
+
+require (
+    (newPhase==1 && raised>=goal) ||
+    (newPhase==2 && raised<goal && now>end))
+
+--------------------
+Initial State:
+
+Account: [CREATOR], balance: 0x0, nonce:0, storage:{}
+Account: [ATTACKER], balance: 0x0, nonce:0, storage:{}
+
+Transaction Sequence:
+
+Caller: [CREATOR], calldata: , decoded_data: , value: 0x0
+Caller: [CREATOR], function: setPhase(uint256), txdata: 0x2cc826550000000000000000000000000000000000000000000000000000000000000002, decoded_data: (2,), value: 0x0
+
+
+#@time
+time used(s):15.627109289169312

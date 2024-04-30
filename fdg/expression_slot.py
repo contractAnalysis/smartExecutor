@@ -169,11 +169,7 @@ def is_slot_in_a_list(slot, slot_list: list) -> bool:
         return False
 
 
-def common_elements(lst_1:list,lst_2_str:list)->list:
-    lst_1_str = [identify_slot_from_symbolic_slot_expression(s) for s in
-                     lst_1]
-
-    my_print(f'\tread slots:{lst_1_str}')
+def common_elements(lst_1_str:list,lst_2_str:list)->list:
 
     common_ele=[]
     for ele in lst_1_str:

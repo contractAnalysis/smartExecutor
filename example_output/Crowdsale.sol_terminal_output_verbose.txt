@@ -1,0 +1,471 @@
+Starting preprocessing.
+number of genesis states: 1
+total instructions: 476
+preprocessing: Achieved 99.79% coverage.
+Ending preprocessing.
+preprocessing time(s): 3.493284225463867
+
+====== coverage ======
+contract coverage: 68.91%
+function coverage:
+	100.00%: setOwner(address)
+	100.00%: setPhase(uint256)
+	31.33%: withdraw()
+	23.01%: refund()
+	96.05%: invest()
+	100.00%: fallback
+
+====== current state changing sequence(s): ======
+	['setOwner(address)']
+	['setPhase(uint256)']
+	['invest()']
+
+==============================
+queue:
+	setOwner(address)#0
+	setPhase(uint256)#1
+	invest()#2
+
+==== Reads in conditions for targets====
+	refund():['1']
+	withdraw():['1']
+	invest():['1']
+
+==== evaluation on the storage writes ====
+-- setOwner(address)#0 --
+	write slots:['0', '1', '3', '4']
+	write slots:{1: ['4']} (writes at each depth)
+	for function refund():
+		read slots:['1']
+	for function withdraw():
+		read slots:['1']
+	for function invest():
+		read slots:['1']
+evaluation raw data:[1.0, 1.0, 1.0]
+evaluation value:3.0
+-- setPhase(uint256)#1 --
+	write slots:['0', '1', '3', '4']
+	write slots:{1: ['1']} (writes at each depth)
+	for function refund():
+		read slots:['1']
+	for function withdraw():
+		read slots:['1']
+	for function invest():
+		read slots:['1']
+evaluation raw data:[1.0, 1.0, 1.0]
+evaluation value:3.0
+-- invest()#2 --
+	write slots:['0', '1', '3', '4', '5', '2']
+	write slots:{1: ['2', '5']} (writes at each depth)
+	for function refund():
+		read slots:['1']
+	for function withdraw():
+		read slots:['1']
+	for function invest():
+		read slots:['1']
+evaluation raw data:[1.0, 1.0, 1.0]
+evaluation value:3.0
+-- summary --
+	setOwner(address)#0: 3.0
+	setPhase(uint256)#1: 3.0
+	invest()#2: 3.0
+
+==== new recent writes ====
+	invest()#2: ['2', '5']
+	setOwner(address)#0: ['4']
+	setPhase(uint256)#1: ['1']
+select invest()#2 based on new recent writes
+
+====== state and assigned functions ======
+state key: invest()#2
+functions: ['setPhase(uint256)']
+
+====== coverage ======
+contract coverage: 68.91%
+function coverage:
+	100.00%: setOwner(address)
+	100.00%: setPhase(uint256)
+	31.33%: withdraw()
+	23.01%: refund()
+	96.05%: invest()
+	100.00%: fallback
+
+====== current state changing sequence(s): ======
+	['invest()', 'setPhase(uint256)']
+
+==============================
+queue:
+	setOwner(address)#0
+	setPhase(uint256)#1
+	invest()#setPhase(uint256)#3
+	invest()#setPhase(uint256)#4
+
+==== Reads in conditions for targets====
+	refund():['1']
+	withdraw():['1']
+	invest():['1']
+
+==== evaluation on the storage writes ====
+-- setOwner(address)#0 --
+	write slots:['0', '1', '3', '4']
+	write slots:{1: ['4']} (writes at each depth)
+	for function refund():
+		read slots:['1']
+	for function withdraw():
+		read slots:['1']
+	for function invest():
+		read slots:['1']
+evaluation raw data:[1.0, 1.0, 1.0]
+evaluation value:3.0
+-- setPhase(uint256)#1 --
+	write slots:['0', '1', '3', '4']
+	write slots:{1: ['1']} (writes at each depth)
+	for function refund():
+		read slots:['1']
+	for function withdraw():
+		read slots:['1']
+	for function invest():
+		read slots:['1']
+evaluation raw data:[1.0, 1.0, 1.0]
+evaluation value:3.0
+-- invest()#setPhase(uint256)#3 --
+	write slots:['0', '1', '3', '4', '5', '2']
+	write slots:{1: ['2', '5'], 2: ['1']} (writes at each depth)
+	for function refund():
+		read slots:['1']
+	for function withdraw():
+		read slots:['1']
+	for function invest():
+		read slots:['1']
+evaluation raw data:[1.0, 1.0, 1.0]
+evaluation value:3.0
+-- invest()#setPhase(uint256)#4 --
+	write slots:['0', '1', '3', '4', '5', '2']
+	write slots:{1: ['2', '5'], 2: ['1']} (writes at each depth)
+	for function refund():
+		read slots:['1']
+	for function withdraw():
+		read slots:['1']
+	for function invest():
+		read slots:['1']
+evaluation raw data:[1.0, 1.0, 1.0]
+evaluation value:3.0
+-- summary --
+	setOwner(address)#0: 3.0
+	setPhase(uint256)#1: 3.0
+	invest()#setPhase(uint256)#3: 3.0
+	invest()#setPhase(uint256)#4: 3.0
+
+==== new recent writes ====
+	setOwner(address)#0: ['4']
+	setPhase(uint256)#1: ['1']
+	invest()#setPhase(uint256)#3: ['1']
+	invest()#setPhase(uint256)#4: ['1']
+
+==== evaluation on the recent writes ====
+-- setOwner(address)#0 --
+	recent writes:{1: ['4']}
+	for function refund():
+		read slots:['1']
+	for function withdraw():
+		read slots:['1']
+	for function invest():
+		read slots:['1']
+evaluation raw data:[0.0, 0.0, 0.0]
+evaluation value:0.0
+-- setPhase(uint256)#1 --
+	recent writes:{1: ['1']}
+	for function refund():
+		read slots:['1']
+	for function withdraw():
+		read slots:['1']
+	for function invest():
+		read slots:['1']
+evaluation raw data:[1.0, 1.0, 1.0]
+evaluation value:3.0
+-- invest()#setPhase(uint256)#3 --
+	recent writes:{1: ['2', '5'], 2: ['1']}
+	for function refund():
+		read slots:['1']
+	for function withdraw():
+		read slots:['1']
+	for function invest():
+		read slots:['1']
+evaluation raw data:[1.0, 1.0, 1.0]
+evaluation value:3.0
+-- invest()#setPhase(uint256)#4 --
+	recent writes:{1: ['2', '5'], 2: ['1']}
+	for function refund():
+		read slots:['1']
+	for function withdraw():
+		read slots:['1']
+	for function invest():
+		read slots:['1']
+evaluation raw data:[1.0, 1.0, 1.0]
+evaluation value:3.0
+-- summary --
+	setPhase(uint256)#1: 3.0
+	invest()#setPhase(uint256)#3: 3.0
+	invest()#setPhase(uint256)#4: 3.0
+	setOwner(address)#0: 0.0
+select setPhase(uint256)#1 based on depth
+
+====== state and assigned functions ======
+state key: setPhase(uint256)#1
+functions: ['withdraw()', 'refund()', 'invest()']
+
+====== coverage ======
+contract coverage: 87.82%
+function coverage:
+	100.00%: setOwner(address)
+	100.00%: setPhase(uint256)
+	31.33%: withdraw()
+	100.00%: refund()
+	100.00%: invest()
+	100.00%: fallback
+
+====== current state changing sequence(s): ======
+	['setPhase(uint256)', 'refund()']
+
+==============================
+queue:
+	setOwner(address)#0
+	invest()#setPhase(uint256)#3
+	invest()#setPhase(uint256)#4
+	setPhase(uint256)#refund()#5
+
+==== Reads in conditions for targets====
+	withdraw():['1']
+
+==== evaluation on the storage writes ====
+-- setOwner(address)#0 --
+	write slots:['0', '1', '3', '4']
+	write slots:{1: ['4']} (writes at each depth)
+	for function withdraw():
+		read slots:['1']
+evaluation raw data:[1.0]
+evaluation value:1.0
+-- invest()#setPhase(uint256)#3 --
+	write slots:['0', '1', '3', '4', '5', '2']
+	write slots:{1: ['2', '5'], 2: ['1']} (writes at each depth)
+	for function withdraw():
+		read slots:['1']
+evaluation raw data:[1.0]
+evaluation value:1.0
+-- invest()#setPhase(uint256)#4 --
+	write slots:['0', '1', '3', '4', '5', '2']
+	write slots:{1: ['2', '5'], 2: ['1']} (writes at each depth)
+	for function withdraw():
+		read slots:['1']
+evaluation raw data:[1.0]
+evaluation value:1.0
+-- setPhase(uint256)#refund()#5 --
+	write slots:['0', '1', '3', '4', '5']
+	write slots:{1: ['1'], 2: ['5']} (writes at each depth)
+	for function withdraw():
+		read slots:['1']
+evaluation raw data:[1.0]
+evaluation value:1.0
+-- summary --
+	setOwner(address)#0: 1.0
+	invest()#setPhase(uint256)#3: 1.0
+	invest()#setPhase(uint256)#4: 1.0
+	setPhase(uint256)#refund()#5: 1.0
+
+==== new recent writes ====
+	setOwner(address)#0: ['4']
+	invest()#setPhase(uint256)#3: ['1']
+	invest()#setPhase(uint256)#4: ['1']
+	setPhase(uint256)#refund()#5: ['5']
+
+==== evaluation on the recent writes ====
+-- setOwner(address)#0 --
+	recent writes:{1: ['4']}
+	for function withdraw():
+		read slots:['1']
+evaluation raw data:[0.0]
+evaluation value:0.0
+-- invest()#setPhase(uint256)#3 --
+	recent writes:{1: ['2', '5'], 2: ['1']}
+	for function withdraw():
+		read slots:['1']
+evaluation raw data:[1.0]
+evaluation value:1.0
+-- invest()#setPhase(uint256)#4 --
+	recent writes:{1: ['2', '5'], 2: ['1']}
+	for function withdraw():
+		read slots:['1']
+evaluation raw data:[1.0]
+evaluation value:1.0
+-- setPhase(uint256)#refund()#5 --
+	recent writes:{1: ['1'], 2: ['5']}
+	for function withdraw():
+		read slots:['1']
+evaluation raw data:[0.0]
+evaluation value:0.0
+-- summary --
+	invest()#setPhase(uint256)#3: 1.0
+	invest()#setPhase(uint256)#4: 1.0
+	setOwner(address)#0: 0.0
+	setPhase(uint256)#refund()#5: 0.0
+select invest()#setPhase(uint256)#4 based on random policy
+
+====== state and assigned functions ======
+state key: invest()#setPhase(uint256)#4
+functions: ['withdraw()']
+
+====== coverage ======
+contract coverage: 87.82%
+function coverage:
+	100.00%: setOwner(address)
+	100.00%: setPhase(uint256)
+	31.33%: withdraw()
+	100.00%: refund()
+	100.00%: invest()
+	100.00%: fallback
+
+====== current state changing sequence(s): ======
+	[]
+
+==============================
+queue:
+	setOwner(address)#0
+	invest()#setPhase(uint256)#3
+	setPhase(uint256)#refund()#5
+
+==== Reads in conditions for targets====
+	withdraw():['1']
+
+==== evaluation on the storage writes ====
+-- setOwner(address)#0 --
+	write slots:['0', '1', '3', '4']
+	write slots:{1: ['4']} (writes at each depth)
+	for function withdraw():
+		read slots:['1']
+evaluation raw data:[1.0]
+evaluation value:1.0
+-- invest()#setPhase(uint256)#3 --
+	write slots:['0', '1', '3', '4', '5', '2']
+	write slots:{1: ['2', '5'], 2: ['1']} (writes at each depth)
+	for function withdraw():
+		read slots:['1']
+evaluation raw data:[1.0]
+evaluation value:1.0
+-- setPhase(uint256)#refund()#5 --
+	write slots:['0', '1', '3', '4', '5']
+	write slots:{1: ['1'], 2: ['5']} (writes at each depth)
+	for function withdraw():
+		read slots:['1']
+evaluation raw data:[1.0]
+evaluation value:1.0
+-- summary --
+	setOwner(address)#0: 1.0
+	invest()#setPhase(uint256)#3: 1.0
+	setPhase(uint256)#refund()#5: 1.0
+
+==== new recent writes ====
+	setOwner(address)#0: ['4']
+	invest()#setPhase(uint256)#3: ['1']
+	setPhase(uint256)#refund()#5: ['5']
+
+==== evaluation on the recent writes ====
+-- setOwner(address)#0 --
+	recent writes:{1: ['4']}
+	for function withdraw():
+		read slots:['1']
+evaluation raw data:[0.0]
+evaluation value:0.0
+-- invest()#setPhase(uint256)#3 --
+	recent writes:{1: ['2', '5'], 2: ['1']}
+	for function withdraw():
+		read slots:['1']
+evaluation raw data:[1.0]
+evaluation value:1.0
+-- setPhase(uint256)#refund()#5 --
+	recent writes:{1: ['1'], 2: ['5']}
+	for function withdraw():
+		read slots:['1']
+evaluation raw data:[0.0]
+evaluation value:0.0
+-- summary --
+	invest()#setPhase(uint256)#3: 1.0
+	setOwner(address)#0: 0.0
+	setPhase(uint256)#refund()#5: 0.0
+select invest()#setPhase(uint256)#3 based on the evaluation of the recent writes
+
+====== state and assigned functions ======
+state key: invest()#setPhase(uint256)#3
+functions: ['withdraw()']
+
+====== coverage ======
+contract coverage: 99.79%
+function coverage:
+	100.00%: setOwner(address)
+	100.00%: setPhase(uint256)
+	100.00%: withdraw()
+	100.00%: refund()
+	100.00%: invest()
+	100.00%: fallback
+
+====== current state changing sequence(s): ======
+	['invest()', 'setPhase(uint256)', 'withdraw()']
+#@statespace
+122 nodes, 121 edges, 1038 total states
+#@coverage
+Achieved 10.34% coverage for code: 608060405269152d02c7e14af6800000600055600060015534801561002357600080fd5b50624f1a00420160038190555033600460006101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff1602179055506103b4806100806000396000f30060806040526004361061006d576000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff16806313af4035146100725780632cc82655146100b55780633ccfd60b146100e2578063590e1ae3146100f9578063e8b5e51f14610110575b600080fd5b34801561007e57600080fd5b506100b3600480360381019080803573ffffffffffffffffffffffffffffffffffffffff16906020019092919050505061011a565b005b3480156100c157600080fd5b506100e06004803603810190808035906020019092919050505061015e565b005b3480156100ee57600080fd5b506100f76101ae565b005b34801561010557600080fd5b5061010e61022b565b005b610118610309565b005b80600460006101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff16021790555050565b600181148015610172575060005460025410155b80610199575060028114801561018b5750600054600254105b8015610198575060035442115b5b15156101a457600080fd5b8060018190555050565b600180541415156101be57600080fd5b600460009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff166108fc6002549081150290604051600060405180830381858888f19350505050158015610228573d6000803e3d6000fd5b50565b600260015414151561023c57600080fd5b3373ffffffffffffffffffffffffffffffffffffffff166108fc600560003373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001908152602001600020549081150290604051600060405180830381858888f193505050501580156102c1573d6000803e3d6000fd5b506000600560003373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002081905550565b600060015414801561031e5750600054600254105b151561032957600080fd5b34600560003373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002060008282540192505081905550346002600082825401925050819055505600a165627a7a72305820df9dfb2f36512d320fe26236c83162e5c1bd4c405fc7c5a32b121f9831f6c2690029
+#@coverage
+Achieved 99.79% coverage for code: 60806040526004361061006d576000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff16806313af4035146100725780632cc82655146100b55780633ccfd60b146100e2578063590e1ae3146100f9578063e8b5e51f14610110575b600080fd5b34801561007e57600080fd5b506100b3600480360381019080803573ffffffffffffffffffffffffffffffffffffffff16906020019092919050505061011a565b005b3480156100c157600080fd5b506100e06004803603810190808035906020019092919050505061015e565b005b3480156100ee57600080fd5b506100f76101ae565b005b34801561010557600080fd5b5061010e61022b565b005b610118610309565b005b80600460006101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff16021790555050565b600181148015610172575060005460025410155b80610199575060028114801561018b5750600054600254105b8015610198575060035442115b5b15156101a457600080fd5b8060018190555050565b600180541415156101be57600080fd5b600460009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff166108fc6002549081150290604051600060405180830381858888f19350505050158015610228573d6000803e3d6000fd5b50565b600260015414151561023c57600080fd5b3373ffffffffffffffffffffffffffffffffffffffff166108fc600560003373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001908152602001600020549081150290604051600060405180830381858888f193505050501580156102c1573d6000803e3d6000fd5b506000600560003373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002081905550565b600060015414801561031e5750600054600254105b151561032957600080fd5b34600560003373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002060008282540192505081905550346002600082825401925050819055505600a165627a7a72305820df9dfb2f36512d320fe26236c83162e5c1bd4c405fc7c5a32b121f9831f6c2690029
+==== Integer Arithmetic Bugs ====
+SWC ID: 101
+Severity: High
+Contract: Crowdsale
+Function name: constructor
+PC address: 42
+Estimated Gas Usage: 21038 - 103767
+The arithmetic operator can overflow.
+It is possible to cause an integer overflow or underflow in the arithmetic operation. 
+--------------------
+In file: ./tests/testdata/solidity_files/Crowdsale.sol:10
+
+now+60 days
+
+--------------------
+Initial State:
+
+Account: [CREATOR], balance: 0x0, nonce:0, storage:{}
+Account: [ATTACKER], balance: 0x0, nonce:0, storage:{}
+
+Transaction Sequence:
+
+Caller: [CREATOR], calldata: , decoded_data: , value: 0x0
+
+==== Dependence on predictable environment variable ====
+SWC ID: 116
+Severity: Low
+Contract: Crowdsale
+Function name: setPhase(uint256)
+PC address: 415
+Estimated Gas Usage: 2729 - 2824
+A control flow decision is made based on The block.timestamp environment variable.
+The block.timestamp environment variable is used to determine a control flow decision. Note that the values of variables like coinbase, gaslimit, block number and timestamp are predictable and can be manipulated by a malicious miner. Also keep in mind that attackers know hashes of earlier blocks. Don't use any of those environment variables as sources of randomness and be aware that use of these variables introduces a certain level of trust into miners.
+--------------------
+In file: ./tests/testdata/solidity_files/Crowdsale.sol:19
+
+require (
+    (newPhase==1 && raised>=goal) ||
+    (newPhase==2 && raised<goal && now>end))
+
+--------------------
+Initial State:
+
+Account: [CREATOR], balance: 0x0, nonce:0, storage:{}
+Account: [ATTACKER], balance: 0x0, nonce:0, storage:{}
+
+Transaction Sequence:
+
+Caller: [CREATOR], calldata: , decoded_data: , value: 0x0
+Caller: [CREATOR], function: setPhase(uint256), txdata: 0x2cc826550000000000000000000000000000000000000000000000000000000000000002, decoded_data: (2,), value: 0x0
+
+
+#@time
+time used(s):16.843836784362793
