@@ -1,20 +1,6 @@
 Installation and Setup
 ======================
 
-Mythril can be setup using different methods.
-
-**************
-PyPI on Mac OS
-**************
-
-.. code-block:: bash
-
-   brew update
-   brew upgrade
-   brew tap ethereum/ethereum
-   brew install solidity
-   pip3 install mythril
-
 
 **************
 PyPI on Ubuntu
@@ -33,33 +19,45 @@ PyPI on Ubuntu
    # Install libssl-dev, python3-dev, and python3-pip
    sudo apt install libssl-dev python3-dev python3-pip
 
-   # Install mythril
-   pip3 install mythril
-   myth version
+   # Install smartExecutorx
+   pip3 install smartExecutorx
+   semyth version
 
 
 ******
 Docker
 ******
 
-All Mythril releases, starting from v0.18.3, are published to DockerHub as Docker images under the :code:`mythril/myth` name.
 
-After installing `Docker CE <https://docs.docker.com/install/>`_:
+1, Pull the Docker image of SmartExecutor:
 
-   .. code-block:: bash
+    .. code-block:: bash
 
-      # Pull the latest release of mythril/myth
-      $ docker pull mythril/myth
+        $ sudo docker pull 23278942/smartexecutor
 
-Use :code:`docker run mythril/myth` the same way you would use the :code:`myth` command
 
-   .. code-block:: bash
+2, Run SmartExecutor with a single Docker command. Replace a_host_directory with the path to your host directory containing the Solidity file, for example, Crowdsale.sol.
 
-      docker run mythril/myth --help
-      docker run mythril/myth disassemble -c "0x6060"
+    .. code-block:: bash
 
-To pass a file from your host machine to the dockerized Mythril, you must mount its containing folder to the container properly. For :code:`contract.sol` in the current working directory, do:
+        $ sudo docker run -it --rm -v a_host_directory:/home/smartExecutor/ image_id analyze ./Crowdsale.sol:Crowdsale
 
-   .. code-block:: bash
+This command mounts the host directory to a directory inside the container and analyzes the contract Crowdsale defined in the Solidity file Crowdsale.sol.
 
-      docker run -v $(pwd):/tmp mythril/myth analyze /tmp/contract.sol
+To analyze the sample Solidity file provided with the Docker image, you can use the following command:
+
+    .. code-block:: bash
+
+        $ sudo docker run -it --rm image_id analyze /opt/smartExecutor/tests/testdata/solidity_files/Crowdsale.sol:Crowdsale
+
+
+3, Additional Options
+
+To see more intermediate data, add the -v option followed by a value (3 or larger):
+
+    .. code-block:: bash
+
+        $ sudo docker run -it --rm image_id -v 3 analyze /opt/smartExecutor/tests/testdata/solidity_files/Crowdsale.sol:Crowdsale
+
+
+

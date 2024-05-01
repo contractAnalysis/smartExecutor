@@ -1,11 +1,10 @@
 
 ##  SmartExecutor ##
 
-SmartExecutor is a guided symbolic execution tool for EVM bytecode. It has a dual-phase process. In Phase 1, it symbolically executes all possible function sequences within the given depth limit.
+SmartExecutor is a guided symbolic execution tool for security analysis on EVM bytecode. It is designed to reduce the sequence explosion of symbolic execution to provide a scalable solution to symbolic execution while trying to maximize code coverage.  It has a dual-phase process. In Phase 1, it symbolically executes all possible function sequences within the given depth limit.
 
-Phase 2 then targets the not-fully-covered functions based on instruction coverage. This is the phase where the guidance takes place. SmartExecutor can direct the execution flow by prioritizing the more significant states to the target functions and selecting the functions at states to be executed that are more likely to cover the targets. The state significant value calculation and the function selection are based on data dependency analysis and runtime execution data like function coverage and target functions.
+Phase 2 then targets the not-fully-covered functions based on instruction coverage. This is the phase where the guidance takes place. SmartExecutor can direct the execution flow by prioritizing the states more significant to the target functions and selecting the functions at states to be executed that are more likely to cover the targets. The state significance value calculation and the function selection are based on static data dependency analysis and runtime execution data like function coverage and target functions.
 
-SmartExecutor is built on top of [Mythril](https://github.com/ConsenSys/mythril), a symbolic-execution-based security analysis tool for EVM bytecode that can detect security vulnerabilities in smart contracts. SmartExecutor is designed to reduce the sequence explosion of symbolic execution on smart contracts. It provides a scalable solution to symbolic execution while still keeping the basic features of Mythril. 
 
 This is the [link](https://ieeexplore.ieee.org/document/10316942) to our conference paper: SmartExecutor: Coverage-Driven Symbolic Execution Guided by a Function Dependency Graph. 
 

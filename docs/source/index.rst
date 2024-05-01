@@ -11,6 +11,7 @@ Welcome to Mythril's documentation!
    security-analysis
    analysis-modules
    mythril
+   fdg
 
 
 Indices and Tables

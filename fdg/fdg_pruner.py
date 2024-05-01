@@ -9,7 +9,7 @@ from fdg.control.guider import Guider
 from fdg.function_coverage import FunctionCoverage
 
 from fdg.preprocessing.preprocess import Preprocessing
-from fdg.constraint_check import state_constraints_hash_check
+
 
 from mythril.laser.ethereum.state.world_state import WorldState
 from mythril.laser.ethereum.svm import LaserEVM
@@ -80,8 +80,9 @@ class FDG_pruner(LaserPlugin):
         @symbolic_vm.laser_hook("start_sym_exec")
         def start_sym_exec_hook():
 
-            # for saving the generated states and executed sequences
-            self.state_hash_check=state_constraints_hash_check()
+            # # for saving the generated states and executed sequences
+            # self.state_hash_check=state_constraints_hash_check()
+            pass
 
 
         @symbolic_vm.laser_hook("stop_sym_exec")

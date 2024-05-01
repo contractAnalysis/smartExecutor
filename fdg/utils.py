@@ -152,31 +152,4 @@ def get_ftn_seq_from_key_1(key:str)->list:
 
 
 
-if __name__ == '__main__':
-    # import numpy as np
-    # print(get_binary(7,16))
-    # print(get_binary(6,16))
-    # print(np.random.choice(range(10), size=2, replace=False))
-    # print(get_combination_for_a_list([1,2,3],3))
-    # print(get_combination([["1","2"], ["b"]], 2))
-    #
-    # sv1_seq_indices = range(2)
-    # sv2_seq_indices = range(1)
-    # sv3_seq_indices = range(2)
-    # comb_indices = get_combination([sv1_seq_indices, sv2_seq_indices,sv3_seq_indices], 3)
-    # print(comb_indices)
-
-    a=[1,2,3]
-    b=[1,2,3]
-    print(f'a={hash_for_list(a)}\nb={hash_for_list(b)}')
-    a=[0,1,2,3]
-    select=random_indices(0,3,2)
-    b=[item for idx,item in enumerate(a) if idx in select]
-    print(f'a={a}')
-    print(f'select={select}')
-    print(f'b={b}')
-
-    print(get_key_1_prefix("2#2#4"))
-
-
 

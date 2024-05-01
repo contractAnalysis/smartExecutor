@@ -1048,7 +1048,7 @@ def parse_args_and_execute(parser: ArgumentParser, args: Namespace) -> None:
         if args.outform == "json":
             print(json.dumps({"version_str": VERSION}))
         else:
-            print("Mythril version {}".format(VERSION))
+            print("SmartExecutor version {}".format(VERSION))
         sys.exit()
 
     if args.command == LIST_DETECTORS_COMMAND:

@@ -277,11 +277,11 @@ class UpdateFWRG():
         for dk in self.acyclicPaths.dk_functions:
             if dk not in self.acyclicPaths.paths_df.keys():
                 self.dk_not_reachable.append(dk)
-                print(f'{dk} is not reachable')
+                # print(f'{dk} is not reachable')
             else:
                 if len(self.acyclicPaths.paths_df[dk])==0:
                     self.dk_not_reachable.append(dk)
-                    print(f'{dk} is not reachable')
+                    # print(f'{dk} is not reachable')
 
 class FWRG_manager():
     def __init__(self, start_functions:list, dk_functions:list, preprocess:Preprocessing):
