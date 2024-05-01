@@ -127,15 +127,4 @@ The output will show the vulnerabilities in the contract. In the case of the "Ex
         Caller: [SOMEGUY], function: assert3(uint256), txdata: 0x546455b50000000000000000000000000000000000000000000000000000000000000017, value: 0x0
 
 
-One of the functions, ``assert5(uint256)``, should also have an assertion failure, but it is not detected because Mythril's default configuration is to run three transactions. 
-To detect this vulnerability, the transaction count can be increased to four using the ``-t`` option, as shown below:
-
-.. code-block:: bash
-
-    $ myth analyze <file_path> -t 4
-
-This gives the following execution output:
-
-
-    .. code-block:: none
 

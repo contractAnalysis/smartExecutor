@@ -18,7 +18,7 @@ NAME = "smartExecutorx"
 DESCRIPTION = "Security analysis tool for Ethereum smart contracts"
 URL = "https://github.com/contractAnalysis/smartExecutor"
 AUTHOR = "contractAnalysis"
-AUTHOR_MAIL = None
+AUTHOR_EMAIL = None
 REQUIRES_PYTHON = ">=3.8.0"
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -56,7 +56,7 @@ TESTS_REQUIRE = ["mypy==0.782", "pytest>=3.6.0", "pytest_mock", "pytest-cov"]
 EXTRAS = {}
 
 # If version is set to None then it will be fetched from __version__.py
-VERSION = "v4.0"
+VERSION = "v4.0.0"
 
 
 # Import the README and use it as the long-description.
@@ -105,7 +105,7 @@ setup(
     long_description_content_type="text/markdown",  # requires twine and recent setuptools
     url=URL,
     author=AUTHOR,
-    author_mail=AUTHOR_MAIL,
+    author_email=AUTHOR_EMAIL,
     license="MIT",
     classifiers=[
         "Development Status :: 3 - Alpha",

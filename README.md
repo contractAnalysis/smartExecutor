@@ -93,7 +93,7 @@ For this reason, here show some useful documents of Mythril:
 - [Vulnerability Remediation](https://swcregistry.io/)
 -->
 If you find this tool helpful, we would appreciate it if you could cite it. Here is the BibTex:
-```json
+```text
 @INPROCEEDINGS{10316942,
   author={Wei, Qiping and Sikder, Fadul and Feng, Huadong and Lei, Yu and Kacker, Raghu and Kuhn, Richard},
   booktitle={2023 5th Conference on Blockchain Research & Applications for Innovative Networks and Services (BRAINS)}, 
