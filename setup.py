@@ -56,7 +56,7 @@ TESTS_REQUIRE = ["mypy==0.782", "pytest>=3.6.0", "pytest_mock", "pytest-cov"]
 EXTRAS = {}
 
 # If version is set to None then it will be fetched from __version__.py
-VERSION = "v0.3"
+VERSION = "v4.0"
 
 
 # Import the README and use it as the long-description.
