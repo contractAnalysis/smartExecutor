@@ -6,7 +6,7 @@ SmartExecutor is a guided symbolic execution tool for security analysis on EVM b
 Phase 2 then targets the not-fully-covered functions based on instruction coverage. This is the phase where the guidance takes place. SmartExecutor can direct the execution flow by prioritizing the states more significant to the target functions and selecting the functions at states to be executed that are more likely to cover the targets. The state significance value calculation and the function selection are based on static data dependency analysis and runtime execution data like function coverage and target functions.
 
 
-This is the [link](https://ieeexplore.ieee.org/document/10316942) to our conference paper: SmartExecutor: Coverage-Driven Symbolic Execution Guided by a Function Dependency Graph. 
+This is the [link](https://ieeexplore.ieee.org/document/10316942) to our conference paper: SmartExecutor: Coverage-Driven Symbolic Execution Guided by a Function Dependency Graph. The [documentation](https://page.d1xp6o5ammny8t.amplifyapp.com/) is available.
 
 
 
