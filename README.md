@@ -19,20 +19,20 @@ $ sudo docker pull 23278942/smartexecutor
 
 2, Run SmartExecutor with a single Docker command. Replace a_host_directory with the path to your host directory containing the Solidity file, for example, Crowdsale.sol.
 ```bash
-$ sudo docker run -it --rm -v a_host_directory:/home/smartExecutor/ image_id analyze ./Crowdsale.sol:Crowdsale
+$ sudo docker run -it --rm -v a_host_directory:/home/smartExecutor/ --entrypoint semyth 3278942/smartexecutor:latest analyze ./Crowdsale.sol:Crowdsale
 ```
 This command mounts the host directory to a directory inside the container and analyzes the contract Crowdsale defined in the Solidity file Crowdsale.sol.
 
 To analyze the sample Solidity file provided with the Docker image, you can use the following command:
 ```bash
-$ sudo docker run -it --rm image_id analyze /opt/smartExecutor/tests/testdata/solidity_files/Crowdsale.sol:Crowdsale 
+$ sudo docker run -it --rm --entrypoint semyth 3278942/smartexecutor:latest analyze /opt/smartExecutor/tests/testdata/solidity_files/Crowdsale.sol:Crowdsale 
 ```
 
 3, Additional Options
 
 To see more intermediate data, add the -v option followed by a value (3 or larger):
 ```bash
-$ sudo docker run -it --rm image_id -v 3 analyze /opt/smartExecutor/tests/testdata/solidity_files/Crowdsale.sol:Crowdsale 
+$ sudo docker run -it --rm --entrypoint semyth 3278942/smartexecutor:latest -v 3 analyze /opt/smartExecutor/tests/testdata/solidity_files/Crowdsale.sol:Crowdsale 
 ```
 
 Click [here](./example_output/Crowdsale.sol_terminal_output.txt) to see the terminal output.
@@ -53,6 +53,14 @@ semyth -v 3 analyze ./Crowdsale.sol:Crowdsale
 
 ```
 -->
+
+
+### Install solc-select and all versions of solc
+```
+pip install solc-select  # solc-select is a package to switch among different versions of solc (Solidity compiler)
+solc-select install all  # install all possible versions of solc 
+solc-select use 0.4.25   # example of using solc-select: set the version of solc to 0.4.25
+```
 
 
 ### Run SmartExecutor in Pycharm IDE:
