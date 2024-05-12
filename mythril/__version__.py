@@ -6,4 +6,4 @@ as for importing into Python.
 
 # __version__ = "v0.23.22" # the version of Mythril that SmartExecutor is built on
 
-__version__ = "v4.0"
+__version__ = "v4.1"
