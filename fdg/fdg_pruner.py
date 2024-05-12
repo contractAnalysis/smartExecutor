@@ -63,7 +63,7 @@ class FDG_pruner(LaserPlugin):
         elif fdg.global_config.function_search_strategy=='seq':
             self.search_stragety=Seq()
         else:
-            self.search_stragety = Mine()
+            self.search_stragety = BFS()
 
         self.guider=Guider(self.search_stragety,list(fdg.global_config.method_identifiers.keys()))
 
@@ -88,22 +88,6 @@ class FDG_pruner(LaserPlugin):
         @symbolic_vm.laser_hook("stop_sym_exec")
         def stop_sym_exec_hook():
             if fdg.global_config.random_baseline>0:return
-            # if not fdg.global_config.flag_preprocess_timeout:
-            #     if not fdg.global_config.preprocessing_exception:
-            #         if self.preprocess is not None and self.functionCoverage is not None:
-            #             if self.preprocess.coverage == self.functionCoverage.coverage:
-            #                 print(f'Reach the maximum coverage.')
-            #
-            # if fdg.global_config.print_function_coverage==1:
-            #    deep_functions_1st_time=self.functionCoverage.get_deep_functions_1st_time()
-            #    if len(deep_functions_1st_time) > 0:
-            #         self.get_depth_k_functions()
-            #         deep_function_in_the_end =self.depth_k
-            #         print(
-            #             f'depth-k functions: {len(deep_functions_1st_time) - len(deep_function_in_the_end)} out of {len(deep_functions_1st_time)} reaches the threshold {fdg.global_config.function_coverage_threshold}%')
-            #
-            #         print(f'all depth-k function(s): {deep_functions_1st_time}')
-            #         print(f'left depth-k function(s): {deep_function_in_the_end}')
 
 
 
@@ -138,10 +122,20 @@ class FDG_pruner(LaserPlugin):
                 self.guider.instructionModification.feed_instructions(
                     laserEVM.open_states[0], fdg.global_config.contract_address)
 
-                # self.guider.save_genesis_states(laserEVM.open_states) # to-do: think about removing it
+                self.guider.save_genesis_states(laserEVM.open_states) # to-do: think about removing it
                 self.get_runtime_bytecode(laserEVM.open_states[0],fdg.global_config.contract_address)
 
+            if fdg.global_config.random_baseline > 0:
+                self.guider.start_iteration(
+                    laserEVM=laserEVM, dk_functions=None,
+                    iteration=self._iteration_)
+                return
 
+            if self.search_stragety.name in ['seq']:
+                self.guider.start_iteration(
+                    laserEVM=laserEVM, dk_functions=None,
+                    iteration=self._iteration_)
+                return
 
             if self._iteration_==1:
                 # create a Preprocessing instance
@@ -178,6 +172,61 @@ class FDG_pruner(LaserPlugin):
             """
             log.info(f'\n----------------------------------------')
             log.info(f'end: self._iteration_={self._iteration_}')
+            # ++++++++++++++++++++++++++++++++++++++++++++++++++
+            if fdg.global_config.random_baseline > 0:
+                # prune unfeasible states
+                old_states_count = len(laserEVM.open_states)
+                laserEVM.open_states = [
+                    state for state in laserEVM.open_states if
+                    state.constraints.is_possible
+                ]
+                prune_count = old_states_count - len(laserEVM.open_states)
+                if prune_count: log.info(
+                    "Pruned {} unreachable states".format(prune_count))
+
+                # compute coverage
+                self.functionCoverage.compute_contract_coverage(
+                    fdg.global_config.target_runtime_bytecode)
+                # self.functionCoverage.print_coverage()
+
+                # check at the end of iteration
+                self.guider.end_iteration(laserEVM, self._iteration_)
+                flag_terminate = self.guider.should_terminate()
+                if flag_terminate:
+                    fdg.global_config.transaction_count = self._iteration_
+
+                if self._iteration_ == 1 and len(laserEVM.open_states) == 1:
+                    # in case that there are one state
+                    self.search_stragety.initialize(True)
+
+                # termination based on the coverage of the contract
+                if self.functionCoverage.coverage >= fdg.global_config.function_coverage_threshold:
+                    if not self.search_stragety.flag_one_start_function:
+                        fdg.global_config.transaction_count = self._iteration_
+
+                return
+
+            if self.search_stragety.name in ['seq']:
+                # prune unfeasible states
+                old_states_count = len(laserEVM.open_states)
+                laserEVM.open_states = [
+                    state for state in laserEVM.open_states if
+                    state.constraints.is_possible
+                ]
+                prune_count = old_states_count - len(laserEVM.open_states)
+                if prune_count: log.info(
+                    "Pruned {} unreachable states".format(prune_count))
+
+                # compute coverage
+                self.functionCoverage.compute_contract_coverage(
+                    fdg.global_config.target_runtime_bytecode)
+                # self.functionCoverage.print_coverage()
+
+                # check at the end of iteration
+                self.guider.end_iteration(laserEVM, self._iteration_)
+                flag_terminate = self.guider.should_terminate()
+                if flag_terminate:
+                    fdg.global_config.transaction_count = self._iteration_
 
             #++++++++++++++++++++++++++++++++++++++++++++++++++
             if self.preprocess is None: return

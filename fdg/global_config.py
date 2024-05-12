@@ -13,7 +13,7 @@ fdg_fwrg=False
 
 # set the search strategy when guiding the symolic execution using a graph structure
 global function_search_strategy
-function_search_strategy='bfs'
+function_search_strategy='mine'
 
 
 # having value larger than 0 means brandom baseline is active

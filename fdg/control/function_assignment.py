@@ -68,6 +68,9 @@ class FunctionAssignment():
     def assign_functions_for_baseline(self)->list:
 
         to_consider_functions=self.all_functions
+        if self.random_select_percent>10:
+            self.random_select_percent=10
+
         select_num=math.ceil((self.random_select_percent/10)*len(to_consider_functions))
 
         select_indices=random_indices(0,len(to_consider_functions)-1,select_num)

@@ -36,8 +36,8 @@ class FunctionSearchStrategy():
         if key in self.world_states.keys():
             self.world_states.pop(key)
 
-    def assign_states(self, deep_functions: list=None, current_state_key: str = None, fdfg: FWRG_manager = None,
-                      states_dict: dict = {},iteration:int=0) -> list:
+    def assign_states(self, dk_functions: list=None, current_state_key: str = None, fdfg: FWRG_manager = None,
+                      states_dict: dict = {}, iteration:int=0) -> list:
         pass
 
 
@@ -50,50 +50,28 @@ class FunctionSearchStrategy():
 class Seq(FunctionSearchStrategy):
     def __init__(self):
         self.queue = []
-
-        # # 0x00c0443f42932d9efe27e64409b21d2e48928d66.sol	0.5.8	JarvisExchange
-        # self.sequences = [
-        #     ['setController(address)', 'withdrawToken(address,uint256,uint256)']
-        # ]
-
-        # 0x9afb9d7ed0f6c054ec76ea61d5cabc384d4dcb25.sol	0.4.26	ConverterFactory
-        self.sequences = [
-            ['transferOwnership(address)', 'acceptOwnership()']
-        ]
-        #0x2caf5a42ec2d6747ec696714bf913b174d94fdf0.sol	0.5.17	LexLocker
-        # contain GT, and function signature with 3 bytes
-        self.sequences = [
-            ['updateJudgmentReward(uint256)']
-        ]
-
         if len(fdg.global_config.sequences)>0:
             # assume that the sequenes are presented as string
-            self.sequences=ast.literal_eval(fdg.global_config.sequences)
+            self.sequences=fdg.global_config.sequences
         else:self.sequences=[]
 
         super().__init__('seq')
 
-    def initialize(self, main_path_sf: dict, main_path_df: dict, fdfg_manager: FWRG_manager):
+    def initialize(self):
         ...
-
-
-
 
 
     def termination(self, states_num: int = 0, current_seq_length: int = 0, sequence_depth_limit: int = 0,
                     iteration: int = 0) -> bool:
         # need to test
         if states_num == 0: return True
-        if iteration>2:
-            if len(self.queue) == 0:
-                return True
         return False
 
-    def assign_states(self, deep_functions: list = None, current_state_key: str = None, fdfg: FWRG_manager = None,
-                      states_dict: dict = {},iteration:int=0) -> list:
+    def assign_states(self, dk_functions: list = None, current_state_key: str = None, fdfg: FWRG_manager = None,
+                      states_dict: dict = {}, iteration:int=0) -> list:
         """
 
-        :param deep_functions:
+        :param dk_functions:
         :param current_state_key:
         :param fdfg:
         :param states_dict:
@@ -121,9 +99,13 @@ class Seq(FunctionSearchStrategy):
             for seq_ in self.sequences:
                 if len(seq)==len(seq_):continue
                 if len(seq)<len(seq_):
+                    flag_add=True
                     for i in range(len(seq)):
-                        if seq[i]!=seq_[i]:break
-                    functions.append(seq_[len(seq)])
+                        if seq[i]!=seq_[i]:
+                            flag_add=False
+                            break
+                    if flag_add:
+                        functions.append(seq_[len(seq)])
             if len(functions)>0:
                 return {state_key:functions},True
 
@@ -152,13 +134,13 @@ class DFS(FunctionSearchStrategy):
 
 
 
-    def assign_states(self, deep_functions: list=None, states_dict: dict = {},iteration:int=0) -> list:
+    def assign_states(self, dk_functions: list=None, states_dict: dict = {}, iteration:int=0) -> list:
 
         """
             save states, push state keys to the stack
             select a state by poping an item from the stack
             assign functions to be executed on the selected state
-        :param deep_functions:
+        :param dk_functions:
         :param current_state_key:
         :param fdfg:
         :param states_dict:
@@ -190,21 +172,21 @@ class DFS(FunctionSearchStrategy):
 
             if self.preprocess_timeout or fdg.global_config.preprocessing_exception:
                 if self.preprocess_coverage<50:
-                    assigned_functions=self.functionAssignment.assign_functions_timeout(state_key,deep_functions, 7)
+                    assigned_functions=self.functionAssignment.assign_functions_timeout(state_key, dk_functions, 7)
                     if len(assigned_functions) > 0:
                         return {state_key: assigned_functions},True
                     continue
                 elif self.preprocess_coverage < 80:
-                    assigned_functions = self.functionAssignment.assign_functions_timeout(state_key,deep_functions, 5)
+                    assigned_functions = self.functionAssignment.assign_functions_timeout(state_key, dk_functions, 5)
                     if len(assigned_functions) > 0:
                         return {state_key: assigned_functions},True
                     continue
                 else:
-                    assigned_functions = self.functionAssignment.assign_functions_timeout(state_key,deep_functions, 3)
+                    assigned_functions = self.functionAssignment.assign_functions_timeout(state_key, dk_functions, 3)
                     if len(assigned_functions) > 0:
                         return {state_key: assigned_functions},True
                     continue
-            assigned_functions = self.functionAssignment.assign_functions(state_key,deep_functions)
+            assigned_functions = self.functionAssignment.assign_functions(state_key, dk_functions)
             if len(assigned_functions) > 0:
                 return {state_key: assigned_functions},True
 
@@ -360,6 +342,9 @@ class RandomBaseline(FunctionSearchStrategy):
 
         if iteration <= 1:
             if states_num == 0: return True
+        else:
+            if len(self.queue)==0:
+                return True
 
         return False
 

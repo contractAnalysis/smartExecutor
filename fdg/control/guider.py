@@ -55,7 +55,7 @@ class Guider():
             self.state_index += 1
         return all_states
 
-    def start_iteration(self,laserEVM:LaserEVM=None,deep_functions:list=None,iteration:int=0):
+    def start_iteration(self, laserEVM:LaserEVM=None, dk_functions:list=None, iteration:int=0):
         """
             prepare for states and functions to be executed on the states
         :param laserEVM:
@@ -65,23 +65,27 @@ class Guider():
         """
         #============================================
         if self.ftn_search_strategy.name in ['seq']:
-            if iteration == 2:
-                self.ftn_search_strategy.initialize(None,None,None)
+            if iteration == 1:
+                self.ftn_search_strategy.initialize()
 
                 organize_states_dict={'constructor':laserEVM.open_states}
-                states_functions,flag_world_state_del = self.ftn_search_strategy.assign_states(deep_functions=None, fdfg=None,states_dict=organize_states_dict)
+                states_functions,flag_world_state_del = self.ftn_search_strategy.assign_states(
+                    dk_functions=None, fdfg=None, states_dict=organize_states_dict)
+                print_assigned_functions(states_functions)
                 self._prepare_states(laserEVM, organize_states_dict, states_functions,flag_world_state_del)
 
             else:
                 organize_states_dict = self.organize_states(laserEVM.open_states)
-                states_functions,flag_world_state_del = self.ftn_search_strategy.assign_states(deep_functions=None, fdfg=None,
-                                                                          states_dict=organize_states_dict)
+                states_functions,flag_world_state_del = self.ftn_search_strategy.assign_states(
+                    dk_functions=None, fdfg=None,
+                    states_dict=organize_states_dict)
                 organize_states_dict = {}
-                for key, function in states_functions.items():
-                    if len(function) > 0:
-                        organize_states_dict[key] = deepcopy(self.ftn_search_strategy.world_states[key])
-
-                self._prepare_states(laserEVM, organize_states_dict, states_functions,flag_world_state_del)
+                if len(states_functions)>0:
+                    for key, function in states_functions.items():
+                        if len(function) > 0:
+                            organize_states_dict[key] = deepcopy(self.ftn_search_strategy.world_states[key])
+                    print_assigned_functions(states_functions)
+                    self._prepare_states(laserEVM, organize_states_dict, states_functions,flag_world_state_del)
             return
 
 
@@ -96,7 +100,8 @@ class Guider():
                 organize_states_dict = self.organize_states(laserEVM.open_states)
 
 
-                states_functions,flag_world_state_del = self.ftn_search_strategy.assign_states(deep_functions=None, states_dict=organize_states_dict)
+                states_functions,flag_world_state_del = self.ftn_search_strategy.assign_states(
+                    dk_functions=None, states_dict=organize_states_dict)
                 print_assigned_functions(states_functions)
                 if self.ftn_search_strategy.name in ['baseline']:
                     organize_states_dict = {}
@@ -116,7 +121,7 @@ class Guider():
         else:
             # when iteration >2
             organize_states_dict=self.organize_states(laserEVM.open_states)
-            states_functions,flag_world_state_del=self.ftn_search_strategy.assign_states(dk_functions=deep_functions, states_dict=organize_states_dict,iteration=iteration)
+            states_functions,flag_world_state_del=self.ftn_search_strategy.assign_states(dk_functions=dk_functions, states_dict=organize_states_dict, iteration=iteration)
 
             if len(states_functions)==0:
                 # no functions will be executed
@@ -202,14 +207,14 @@ class Guider():
     def should_terminate(self):
         return self.termination
 
-    # def save_genesis_states(self,states:list):
-    #     self.genesis_states=deepcopy(states)
-    #     if self.ftn_search_strategy.name in ['mine']:
-    #         states_dict=self.organize_states(states)
-    #         # if len(states_dict)>=2:
-    #         #     print('Check when two or more genesis states are generated (guider.py)')
-    #         self.ftn_search_strategy.update_states(states_dict)
-    #         self.ftn_search_strategy.state_key_assigned_at_last =list(states_dict.keys())[0]
+    def save_genesis_states(self,states:list):
+        self.genesis_states=deepcopy(states)
+        if self.ftn_search_strategy.name in ['mine']:
+            states_dict=self.organize_states(states)
+            # if len(states_dict)>=2:
+            #     print('Check when two or more genesis states are generated (guider.py)')
+            self.ftn_search_strategy.update_states(states_dict)
+            self.ftn_search_strategy.state_key_assigned_at_last =list(states_dict.keys())[0]
 
 
 

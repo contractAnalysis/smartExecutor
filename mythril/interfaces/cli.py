@@ -6,6 +6,7 @@
 """
 
 import argparse
+import ast
 import json
 import logging
 import os
@@ -439,6 +440,7 @@ def create_safe_functions_parser(parser: ArgumentParser):
     add_analysis_args(options)
     add_fwrg_analysis_args(options) #@wei
 
+
 def add_fwrg_analysis_args(options):
     # @wei
     options.add_argument(
@@ -477,7 +479,7 @@ def add_fwrg_analysis_args(options):
     options.add_argument(
         "-seq",
         "--sequences",
-        type=str,
+        type=parse_list_of_lists,
         help="sequences that will be executed directly",
 
     )
@@ -511,6 +513,12 @@ def add_fwrg_analysis_args(options):
         default=5,
         help="limit the times a function can be executed",
     )
+    options.add_argument(
+        "--seq-len-limit",
+        type=int,
+        default=4,
+        help="set the maximum sequence length to be executed",
+    )
 
     options.add_argument(
         "--random-baseline",
@@ -518,6 +526,21 @@ def add_fwrg_analysis_args(options):
         default=0,  # 0 means the baseline is inactive
         help=" with values from  0 to 10. indicate the percent of functions to be considered",
     )
+    options.add_argument(
+
+        "--no-guidance",
+        default=False,
+        action="store_true",
+        help="use guided exploration",
+    )
+
+
+def parse_list_of_lists(value):
+    try:
+        # Parse the string representation of the list of lists into an actual list of lists
+        return ast.literal_eval(value)
+    except (ValueError, SyntaxError) as e:
+        raise argparse.ArgumentTypeError(f"Invalid value for list of lists: {value}")
 
 def add_fwrg_arguments(args: Namespace):
     """
@@ -534,6 +557,8 @@ def add_fwrg_arguments(args: Namespace):
     fdg.global_config.optimization = args.optimization
     fdg.global_config.flag_consider_all_reads = args.consider_all_reads
     fdg.global_config.execution_times_limit = args.execution_times_limit
+    fdg.global_config.seq_len_limit=args.seq_len_limit
+    fdg.global_config.function_search_strategy=args.function_search_strategy
     if args.no_guidance:
         fdg.global_config.flag_fwrg=False
     else:
@@ -555,13 +580,7 @@ def add_analysis_args(options):
         action="store_true", #
         help="use guided exploration",
     )
-    options.add_argument(
 
-        "--no-guidance",
-        default=False,
-        action="store_true",
-        help="use guided exploration",
-    )
 
     options.add_argument(
         "-m",

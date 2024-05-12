@@ -1,4 +1,4 @@
-Welcome to Mythril's documentation!
+Welcome to SmartExecutor's documentation!
 ===========================================
 
 .. toctree::
@@ -8,10 +8,10 @@ Welcome to Mythril's documentation!
    about
    installation
    tutorial
-   security-analysis
-   analysis-modules
-   mythril
+   use-cases
+   command-line-options
    fdg
+   analysis-modules
 
 
 Indices and Tables

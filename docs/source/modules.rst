@@ -1,7 +1,7 @@
-mythril
+SmartExecutor
 =======
 
 .. toctree::
    :maxdepth: 4
 
-   mythril
+   fdg

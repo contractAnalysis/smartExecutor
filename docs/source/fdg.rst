@@ -1,5 +1,5 @@
-fdg package
-===============
+SmartExecutor Modules
+=====================
 
 Subpackages
 -----------

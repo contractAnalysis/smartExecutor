@@ -109,7 +109,7 @@ html_static_path = ["_static"]
 # -- Options for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = "Mythrildoc"
+htmlhelp_basename = "SmartExecutordoc"
 
 
 # -- Options for LaTeX output ------------------------------------------------
@@ -135,9 +135,9 @@ latex_elements = {
 latex_documents = [
     (
         master_doc,
-        "Mythril.tex",
-        "Mythril Documentation",
-        "ConsenSys Dilligence",
+        "SmartExecutor.tex",
+        "SmartExecutor Documentation",
+        "ContractAnalysis",
         "manual",
     )
 ]
@@ -147,7 +147,7 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [(master_doc, "mythril", "Mythril Documentation", [author], 1)]
+man_pages = [(master_doc, "smartExecutor", "SmartExecutor Documentation", [author], 1)]
 
 
 # -- Options for Texinfo output ----------------------------------------------
@@ -158,10 +158,10 @@ man_pages = [(master_doc, "mythril", "Mythril Documentation", [author], 1)]
 texinfo_documents = [
     (
         master_doc,
-        "Mythril",
-        "Mythril Documentation",
+        "SmartExecutor",
+        "SmartExecutor Documentation",
         author,
-        "Mythril",
+        "SmartExecutor",
         "One line description of project.",
         "Miscellaneous",
     )
