@@ -25,7 +25,7 @@ copyright = "2024"
 author = "contractAnalysis"
 
 # The short X.Y version
-version = "v4.0"
+version = "v4.1"
 # The full version, including alpha/beta/rc tags
 from mythril.__version__ import __version__ as VERSION
 

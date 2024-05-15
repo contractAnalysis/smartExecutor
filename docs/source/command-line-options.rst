@@ -110,11 +110,6 @@ These are the options that can be configured.
     Default: 1
 
 
-.. option:: --no-guidance
-
-    Flag to allow guidance in the symbolic execution process. When it appears, it means the basic symbolic execution without any guidance.
-
-    Default: False
 
 .. option:: --random-baseline
 
@@ -125,3 +120,17 @@ These are the options that can be configured.
     5: 50% ...
 
     Default: None
+
+
+.. option:: --no-guidance
+
+    Flag to allow guidance in the symbolic execution process. When it appears, it means the basic symbolic execution without any guidance.
+
+    Default: False
+
+.. option:: -t, --transaction-count
+
+    Set the maximum number of transactions issued by laser, which is effective when --no-guidance option is enabled.
+
+    Default: 2
+
