@@ -1,6 +1,7 @@
 
 # support FDG-guided execution and sequence execution
 from fdg.control.mine import Mine
+from fdg.control.rl_mlp_policy import RL_MLP_Policy
 from fdg.preprocessing.address_collection import collect_addresses_in_constructor
 
 from fdg.control.ftn_search_strategy import BFS, RandomBaseline, DFS, Seq
@@ -56,6 +57,8 @@ class FDG_pruner(LaserPlugin):
         if fdg.global_config.random_baseline>0:
             self.search_stragety = RandomBaseline(fdg.global_config.random_baseline,
                                                   fdg.global_config.method_identifiers)
+        elif fdg.global_config.function_search_strategy=='rl_mlp_policy':
+            self.search_stragety=RL_MLP_Policy()
         elif fdg.global_config.function_search_strategy=='dfs':
             self.search_stragety=DFS()
         elif fdg.global_config.function_search_strategy=='mine':
@@ -148,6 +151,21 @@ class FDG_pruner(LaserPlugin):
                 return
 
             else:
+                #--------------------
+                if self.search_stragety.name in ['rl_mlp_policy']:
+                    if self._iteration_ == 2:
+                        # execute all possible functions to find start functions and target functions
+                        pass
+                    else:
+                        self.guider.start_iteration(laserEVM, self.depth_k,
+                                                    self._iteration_)
+                        flag_terminate = self.guider.should_terminate()
+                        if flag_terminate:
+                            fdg.global_config.transaction_count = self._iteration_
+                            laserEVM.open_states = []
+                    return
+
+                # -------------------
                 if self._iteration_<=fdg.global_config.p1_dl+1:
                     # Phase 1
                     ...
@@ -205,7 +223,7 @@ class FDG_pruner(LaserPlugin):
                         fdg.global_config.transaction_count = self._iteration_
 
                 return
-
+            # ++++++++++++++++++++++++++++++++++++++++++++++++++
             if self.search_stragety.name in ['seq']:
                 # prune unfeasible states
                 old_states_count = len(laserEVM.open_states)
@@ -227,6 +245,8 @@ class FDG_pruner(LaserPlugin):
                 flag_terminate = self.guider.should_terminate()
                 if flag_terminate:
                     fdg.global_config.transaction_count = self._iteration_
+
+
 
             #++++++++++++++++++++++++++++++++++++++++++++++++++
             if self.preprocess is None: return
@@ -263,6 +283,29 @@ class FDG_pruner(LaserPlugin):
                     fdg.global_config.transaction_count = self._iteration_
                     return
 
+
+            #--------------------------
+            if self.search_stragety.name in ['rl_mlp_policy']:
+                if self._iteration_ == 2:
+                    # initialize guider
+                    self.get_depth_k_functions()
+                    sequences = self.guider.get_start_sequence(laserEVM)
+                    start_functions = [seq[-1] for seq in sequences if
+                                       len(seq) > 0]
+                    start_functions = list(set(start_functions))
+                    self.guider.init(start_functions, self.depth_k,
+                                     self.preprocess)
+                else:
+                    # belong to Phase 2
+                    self.guider.end_iteration(laserEVM, self._iteration_)
+
+                flag_termination = self.guider.should_terminate()
+                if flag_termination:
+                    fdg.global_config.transaction_count = self._iteration_
+
+                return
+
+            #--------------------------
             if self._iteration_<=fdg.global_config.p1_dl:
                 # the basic symbolic execution
                 ...

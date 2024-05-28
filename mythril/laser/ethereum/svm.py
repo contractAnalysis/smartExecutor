@@ -313,7 +313,7 @@ class LaserEVM:
         self.time = datetime.now()
         i = 0
         while i < fdg.global_config.transaction_count:  # @wei rewrite loop
-            if fdg.global_config.function_search_strategy in ['mine','bfs','dfs']:
+            if fdg.global_config.function_search_strategy in ['mine','bfs','dfs','rl_mlp_policy']:
                 # need the special transaction
                 if i == 0:
                     copy_laserEVM = deepcopy(self)

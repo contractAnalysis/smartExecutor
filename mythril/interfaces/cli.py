@@ -469,8 +469,8 @@ def add_fwrg_analysis_args(options):
     options.add_argument(
         "-fss",
         "--function-search-strategy",
-        choices=["dfs", "bfs", "mine", 'seq'],
-        default="mine",
+        choices=["dfs", "bfs", "mine", 'seq','rl_mlp_policy'],
+        default="rl_mlp_policy",
 
         help="Function data flow graph search strategy",
     )
@@ -563,9 +563,25 @@ def add_fwrg_arguments(args: Namespace):
         fdg.global_config.flag_fwrg=False
     else:
         fdg.global_config.flag_fwrg=True
-    # fdg.global_config.flag_fwrg=args.function_wr_graph
-    if args.v>=3:
-        fdg.output_data.flag_basic=True
+        if len(args.solidity_files)>0:
+            print(args.solidity_files[0])
+            if '/' in args.solidity_files[0]:
+                solidity_contract=args.solidity_files[0].split(f'/')[-1]
+            elif '\\' in args.solidity_files[0]:
+                solidity_contract=args.solidity_files[0].split(f'\\')[-1]
+            else:
+                solidity_contract=""
+            if len(solidity_contract)>0 and ':' in solidity_contract:
+                fdg.global_config.solidity_name=solidity_contract.split(f':')[0]
+                fdg.global_config.contract_name = solidity_contract.split(f':')[
+                    -1]
+            else:
+                if fdg.global_config.function_search_strategy in ['rl_mlp_policy']:
+                    # rl_mlp_policy is based on the source code
+                    print(f'need to provide the solidity file and contract name')
+                    exit
+        if args.v>=3:
+            fdg.output_data.flag_basic=True
 
 def add_analysis_args(options):
     """

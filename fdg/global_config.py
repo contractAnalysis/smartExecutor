@@ -10,6 +10,9 @@ Important parameters
 global flag_fwrg
 fdg_fwrg=False
 
+solidity_name=""
+contract_name=""
+top_k=1
 
 # set the search strategy when guiding the symolic execution using a graph structure
 global function_search_strategy

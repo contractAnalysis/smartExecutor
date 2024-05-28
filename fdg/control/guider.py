@@ -29,13 +29,18 @@ class Guider():
         fwrg_manager=FWRG_manager(start_functions, depth_k_functions, preprocess)
         if self.ftn_search_strategy.name in ['seq']:
             self.ftn_search_strategy.initialize(fwrg_manager.acyclicPaths.main_paths_sf, fwrg_manager.updateFWRG.main_paths_df, fwrg_manager)
-        elif self.ftn_search_strategy.name in ['mine','bfs','dfs']:
+        elif self.ftn_search_strategy.name in ['mine','bfs','dfs','rl_mlp_policy']:
             flag_one_start_function=True if len(start_functions)==1 else False  #to-do: how to update flag_one_state_dpeht1
             if preprocess.coverage is None:
                 preprocess.coverage=0
-            self.ftn_search_strategy.initialize(flag_one_start_function,preprocess.timeout,preprocess.coverage,preprocess.write_read_info.all_functions,fwrg_manager)
-
-
+            if self.ftn_search_strategy.name in ['rl_mlp_policy']:
+                self.ftn_search_strategy.initialize(flag_one_start_function,preprocess.timeout,preprocess.coverage,preprocess.write_read_info.all_functions,fwrg_manager,start_functions,depth_k_functions,fdg.global_config.solidity_name,fdg.global_config.contract_name)
+            else:
+                self.ftn_search_strategy.initialize(flag_one_start_function,
+                                                    preprocess.timeout,
+                                                    preprocess.coverage,
+                                                    preprocess.write_read_info.all_functions,
+                                                    fwrg_manager)
 
     def organize_states(self, states:[WorldState]):
         all_states = {}
@@ -128,12 +133,11 @@ class Guider():
                 self.termination=True
 
             # get the states for the state keys in data states_functions returned from assign_states
-            if self.ftn_search_strategy.name in ['dfs','mine','bfs','mine1']:
+            if self.ftn_search_strategy.name in ['dfs','mine','bfs','rl_mlp_policy']:
                 organize_states_dict = {}
                 for key,function in states_functions.items():
                     if len(function)>0:
                         organize_states_dict[key]=self.ftn_search_strategy.world_states[key]
-
 
             print_assigned_functions(states_functions)
             self._prepare_states(laserEVM, organize_states_dict, states_functions,flag_world_state_del)
@@ -142,6 +146,10 @@ class Guider():
     def _prepare_states(self, laserEVM:LaserEVM, states_dict:dict, states_functions:dict,flag_wd_del:bool):
         cur_iteration_all_sequences = []
         # specify the functions to be executed on each open states(world states)
+        if len(states_functions)==0:
+            laserEVM.open_states=[]
+            return
+
         modified_states = []
         for key, states in states_dict.items():
             ftn_seq = get_ftn_seq_from_key_1(key)
