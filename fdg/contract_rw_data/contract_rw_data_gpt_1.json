@@ -231,8 +231,8 @@
                 "live",
                 "dec",
                 "ilk",
-                "wards",
-                "gem"
+                "gem",
+                "wards"
             ],
             "state_variables_written": []
         },
@@ -240,8 +240,8 @@
             "state_variables_read_in_BC": [
                 "dec",
                 "ilk",
-                "wards",
-                "gem"
+                "gem",
+                "wards"
             ],
             "state_variables_written": []
         }
@@ -311,8 +311,7 @@
                 "START",
                 "DAYS",
                 "raisedAmount",
-                "CAP",
-                "RATE"
+                "CAP"
             ],
             "state_variables_written": [
                 "raisedAmount"

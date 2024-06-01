@@ -11,6 +11,9 @@ global flag_fwrg
 fdg_fwrg=False
 
 
+global rw_json_file_name
+rw_json_file_name=''
+
 # set the search strategy when guiding the symolic execution using a graph structure
 global function_search_strategy
 function_search_strategy='bfs'

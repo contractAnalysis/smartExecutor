@@ -311,8 +311,7 @@
                 "START",
                 "DAYS",
                 "raisedAmount",
-                "CAP",
-                "RATE"
+                "CAP"
             ],
             "state_variables_written": [
                 "raisedAmount"
@@ -331,15 +330,21 @@
     },
     "0x4c969A8Fe3e79Ce8AEB9f40E4406385A36c11112.solsimpleToken": {
         "totalSupply": {
-            "state_variables_read_in_BC": [],
+            "state_variables_read_in_BC": [
+                "totalSupply_"
+            ],
             "state_variables_written": []
         },
         "balanceOf": {
-            "state_variables_read_in_BC": [],
+            "state_variables_read_in_BC": [
+                "balances"
+            ],
             "state_variables_written": []
         },
         "allowance": {
-            "state_variables_read_in_BC": [],
+            "state_variables_read_in_BC": [
+                "allowed"
+            ],
             "state_variables_written": []
         },
         "transfer": {
@@ -411,8 +416,8 @@
         "moveFund": {
             "state_variables_read_in_BC": [
                 "owner",
-                "daitoken",
-                "aragon"
+                "aragon",
+                "daitoken"
             ],
             "state_variables_written": []
         },

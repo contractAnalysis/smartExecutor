@@ -503,6 +503,14 @@ def add_fwrg_analysis_args(options):
         help="limit the times a function can be executed",
     )
 
+
+    options.add_argument(
+        "--rw-json-name",
+        type=str,
+        default='',
+        help="the json file name that containing dependency data",
+    )
+
     options.add_argument(
         "--random-baseline",
         type=int,
@@ -524,6 +532,7 @@ def add_fwrg_arguments(args: Namespace):
     fdg.global_config.flag_consider_all_reads = args.consider_all_reads
     fdg.global_config.execution_times_limit = args.execution_times_limit
 
+    fdg.global_config.rw_json_file_name = args.rw_json_name
     fdg.global_config.flag_fwrg=args.function_wr_graph
 
     if len(args.solidity_files)>0:

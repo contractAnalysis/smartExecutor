@@ -230,8 +230,8 @@
             "state_variables_read_in_BC": [
                 "live",
                 "dec",
-                "ilk",
                 "wards",
+                "ilk",
                 "gem"
             ],
             "state_variables_written": []
@@ -239,8 +239,8 @@
         "exit": {
             "state_variables_read_in_BC": [
                 "dec",
-                "ilk",
                 "wards",
+                "ilk",
                 "gem"
             ],
             "state_variables_written": []
@@ -331,15 +331,21 @@
     },
     "0x4c969A8Fe3e79Ce8AEB9f40E4406385A36c11112.solsimpleToken": {
         "totalSupply": {
-            "state_variables_read_in_BC": [],
+            "state_variables_read_in_BC": [
+                "totalSupply_"
+            ],
             "state_variables_written": []
         },
         "balanceOf": {
-            "state_variables_read_in_BC": [],
+            "state_variables_read_in_BC": [
+                "balances"
+            ],
             "state_variables_written": []
         },
         "allowance": {
-            "state_variables_read_in_BC": [],
+            "state_variables_read_in_BC": [
+                "allowed"
+            ],
             "state_variables_written": []
         },
         "transfer": {

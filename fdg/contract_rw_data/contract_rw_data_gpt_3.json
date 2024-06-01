@@ -231,8 +231,8 @@
                 "live",
                 "dec",
                 "ilk",
-                "wards",
-                "gem"
+                "gem",
+                "wards"
             ],
             "state_variables_written": []
         },
@@ -240,8 +240,8 @@
             "state_variables_read_in_BC": [
                 "dec",
                 "ilk",
-                "wards",
-                "gem"
+                "gem",
+                "wards"
             ],
             "state_variables_written": []
         }
@@ -311,8 +311,7 @@
                 "START",
                 "DAYS",
                 "raisedAmount",
-                "CAP",
-                "RATE"
+                "CAP"
             ],
             "state_variables_written": [
                 "raisedAmount"
@@ -331,15 +330,21 @@
     },
     "0x4c969A8Fe3e79Ce8AEB9f40E4406385A36c11112.solsimpleToken": {
         "totalSupply": {
-            "state_variables_read_in_BC": [],
+            "state_variables_read_in_BC": [
+                "totalSupply_"
+            ],
             "state_variables_written": []
         },
         "balanceOf": {
-            "state_variables_read_in_BC": [],
+            "state_variables_read_in_BC": [
+                "balances"
+            ],
             "state_variables_written": []
         },
         "allowance": {
-            "state_variables_read_in_BC": [],
+            "state_variables_read_in_BC": [
+                "allowed"
+            ],
             "state_variables_written": []
         },
         "transfer": {
@@ -449,7 +454,7 @@
         }
     },
     "0xdb6bcae929767e657884b03974c849d46352cde4.solERC20Latte": {
-        "transfer": {
+        "ERC20Latte.transfer": {
             "state_variables_read_in_BC": [
                 "balances"
             ],
@@ -457,7 +462,7 @@
                 "balances"
             ]
         },
-        "transferFrom": {
+        "ERC20Latte.transferFrom": {
             "state_variables_read_in_BC": [
                 "allowed",
                 "balances"
@@ -467,19 +472,19 @@
                 "allowed"
             ]
         },
-        "balanceOf": {
+        "ERC20Latte.balanceOf": {
             "state_variables_read_in_BC": [
                 "balances"
             ],
             "state_variables_written": []
         },
-        "approve": {
+        "ERC20Latte.approve": {
             "state_variables_read_in_BC": [],
             "state_variables_written": [
                 "allowed"
             ]
         },
-        "allowance": {
+        "ERC20Latte.allowance": {
             "state_variables_read_in_BC": [
                 "allowed"
             ],

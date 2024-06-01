@@ -32,10 +32,28 @@ class Guider():
 
         # current path: C:\Users\18178\PycharmProjects\smartExecutor\fdg\control\guider.py
         current_path = os.path.abspath(__file__)
-        contracts_rw_data_file_name='contract_rw_data_gt.json'
-        contracts_rw_data_file_path=current_path.split('control\guider.py')[0]+'contract_rw_data\\'
-        contracts_rw_data=load_a_json_file(f'{contracts_rw_data_file_path}{contracts_rw_data_file_name}')
-        # key: f'{solidity_name}{contract_name}'
+        contracts_rw_data_file_path = current_path.split('control/guider.py')[0] + 'contract_rw_data/'
+        if not os.path.exists(fdg.global_config.rw_json_file_name):
+            if not os.path.exists(f'{current_path}/{fdg.global_config.rw_json_file_name}'):
+                contracts_rw_data={}
+            else:
+                contracts_rw_data = load_a_json_file(
+                    f'{contracts_rw_data_file_path}{fdg.global_config.rw_json_file_name}')
+        else:
+            contracts_rw_data = load_a_json_file(f'{fdg.global_config.rw_json_file_name}')
+
+        # ------------------ manual --------------------
+        # if fdg.global_config.data_dependency_method in ['slither']:
+        #     contracts_rw_data_file_name='contract_rw_data_slither.json'
+        # # contracts_rw_data_file_name = 'contract_rw_data_gt.json'
+        # # contracts_rw_data_file_name = 'contract_rw_data_gpt_3.json'
+        # contracts_rw_data_file_name='contract_rw_data_sligpt_2nd.json'
+        # contracts_rw_data_file_path=current_path.split('control\guider.py')[0]+'contract_rw_data\\'
+        # contracts_rw_data=load_a_json_file(f'{contracts_rw_data_file_path}{contracts_rw_data_file_name}')
+        # # contracts_rw_data={}
+        # # key: f'{solidity_name}{contract_name}'
+
+
         contract_key=f'{fdg.global_config.solidity_name}{fdg.global_config.contract_name}'
         if contract_key not in contracts_rw_data.keys():
             print(f'{contract_key} does not have prepared rw data')
