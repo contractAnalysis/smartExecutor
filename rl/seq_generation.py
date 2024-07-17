@@ -13,8 +13,8 @@ class SeqGeneration:
     def __init__(self):
         pass
     def remove_contract_name_from_function_name(self, sequences:list,contract_name:str):
-        return [ [ func.split(f'{contract_name}.')[-1] if f'{contract_name}.' in func else func for func in seq] for seq in sequences]
-
+        temp_sequences= [ [ func.split(f'{contract_name}.')[-1] if f'{contract_name}.' in func else func for func in seq] for seq in sequences]
+        return [[func.split(".")[-1] if "." in func else func for func in seq] for seq in temp_sequences]
     def generate_simple(self, data):
 
         solidity_name=data['solidity_name']
