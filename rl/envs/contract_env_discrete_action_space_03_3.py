@@ -7,12 +7,15 @@ import gymnasium
 from gymnasium import spaces
 import numpy as np
 
+import rl
 from rl.env_data_preparation.contract_dynamics import ContractDynamics
-from rl.config import max_func_value_element, max_svar_value, \
-    NUM_actions
+from rl.config import rl_cur_parameters
+
 from rl.utils import goal_rewarding, weighted_choice, sort_lists, \
     scale_value_continous, random_selection
 
+# max_func_value_element=rl.config.rl_cur_parameters["max_func_value_element"]
+# max_svar_value=rl.config.rl_cur_parameters["max_svar_value"]
 
 class ContractEnv_33(gymnasium.Env):
     """
@@ -86,6 +89,8 @@ class ContractEnv_33(gymnasium.Env):
 
         function_value = self.conEnvData_wsa["function_value"]
         # scale to 0 and 1 (max max_func_value_element based on the given contract dataset)
+        max_func_value_element = rl.config.rl_cur_parameters[
+            "max_func_value_element"]
         self.function_for_identifier = [
             scale_value_continous(value, 0, max_func_value_element) for value in
             function_value]
@@ -214,6 +219,7 @@ class ContractEnv_33(gymnasium.Env):
                 reward += reward_
 
         if cur_length <= 4:
+            max_svar_value = rl.config.rl_cur_parameters["max_svar_value"]
             if self.flag_model == 0:
                 self.state[2 * self.num_state_var + cur_length - 1] = action
 
@@ -334,7 +340,7 @@ class ContractEnv_33(gymnasium.Env):
         self.goal_consider_status[self.goal] += 1
 
     def reset(self, seed: int = None, options={}):
-
+        max_svar_value = rl.config.rl_cur_parameters["max_svar_value"]
         self.score = 0
         self.previous_actions = []
 

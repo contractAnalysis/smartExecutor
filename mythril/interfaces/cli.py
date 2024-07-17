@@ -19,6 +19,8 @@ from ast import literal_eval
 import fdg.global_config
 import mythril.support.signatures as sigs
 from argparse import ArgumentParser, Namespace, RawTextHelpFormatter
+
+import rl.config
 from mythril.concolic import concolic_execution
 from mythril.exceptions import (
     DetectorNotFoundError,
@@ -36,6 +38,9 @@ from mythril.analysis.report import Report
 from mythril.__version__ import __version__ as VERSION
 
 # Initialise core Mythril Component
+from rl.config import get_project_root, small_dataset_json_file
+from rl.utils import load_a_json_file
+
 _ = MythrilPluginLoader()
 
 ANALYZE_LIST = ("analyze", "a")
@@ -575,6 +580,18 @@ def add_fwrg_arguments(args: Namespace):
                 fdg.global_config.solidity_name=solidity_contract.split(f':')[0]
                 fdg.global_config.contract_name = solidity_contract.split(f':')[
                     -1]
+
+                if fdg.global_config.function_search_strategy in ['rl_mlp_policy']:
+                    # for rl_mlp_policy: set the parameter: rl_cur_parameters in config.py
+                    path = f'{get_project_root()}'
+                    contracts_static_data = load_a_json_file(
+                        f'{path}/rl/contract_env_data/{small_dataset_json_file}')
+                    if f'{fdg.global_config.solidity_name}{fdg.global_config.contract_name}' in contracts_static_data.keys():
+                        rl.config.rl_cur_parameters= rl.config.rl_parameters["small_dataset"]
+                    else:
+                        rl.config.rl_cur_parameters=rl.config.rl_parameters["sGuard"]
+
+                    print(f'rl.config.rl_cur_parameters:{rl.config.rl_cur_parameters}')
             else:
                 if fdg.global_config.function_search_strategy in ['rl_mlp_policy']:
                     # rl_mlp_policy is based on the source code
@@ -582,6 +599,7 @@ def add_fwrg_arguments(args: Namespace):
                     exit
         if args.v>=3:
             fdg.output_data.flag_basic=True
+
 
 def add_analysis_args(options):
     """

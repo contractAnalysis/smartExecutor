@@ -2,20 +2,28 @@ from sb3_contrib import MaskablePPO
 from stable_baselines3 import PPO
 import random
 
+import rl
 from rl.contract_env_data.contract_info import sGuard_test_1, \
     sGuard_contract_info_into_groups, sGuard_train_1
 from rl.env_data_preparation.contract_env_data_preparation import collect_env_data
 
 from rl.envs.contract_env_discrete_action_space_03_3 import  ContractEnv_33
 
-from rl.config import ENV_NAME, flag_model, \
-    goal_indicator, flag_maskable, model_file_name_prefix, NUM_actions, \
-    NUM_state_var, contract_json_file_path, \
-    contract_data_for_env_construction_json_file_name, model_path, model_groups, \
-    model_folder, mode
+from rl.utils import  get_key_from_list, load_a_json_file, euclidean_distance
 
-from rl.utils import  get_key_from_list, load_a_json_file, \
-    euclidean_distance
+from rl.config import rl_cur_parameters,contract_json_file_path,model_path,model_groups
+
+
+
+# goal_indicator=rl.config.rl_cur_parameters["goal_indicator"]
+# flag_maskable=rl.config.rl_cur_parameters["flag_maskable"]
+# model_file_name_prefix=rl.config.rl_cur_parameters["model_file_name_prefix"]
+
+# contract_data_for_env_construction_json_file_name=rl.config.rl_cur_parameters["contract_data_for_env_construction_json_file_name"]
+
+# model_folder=rl.config.rl_cur_parameters["model_folder"]
+
+
 
 
 def get_env(solidity_name: str, contract_name: str, solc_version:str="0.4.25", start_functions:list=[],target_functions:list=[]):
@@ -25,10 +33,15 @@ def get_env(solidity_name: str, contract_name: str, solc_version:str="0.4.25", s
                                                    solc_version=solc_version, start_functions=start_functions,target_functions=target_functions)
     if len(conEnvData_wsa)==0:
         return None
-    if ENV_NAME in ["ContractEnv_55"]:
-        env = ContractEnv_55(conDynamics, conEnvData_wsa, flag_model=flag_model,goal_indicator=goal_indicator,
-                             mode=mode)
-    elif ENV_NAME in ["ContractEnv_33"]:
+
+    ENV_NAME = rl.config.rl_cur_parameters["ENV_NAME"]
+    flag_model = rl.config.rl_cur_parameters["flag_model"]
+    goal_indicator = rl.config.rl_cur_parameters["goal_indicator"]
+    NUM_actions = rl.config.rl_cur_parameters["NUM_actions"]
+    NUM_state_var = rl.config.rl_cur_parameters["NUM_state_var"]
+    mode = rl.config.rl_cur_parameters["mode"]
+
+    if ENV_NAME in ["ContractEnv_33"]:
         env = ContractEnv_33(conDynamics, conEnvData_wsa, flag_model=flag_model,goal_indicator=goal_indicator,
                              mode=mode,action_size=NUM_actions,num_state_variable=NUM_state_var)
     env.contract_name = contract_name
@@ -37,6 +50,7 @@ def get_env(solidity_name: str, contract_name: str, solc_version:str="0.4.25", s
 
 def retrieve_model(models_dir:str, model_file_prefix:str, flag_maskable:bool=True):
 
+    flag_maskable = rl.config.rl_cur_parameters["flag_maskable"]
     if flag_maskable:
         model = MaskablePPO.load(f"{models_dir}{model_file_prefix}.zip")
     else:
@@ -45,9 +59,17 @@ def retrieve_model(models_dir:str, model_file_prefix:str, flag_maskable:bool=Tru
 
 
 def find_the_model_for_a_contract(solidty_name:str, contract_name, env=None, flag_whole:bool=True):
+    model_folder = rl.config.rl_cur_parameters["model_folder"]
+    model_file_name_prefix = rl.config.rl_cur_parameters[
+        "model_file_name_prefix"]
     if flag_whole:
         print(f'use a general model')
         return f'{model_path}{model_folder}\\',model_file_name_prefix
+
+    contract_data_for_env_construction_json_file_name = \
+    rl.config.rl_cur_parameters[
+        "contract_data_for_env_construction_json_file_name"]
+
     sGuard_contract_data = load_a_json_file(
         contract_json_file_path + contract_data_for_env_construction_json_file_name)
 

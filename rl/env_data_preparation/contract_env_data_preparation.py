@@ -8,10 +8,10 @@ import ast
 import random
 from copy import deepcopy
 
+import rl
 from rl.env_data_preparation.contract_dynamics import ContractDynamics
-from rl.config import contract_solidity_path, \
-    contract_rw_data_json_file_name, contract_json_file_path, \
-    contract_data_for_env_construction_json_file_name, NUM_state_var
+from rl.config import contract_solidity_path,rl_cur_parameters, contract_json_file_path
+
 from rl.generation.contract_data_slither import get_rw_data_from_slither
 
 from rl.utils import load_a_json_file, get_seq_from_key
@@ -167,10 +167,7 @@ class EnvDataCollection02():
                         except:
                             pass
 
-        # print(f'start function: {self.start_functions}')
-        # print(f'target function: {self.targets}')
-        # for func, value in self.function_sequence_writes.items():
-        #     print(f'{func}:{value}')
+
 
     def get_functions_in_sequences(self):
         def get_seq_from_key(key: str):
@@ -238,7 +235,7 @@ class CollectContractEnvData_wsa():
     """
 
     def __init__(self, envDataCollected: EnvDataCollection02,
-                 num_state_var: int = NUM_state_var, num_reads: int = 3,
+                 num_state_var: int = 24, num_reads: int = 3,
                  num_writes: int = 3):
 
         self.envDataCollected = envDataCollected
@@ -445,7 +442,7 @@ def parepare_rw_data_and_or_sequences(solidity_name:str,contract_name:str,solc_v
     env_data.targets=target_functions
 
     # collect rw data (require the mapping from svar names to integers)
-    contracts_static_data = load_a_json_file(f'{contract_json_file_path}{contract_rw_data_json_file_name}')
+    contracts_static_data = load_a_json_file(f'{contract_json_file_path}{rl.config.rl_cur_parameters["contract_rw_data_json_file_name"]}')
     svar_to_int=contracts_static_data['svar_to_int']
     svar_by_type=contracts_static_data['svar_by_type']
 
@@ -504,7 +501,7 @@ def parepare_rw_data_and_or_sequences(solidity_name:str,contract_name:str,solc_v
     }
 
     env_data.receive_data_from_static_analysis(my_static_data)
-    conEnvData = CollectContractEnvData_wsa(env_data)
+    conEnvData = CollectContractEnvData_wsa(env_data,num_state_var=rl.config.rl_cur_parameters["NUM_state_var"])
     data = conEnvData.obtain_contract_data()
     return data
 
@@ -618,7 +615,7 @@ def contract_data_mapping_function_to_integer(contracts_data:dict,target_contrac
 
 def collect_env_data(solidity_name:str,contract_name:str, solc_version:str="0.4.25", start_functions:list=[],target_functions:list=[]):
     contracts_data = load_a_json_file(
-        f'{contract_json_file_path}{contract_data_for_env_construction_json_file_name}')
+        f'{contract_json_file_path}{rl.config.rl_cur_parameters["contract_data_for_env_construction_json_file_name"]}')
 
     contract_key = f'{solidity_name}{contract_name}'
     if contract_key in contracts_data.keys():
