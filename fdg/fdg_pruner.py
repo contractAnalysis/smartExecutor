@@ -296,12 +296,25 @@ class FDG_pruner(LaserPlugin):
                     self.guider.init(start_functions, self.depth_k,
                                      self.preprocess)
                 else:
-                    # belong to Phase 2
                     self.guider.end_iteration(laserEVM, self._iteration_)
 
                 flag_termination = self.guider.should_terminate()
                 if flag_termination:
                     fdg.global_config.transaction_count = self._iteration_
+
+                # termination based on the coverage of the contract
+                if self.functionCoverage.coverage >= fdg.global_config.function_coverage_threshold:
+
+                    if self.functionCoverage.coverage >= fdg.global_config.function_coverage_threshold + 1:
+                        if not self.search_stragety.flag_one_start_function:
+                            # make sure that when there is only one state generated at depth1,
+                            # the execution does not terminate
+                            fdg.global_config.transaction_count = self._iteration_
+                    else:
+                        if not self.search_stragety.flag_one_start_function:
+                            # make sure that when there is only one state generated at depth1,
+                            # the execution does not terminate
+                            fdg.global_config.transaction_count = self._iteration_
 
                 return
 

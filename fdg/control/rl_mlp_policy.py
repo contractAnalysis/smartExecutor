@@ -7,6 +7,8 @@ from fdg.control.ftn_search_strategy import FunctionSearchStrategy
 from fdg.control.function_assignment import FunctionAssignment
 from fdg.fwrg_manager import FWRG_manager
 from fdg.utils import get_ftn_seq_from_key_1
+from rl.config import dataset, flag_model_whole, top_k
+from rl.seq_generation import wrapper
 
 
 class RL_MLP_Policy(FunctionSearchStrategy):
@@ -36,9 +38,14 @@ class RL_MLP_Policy(FunctionSearchStrategy):
 
 
 
-    def request_sequences(self):
+    def request_sequences_0(self):
         # Define the JSON data to send in the POST request
-        data = {"solidity_name": f"{self.solidity_name}", "contract_name": f"{self.contract_name}","top_k":f'{fdg.global_config.top_k}'}
+        data = {"solidity_name": f"{self.solidity_name}",
+                "contract_name": f"{self.contract_name}",
+                "top_k":f'{fdg.global_config.top_k}',
+                "flag_whole":False,
+                "dataset":'small_dataset',
+                }
         print(f'Request data:{data}')
 
         # Send a POST request to the server
@@ -60,11 +67,37 @@ class RL_MLP_Policy(FunctionSearchStrategy):
             print("Error:", response.status_code)
             self.flag_rl_mlp_policy=False
 
+    def request_sequences(self):
+        # Define the JSON data to send in the POST request
+        data = {"solidity_name": f"{self.solidity_name}",
+                "contract_name": f"{self.contract_name}",
+                # "solc_version": "0.4.18",
+                # "start_functions": [],
+                # "target_functions": [],
+                "top_k": f'{top_k}',
+                "flag_whole": flag_model_whole,
+                "dataset": dataset,
+                }
+        # print(f'Request data:{data}')
+
+        result = wrapper.generate_simple(data)
+        if len(result)>0:
+            for k, v in result.items():
+                print(f'{k}')
+                for seq in v:
+                    self.sequences.append(seq)
+                    print(f'\t{seq}')
+
+        else:
+            print("Error:", "no sequences are generated")
+            self.flag_rl_mlp_policy = False
+
+
 
     def termination(self, states_num: int = 0, current_seq_length: int = 0, sequence_depth_limit: int = 0,
                     iteration: int = 0) -> bool:
         # need to test
-        if states_num == 0: return True
+        # if states_num == 0: return True
         return False
 
     def assign_states(self, dk_functions: list = None, current_state_key: str = None, fdfg: FWRG_manager = None,

@@ -3,7 +3,9 @@ import logging
 import re
 import json
 import operator
-from eth_abi import decode_abi
+
+import eth_abi
+# from eth_abi import decode_abi
 from jinja2 import PackageLoader, Environment
 from typing import Dict, List, Any, Optional
 import hashlib
@@ -230,7 +232,9 @@ class Issue:
         if len(data) % 64 > 0:
             data += "0" * (64 - len(data) % 64)
         try:
-            decoded_output = decode_abi(type_info, bytes.fromhex(data))
+            # decoded_output = decode_abi(type_info, bytes.fromhex(data))
+            decoded_output = eth_abi.encode(type_info, bytes.fromhex(data))
+
             return decoded_output
         except Exception as e:
             return None
