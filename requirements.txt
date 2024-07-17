@@ -31,7 +31,7 @@ pyparsing<3,>=2.0.2
 pytest-cov
 pytest_mock
 requests
-rlp<3
+rlp==4.0.1
 semantic_version
 transaction>=2.2.1
 typing-extensions<4,>=3.7.4
