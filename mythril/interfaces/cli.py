@@ -38,7 +38,7 @@ from mythril.analysis.report import Report
 from mythril.__version__ import __version__ as VERSION
 
 # Initialise core Mythril Component
-from rl.config import get_project_root, small_dataset_json_file
+from rl.config import small_dataset_json_file
 from rl.utils import load_a_json_file
 
 _ = MythrilPluginLoader()
