@@ -46,4 +46,8 @@ stable_baselines3==2.3.2
 werkzeug==3.0.3
 websockets==11.0.3
 web3 ==6.9.0
-
+ click==8.1.7
+ blinker ==1.6.2
+itsdangerous== 2.2.0
+intel-openmp==2021.4.0
+iniconfig==2.0.0
