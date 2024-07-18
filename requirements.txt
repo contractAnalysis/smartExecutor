@@ -51,3 +51,9 @@ web3 ==6.9.0
 itsdangerous== 2.2.0
 intel-openmp==2021.4.0
 iniconfig==2.0.0
+sb_contrib
+slither-analyzer ==0.10.3
+solc-select== 1.0.4
+sb3-contrib==2.2.1
+requests== 2.31.0
+requests-toolbelt == 1.0.0
