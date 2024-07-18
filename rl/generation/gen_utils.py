@@ -5,6 +5,7 @@ import random
 import rl
 from rl.contract_env_data.contract_info import sGuard_test_1, \
     sGuard_contract_info_into_groups, sGuard_train_1
+
 from rl.env_data_preparation.contract_env_data_preparation import collect_env_data
 
 from rl.envs.contract_env_discrete_action_space_03_3 import  ContractEnv_33
@@ -12,17 +13,6 @@ from rl.envs.contract_env_discrete_action_space_03_3 import  ContractEnv_33
 from rl.utils import  get_key_from_list, load_a_json_file, euclidean_distance
 
 from rl.config import rl_cur_parameters,contract_json_file_path,model_path,model_groups
-
-
-
-# goal_indicator=rl.config.rl_cur_parameters["goal_indicator"]
-# flag_maskable=rl.config.rl_cur_parameters["flag_maskable"]
-# model_file_name_prefix=rl.config.rl_cur_parameters["model_file_name_prefix"]
-
-# contract_data_for_env_construction_json_file_name=rl.config.rl_cur_parameters["contract_data_for_env_construction_json_file_name"]
-
-# model_folder=rl.config.rl_cur_parameters["model_folder"]
-
 
 
 
