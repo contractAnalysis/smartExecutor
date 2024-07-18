@@ -41,6 +41,8 @@ def get_env(solidity_name: str, contract_name: str, solc_version:str="0.4.25", s
 def retrieve_model(models_dir:str, model_file_prefix:str, flag_maskable:bool=True):
 
     flag_maskable = rl.config.rl_cur_parameters["flag_maskable"]
+    if '.zip' in model_file_prefix:
+        model_file_prefix=model_file_prefix.rstrip(".zip")
     if flag_maskable:
         model = MaskablePPO.load(f"{models_dir}{model_file_prefix}.zip")
     else:
