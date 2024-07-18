@@ -43,7 +43,7 @@ class SeqGeneration:
             return {}
         # env.mode='test'
         if rl.config.rl_cur_parameters["dataset"]=='small_dataset':
-            model_dir = f'{model_path}{rl.config.rl_cur_parameters["model_folder"]}\\'
+            model_dir = f'{model_path}{rl.config.rl_cur_parameters["model_folder"]}/'
             model_file_prefix =rl.config.rl_cur_parameters["model_file_name_prefix"]
             print(f'use a general model')
         elif rl.config.rl_cur_parameters["dataset"]=='sGuard':
@@ -51,7 +51,7 @@ class SeqGeneration:
             model_file_prefix = ""
             model_dir,model_file_prefix=find_the_model_for_a_contract(solidity_name,contract_name,env,data["flag_whole"])
             if len(model_dir)==0:
-                model_dir = f'{model_path}{rl.config.rl_cur_parameters["model_folder"]}\\'
+                model_dir = f'{model_path}{rl.config.rl_cur_parameters["model_folder"]}/'
                 model_file_prefix =rl.config.rl_cur_parameters["model_file_name_prefix"]
                 print(f'use a general model')
 

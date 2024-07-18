@@ -79,7 +79,7 @@ def find_the_model_for_a_contract(solidty_name:str, contract_name, env=None, fla
                         svar_key = get_key_from_list(
                             con_env_data['state_variables_selected'])
                         if cur_svar_key == svar_key:
-                            model_dir = f'{model_path}{model_groups[group_key][0]}\\'
+                            model_dir = f'{model_path}{model_groups[group_key][0]}/'
                             model_file_prefix = model_groups[group_key][1]
                             print(f'use model from: {group_key} (testing)')
                             return model_dir,model_file_prefix
@@ -87,7 +87,7 @@ def find_the_model_for_a_contract(solidty_name:str, contract_name, env=None, fla
             # find the model for a contract from the training set
             for group_key, con_list in sGuard_contract_info_into_groups.items():
                 if cur_con_key in con_list:
-                    model_dir = f'{model_path}{model_groups[group_key][0]}\\'
+                    model_dir = f'{model_path}{model_groups[group_key][0]}/'
                     model_file_prefix = model_groups[group_key][1]
                     print(f'use model from: {group_key} (training)')
                     return model_dir,model_file_prefix
@@ -106,7 +106,7 @@ def find_the_model_for_a_contract(solidty_name:str, contract_name, env=None, fla
                     svar_key = get_key_from_list(
                         con_env_data['state_variables_selected'])
                     if cur_svar_key == svar_key:
-                        model_dir = f'{model_path}{model_groups[group_key][0]}\\'
+                        model_dir = f'{model_path}{model_groups[group_key][0]}/'
                         model_file_prefix = model_groups[group_key][1]
                         print(f'use model from: {group_key} (unseen,not new)')
                         return model_dir,model_file_prefix
@@ -119,7 +119,7 @@ def find_the_model_for_a_contract(solidty_name:str, contract_name, env=None, fla
                     svar = con_env_data['state_variables_selected']
                     distance=euclidean_distance(cur_state_variables, svar)
                     if distance<100:
-                        model_dir = f'{model_path}{model_groups[group_key][0]}\\'
+                        model_dir = f'{model_path}{model_groups[group_key][0]}/'
                         model_file_prefix = model_groups[group_key][1]
                         print(f'use model from: {group_key} (unseen,new)')
                         return model_dir, model_file_prefix
