@@ -56,7 +56,7 @@ def find_the_model_for_a_contract(solidty_name:str, contract_name, env=None, fla
         "model_file_name_prefix"]
     if flag_whole:
         print(f'use a general model')
-        return f'{model_path}{model_folder}\\',model_file_name_prefix
+        return f'{model_path}{model_folder}/',model_file_name_prefix
 
     contract_data_for_env_construction_json_file_name = \
     rl.config.rl_cur_parameters[
