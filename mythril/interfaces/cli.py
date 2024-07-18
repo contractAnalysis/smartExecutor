@@ -586,7 +586,7 @@ def add_fwrg_arguments(args: Namespace):
                     # path = f'{get_project_root()}'
                     path= rl.config.project_path
                     contracts_static_data = load_a_json_file(
-                        f'{path}/rl/contract_env_data/{small_dataset_json_file}')
+                        f'{path}rl/contract_env_data/{small_dataset_json_file}')
 
                     if f'{fdg.global_config.solidity_name}{fdg.global_config.contract_name}' in contracts_static_data.keys():
                         rl.config.rl_cur_parameters= rl.config.rl_parameters["small_dataset"]
