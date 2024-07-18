@@ -18,7 +18,7 @@ eth-typing==4.3.1
 eth-utils==4.1.1
 hexbytes==1.2.1
 jinja2==3.1.2
-MarkupSafe==2.0.1
+MarkupSafe==2.1.1
 mock
 mypy-extensions==0.4.4
 persistent==5.0
@@ -54,4 +54,3 @@ iniconfig==2.0.0
 slither-analyzer ==0.10.3
 solc-select== 1.0.4
 sb3-contrib==2.2.1
-
