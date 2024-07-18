@@ -1,9 +1,11 @@
 import os
+import sys
 
 
 def get_project_root():
     return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 project_path=f'{get_project_root()}/'
+sys.path.append(project_path)
 print(f'project path: {project_path}')
 
 # project_path='C:\\Users\\18178\\PycharmProjects\\smartExecutor\\'
