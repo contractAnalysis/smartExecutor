@@ -121,7 +121,7 @@ setup(
     tests_require=TESTS_REQUIRE,
     python_requires=REQUIRES_PYTHON,
     extras_require=EXTRAS,
-    package_data={"mythril.analysis.templates": ["*"], "mythril.support.assets": ["*"]},
+    package_data={"mythril.analysis.templates": ["*"], "mythril.support.assets": ["*"],"rl":["*"]},
     include_package_data=True,
     entry_points={"console_scripts": ["semyth=mythril.interfaces.cli:main"]},
     cmdclass={"verify": VerifyVersionCommand},
