@@ -33,7 +33,7 @@ model_groups={
     "group_10": ["ContractEnv_33_group_10_1718941700", "14570000"],
     "group_11": ["ContractEnv_33_group_11_1718941700", "14690000"],
     "group_12": ["ContractEnv_33_group_12_1718941700", "14170000"],
-    "group_13": ["ContractEnv_33_group_13_1718941700", "14380000"],
+    "group_13": ["ContractEnv_33_group_13_1718941700", "12890000"],
 }
 
 rl_parameters={
