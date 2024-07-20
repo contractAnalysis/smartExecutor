@@ -96,7 +96,6 @@ class VerifyVersionCommand(install):
             )
             sys.exit(info)
 
-
 setup(
     name=NAME,
     version=about["__version__"][1:],
@@ -121,7 +120,11 @@ setup(
     tests_require=TESTS_REQUIRE,
     python_requires=REQUIRES_PYTHON,
     extras_require=EXTRAS,
-    package_data={"mythril.analysis.templates": ["*"], "mythril.support.assets": ["*"],"rl":["*"]},
+    package_data={"mythril.analysis.templates": ["*"],
+                  "mythril.support.assets": ["*"],
+                  "rl.contract_env_data":["*"],
+                  '': ['*.zip', '*.json'],
+                  },
     include_package_data=True,
     entry_points={"console_scripts": ["semyth=mythril.interfaces.cli:main"]},
     cmdclass={"verify": VerifyVersionCommand},
