@@ -18,7 +18,8 @@ model_path=project_path+"rl/models/"
 contract_solidity_path=""
 seq_len_limit=4
 
-
+env_name='ContractEnv_33'
+top_k=2
 
 model_groups={
     "group_1": ["ContractEnv_33_group_1_1718941700", "14430000"],
@@ -54,7 +55,6 @@ rl_parameters={
         "flag_maskable": True,
         "mode": 'predict',
         "flag_model_whole": False,
-        "top_k":2,
     },
 
     "small_dataset":{
@@ -74,7 +74,6 @@ rl_parameters={
         "flag_maskable":True,
         "mode":'predict',
         "flag_model_whole":True,
-        "top_k":2,
     },
     "HoloToken": {
         "contract_data_for_env_construction_json_file_name": "rl_small_dataset_contracts_data_for_env_construction_7_4_2024_8_in_integer.json",
@@ -93,8 +92,26 @@ rl_parameters={
         "flag_maskable": True,
         "mode": 'predict',
         "flag_model_whole": True,
-        "top_k":2,
-    }
+    },
+
+    "sGuard_env55":{
+        "contract_data_for_env_construction_json_file_name": "rl_sGuard_contracts_data_for_env_5_26_24_in_integer.json",
+        "contract_rw_data_json_file_name": 'rl_sGuard_contracts_data_for_env_construction_5_26_24.json',
+        "dataset": "sGuard",
+        "NUM_state_var": 24,
+        "NUM_actions": 51,
+        "max_svar_value": 5740,
+        "max_func_value_element": 70,
+        "ENV_NAME": "ContractEnv_55",
+        "NUM_episode": 5,
+        "model_folder": 'ContractEnv_55_model7_sGuard_whole',
+        "model_file_name_prefix": "6740000",
+        "flag_model": 7,
+        "goal_indicator": 2,
+        "flag_maskable": False,
+        "mode": 'predict',
+        "flag_model_whole": True,
+    },
 }
 
 # rl_cur_parameters={

@@ -539,6 +539,20 @@ def add_fwrg_analysis_args(options):
         help="use guided exploration",
     )
 
+    options.add_argument(
+
+        "-env",
+        default="ContractEnv_33",
+        type=str,
+        help="the environment for rl_mlp_policy",
+    )
+
+    options.add_argument(
+        "-topk",
+        default=2,
+        type=int,
+        help="the number of sequences considered for each taraget",
+    )
 
 def parse_list_of_lists(value):
     try:
@@ -564,6 +578,8 @@ def add_fwrg_arguments(args: Namespace):
     fdg.global_config.execution_times_limit = args.execution_times_limit
     fdg.global_config.seq_len_limit=args.seq_len_limit
     fdg.global_config.function_search_strategy=args.function_search_strategy
+    rl.config.env_name=args.env
+    rl.config.top_k=args.topk
     if args.no_guidance:
         fdg.global_config.flag_fwrg=False
     else:
@@ -582,16 +598,17 @@ def add_fwrg_arguments(args: Namespace):
                     -1]
 
                 if fdg.global_config.function_search_strategy in ['rl_mlp_policy']:
-                    # for rl_mlp_policy: set the parameter: rl_cur_parameters in config.py
-                    # path = f'{get_project_root()}'
-                    path= rl.config.project_path
-                    contracts_static_data = load_a_json_file(
-                        f'{path}rl/contract_env_data/{small_dataset_json_file}')
-
-                    if f'{fdg.global_config.solidity_name}{fdg.global_config.contract_name}' in contracts_static_data.keys():
-                        rl.config.rl_cur_parameters= rl.config.rl_parameters["small_dataset"]
+                    if args.env in ['ContractEnv_55']:
+                        rl.config.rl_cur_parameters=rl.config.rl_parameters["sGuard_env55"]
                     else:
-                        rl.config.rl_cur_parameters=rl.config.rl_parameters["sGuard"]
+                        path= rl.config.project_path
+                        contracts_static_data = load_a_json_file(
+                            f'{path}rl/contract_env_data/{small_dataset_json_file}')
+
+                        if f'{fdg.global_config.solidity_name}{fdg.global_config.contract_name}' in contracts_static_data.keys():
+                            rl.config.rl_cur_parameters= rl.config.rl_parameters["small_dataset"]
+                        else:
+                            rl.config.rl_cur_parameters=rl.config.rl_parameters["sGuard"]
 
                     print(f'rl.config.rl_cur_parameters:{rl.config.rl_cur_parameters}')
             else:

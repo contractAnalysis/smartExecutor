@@ -9,6 +9,7 @@ from rl.contract_env_data.contract_info import sGuard_test_1, \
 from rl.env_data_preparation.contract_env_data_preparation import collect_env_data
 
 from rl.envs.contract_env_discrete_action_space_03_3 import  ContractEnv_33
+from rl.envs.contract_env_discrete_action_space_05_5 import ContractEnv_55
 
 from rl.utils import  get_key_from_list, load_a_json_file, euclidean_distance
 
@@ -31,9 +32,14 @@ def get_env(solidity_name: str, contract_name: str, solc_version:str="0.4.25", s
     NUM_state_var = rl.config.rl_cur_parameters["NUM_state_var"]
     mode = rl.config.rl_cur_parameters["mode"]
 
+
     if ENV_NAME in ["ContractEnv_33"]:
         env = ContractEnv_33(conDynamics, conEnvData_wsa, flag_model=flag_model,goal_indicator=goal_indicator,
                              mode=mode,action_size=NUM_actions,num_state_variable=NUM_state_var)
+    elif ENV_NAME in ["ContractEnv_55"]:
+        env = ContractEnv_55(conDynamics, conEnvData_wsa, flag_model=flag_model,
+                             goal_indicator=goal_indicator,
+                             mode=mode)
     env.contract_name = contract_name
     env.solidity_name = solidity_name
     return env

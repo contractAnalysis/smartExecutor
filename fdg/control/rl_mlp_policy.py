@@ -8,7 +8,7 @@ from fdg.control.ftn_search_strategy import FunctionSearchStrategy
 from fdg.control.function_assignment import FunctionAssignment
 from fdg.fwrg_manager import FWRG_manager
 from fdg.utils import get_ftn_seq_from_key_1
-from rl.config import rl_cur_parameters
+from rl.config import rl_cur_parameters, top_k
 
 from rl.seq_generation import wrapper
 
@@ -76,7 +76,7 @@ class RL_MLP_Policy(FunctionSearchStrategy):
                 # "solc_version": "0.4.18",
                 # "start_functions": [],
                 # "target_functions": [],
-                "top_k": f'{rl.config.rl_cur_parameters["top_k"]}',
+                "top_k": f'{top_k}',
                 "flag_whole": rl.config.rl_cur_parameters["flag_model_whole"],
                 "dataset": rl.config.rl_cur_parameters["dataset"],
                 }
