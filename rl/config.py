@@ -2,14 +2,14 @@ import os
 import sys
 
 
-# def get_project_root():
-#     return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-# project_path=f'{get_project_root()}/'
-# sys.path.append(project_path)
+def get_project_root():
+    return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+project_path=f'{get_project_root()}/'
+sys.path.append(project_path)
 # print(f'project path: {project_path}')
 
 # project_path='C:\\Users\\18178\\PycharmProjects\\smartExecutor\\'
-project_path="./"
+# project_path="./"
 small_dataset_json_file="rl_small_dataset_contracts_data_for_env_construction_7_4_2024_8.json"
 
 output_path=project_path+"temp_results/"
@@ -28,7 +28,7 @@ model_groups={
     "group_5": ["ContractEnv_33_group_5_1718941700", "14680000"],
     "group_6": ["ContractEnv_33_group_6_1718941700", "14300000"],
     "group_7": ["ContractEnv_33_group_7_1718941700", "14480000"],
-    "group_8": ["ContractEnv_33_group_8_1718941700", "14770000"],
+    "group_8": ["ContractEnv_33_group_8_1718941700", "14470000"],
     "group_9": ["ContractEnv_33_group_9_1718941700", "14770000"],
     "group_10": ["ContractEnv_33_group_10_1718941700", "14570000"],
     "group_11": ["ContractEnv_33_group_11_1718941700", "14690000"],
