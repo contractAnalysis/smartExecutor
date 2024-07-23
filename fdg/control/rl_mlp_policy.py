@@ -90,10 +90,11 @@ class RL_MLP_Policy(FunctionSearchStrategy):
                 for seq in v:
                     self.sequences.append(seq)
                     print(f'\t{seq}')
-        targets_with_seq=[ftn.split(f'.')[-1] if '.' in ftn else ftn for ftn in result.keys()]
-        for target,_ in self.target_functions:
-            if target not in targets_with_seq:
-                self.target_functions_no_seq.append(target)
+            targets_with_seq=[ftn.split(f'.')[-1] if '.' in ftn else ftn for ftn in result.keys()]
+            for target,_ in self.target_functions:
+                if target not in targets_with_seq:
+                    if target not in ['symbol()','name()','decimals()']:
+                        self.target_functions_no_seq.append(target)
         else:
             print("Error:", "no sequences are generated")
             self.flag_rl_mlp_policy = False
@@ -163,18 +164,22 @@ initialize(address,address,uint256),initialize(address) (se) vs initialize(addre
                 return {state_key:functions+left_target},True
             else:
                 if rl.config.MIX in ['d']:
-                    functions=self.random_policy(state_key,dk_functions)
+                    functions_1=self.random_policy(state_key,dk_functions)
 
                     dk_func = [ftn for ftn, _ in dk_functions]
                     left_target = [ftn for ftn in self.target_functions_no_seq
                                    if ftn in dk_func]
 
-                    functions=list(set(functions+left_target))
-                    return {state_key: functions}, True
+                    functions_1=list(set(functions_1+left_target))
+                    functions_1 = [ftn for ftn in functions_1 if
+                                 ftn not in ['symbol()', 'name()',
+                                             'decimals()']]
                 else:
                     dk_func = [ftn for ftn, _ in dk_functions]
-                    # functions=self.random_select_targets(dk_func)
-                    return {state_key: dk_func}, True
+                    functions_1 = [ftn for ftn in self.target_functions_no_seq
+                                   if ftn in dk_func]
+                if len(functions_1)>0:
+                    return {state_key: functions_1}, True
 
     def random_policy(self,state_key:str,dk_functions:list):
         seq = get_ftn_seq_from_key_1(state_key)
@@ -189,7 +194,7 @@ initialize(address,address,uint256),initialize(address) (se) vs initialize(addre
             return list(set(random_targets + random_selected))
 
     def random_select_functions(self):
-        percent_of_functions=5
+        percent_of_functions=2
         if self.preprocess_timeout or fdg.global_config.preprocessing_exception:
             if self.preprocess_coverage<50:
                 percent_of_functions= 7
@@ -198,13 +203,13 @@ initialize(address,address,uint256),initialize(address) (se) vs initialize(addre
             elif self.preprocess_coverage<90:
                 percent_of_functions= 3
             else:
-                percent_of_functions= 1
+                percent_of_functions= 2
         random_selected_functions = self.functionAssignment.select_functions_randomly(
             percent_of_functions)
         return random_selected_functions
 
     def random_select_targets(self,targets:list):
-        percent_of_functions=5
+        percent_of_functions=2
         if self.preprocess_timeout or fdg.global_config.preprocessing_exception:
             if self.preprocess_coverage<50:
                 percent_of_functions= 7
@@ -213,6 +218,6 @@ initialize(address,address,uint256),initialize(address) (se) vs initialize(addre
             elif self.preprocess_coverage<90:
                 percent_of_functions= 3
             else:
-                percent_of_functions= 1
+                percent_of_functions= 2
         random_selected_functions = self.functionAssignment.select_functions_randomly_1( targets,percent_of_functions)
         return random_selected_functions

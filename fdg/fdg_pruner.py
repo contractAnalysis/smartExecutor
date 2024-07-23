@@ -157,6 +157,7 @@ class FDG_pruner(LaserPlugin):
                         # execute all possible functions to find start functions and target functions
                         pass
                     else:
+                        self.get_depth_k_functions()
                         self.guider.start_iteration(laserEVM, self.depth_k,
                                                     self._iteration_)
                         flag_terminate = self.guider.should_terminate()

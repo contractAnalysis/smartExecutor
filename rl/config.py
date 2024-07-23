@@ -106,7 +106,7 @@ rl_parameters={
         "ENV_NAME": "ContractEnv_55",
         "NUM_episode": 5,
         "model_folder": 'ContractEnv_55_model7_sGuard_whole',
-        "model_file_name_prefix": "53800000",
+        "model_file_name_prefix": "53920000",
         "flag_model": 7,
         "goal_indicator": 2,
         "flag_maskable": False,
