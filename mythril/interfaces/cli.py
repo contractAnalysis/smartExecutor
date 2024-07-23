@@ -549,9 +549,16 @@ def add_fwrg_analysis_args(options):
 
     options.add_argument(
         "-topk",
-        default=2,
+        default=5,
         type=int,
         help="the number of sequences considered for each taraget",
+    )
+
+    options.add_argument(
+        "-mix",
+        default="d",
+        type=str,
+        help="indicate the style in the rl_mlp_policy",
     )
 
 def parse_list_of_lists(value):
@@ -580,6 +587,7 @@ def add_fwrg_arguments(args: Namespace):
     fdg.global_config.function_search_strategy=args.function_search_strategy
     rl.config.env_name=args.env
     rl.config.top_k=args.topk
+    rl.config.MIX = args.mix
     if args.no_guidance:
         fdg.global_config.flag_fwrg=False
     else:

@@ -20,6 +20,7 @@ seq_len_limit=4
 
 env_name='ContractEnv_33'
 top_k=2
+MIX="a"
 
 model_groups={
     "group_1": ["ContractEnv_33_group_1_1718941700", "14430000"],
@@ -49,7 +50,7 @@ rl_parameters={
         "ENV_NAME": "ContractEnv_33",
         "NUM_episode": 5,
         "model_folder": 'ContractEnv_33_model6_sGuard_whole_1718462078',
-        "model_file_name_prefix": "3650000",
+        "model_file_name_prefix": "714650000",
         "flag_model": 6,
         "goal_indicator": 2,
         "flag_maskable": True,
@@ -105,7 +106,7 @@ rl_parameters={
         "ENV_NAME": "ContractEnv_55",
         "NUM_episode": 5,
         "model_folder": 'ContractEnv_55_model7_sGuard_whole',
-        "model_file_name_prefix": "6740000",
+        "model_file_name_prefix": "53800000",
         "flag_model": 7,
         "goal_indicator": 2,
         "flag_maskable": False,

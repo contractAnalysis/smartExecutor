@@ -467,6 +467,7 @@ class ContractEnv_33(gymnasium.Env):
         return action_mask
 
     def correct_1st_action(self,action:int):
+        max_svar_value = rl.config.rl_cur_parameters["max_svar_value"]
         if self.mode in ['test','predict']:
             if len(self.previous_actions)==0:
                 if action not in self.conEnvData_wsa["start_functions_in_integer"]:

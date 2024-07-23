@@ -89,15 +89,17 @@ class FunctionAssignment():
 
     def select_functions_randomly(self,percentage:int)->list:
         to_consider_functions = self.all_functions
-        select_num = math.ceil(
-            (percentage/ 10) * len(to_consider_functions))
+        return self.select_functions_randomly_1(to_consider_functions,percentage)
 
-        select_indices = random_indices(0, len(to_consider_functions) - 1,
+    def select_functions_randomly_1(self,from_functions:list,percentage:int)->list:
+        select_num = math.ceil(
+            (percentage / 10) * len(from_functions))
+
+        select_indices = random_indices(0, len(from_functions) - 1,
                                         select_num)
         selected_functions = [ftn for idx, ftn in
-                              enumerate(to_consider_functions) if
+                              enumerate(from_functions) if
                               idx in select_indices]
-
         return selected_functions
 
     def record_assignment(self,assigned_functions:list):

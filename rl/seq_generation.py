@@ -3,7 +3,7 @@ import rl
 from rl.config import model_path
 
 from rl.generation.gen_utils import get_env, get_top_k_sequences, \
-    retrieve_model, find_the_model_for_a_contract
+    retrieve_model, find_the_model_for_a_contract, refine_sequences
 from rl.generation.prediction import my_model_prediction
 
 
@@ -36,39 +36,81 @@ class SeqGeneration:
         top_k=data['top_k']
         if isinstance(top_k,str):
             top_k=int(top_k)
-        results={}
+
         env=get_env(solidity_name,contract_name,solc_version=solc_version,start_functions=start_functions,target_functions=target_functions)
         if env is None:
             print(f'Fail to construct environment (possible reasons: the contract is an unseen contract, fail to compile the contract)')
             return {}
-        # env.mode='test'
-        if rl.config.rl_cur_parameters["dataset"]=='small_dataset':
-            model_dir = f'{model_path}{rl.config.rl_cur_parameters["model_folder"]}/'
-            model_file_prefix =rl.config.rl_cur_parameters["model_file_name_prefix"]
+
+        model_paths = []
+        if rl.config.rl_cur_parameters["dataset"]== 'small_dataset':
+            model_dir = f'{model_path}{rl.config.rl_cur_parameters["model_folder"]}\\'
+            model_file_prefix = rl.config.rl_cur_parameters["model_file_name_prefix"]
             print(f'use a general model')
-        elif rl.config.rl_cur_parameters["dataset"]=='sGuard':
-            model_dir =""
-            model_file_prefix = ""
-            model_dir,model_file_prefix=find_the_model_for_a_contract(solidity_name,contract_name,env,data["flag_whole"])
-            if len(model_dir)==0:
-                model_dir = f'{model_path}{rl.config.rl_cur_parameters["model_folder"]}/'
-                model_file_prefix =rl.config.rl_cur_parameters["model_file_name_prefix"]
+            model_paths.append(f"{model_dir}{model_file_prefix}.zip")
+        elif rl.config.rl_cur_parameters["dataset"] == 'sGuard' and env.env_name in ['ContractEnv_33']:
+            if rl.config.MIX == "a":
+                data['flag_whole'] = False
+                model_dir, model_file_prefix = find_the_model_for_a_contract(
+                    solidity_name, contract_name, env, data["flag_whole"])
+                model_paths.append(f"{model_dir}{model_file_prefix}.zip")
+            elif rl.config.MIX == 'b':
+                data['flag_whole'] = True
+                model_dir = f'{model_path}{rl.config.rl_cur_parameters["model_folder"]}\\'
+                model_file_prefix = rl.config.rl_cur_parameters[
+                    "model_file_name_prefix"]
                 print(f'use a general model')
+                model_paths.append(f"{model_dir}{model_file_prefix}.zip")
+            elif rl.config.MIX in [ 'c','d']:
+                model_dir = f'{model_path}{rl.config.rl_cur_parameters["model_folder"]}\\'
+                model_file_prefix = rl.config.rl_cur_parameters[
+                    "model_file_name_prefix"]
+                print(f'use a general model')
+                model_paths.append(f"{model_dir}{model_file_prefix}.zip")
 
-        model=retrieve_model(model_dir, model_file_prefix, flag_maskable=rl.config.rl_cur_parameters["flag_maskable"] )
-        # if env.env_name in ["ContractEnv_55", "ContractEnv_33"]:
-        #     print(f'\n==== {env.solidity_name}:{env.contract_name} ====')
-        #     for key, info in env.conEnvData_wsa["function_data"].items():
-        #         print(f'{key}:{info["name"]}')
+                data['flag_whole'] = False
+                model_dir, model_file_prefix = find_the_model_for_a_contract(
+                    solidity_name, contract_name, env, data["flag_whole"])
+                if f"{model_dir}{model_file_prefix}.zip" not in model_paths:
+                    model_paths.append(f"{model_dir}{model_file_prefix}.zip")
+            else:
+                model_dir = f'{model_path}{rl.config.rl_cur_parameters["model_folder"]}\\'
+                model_file_prefix = rl.config.rl_cur_parameters[
+                    "model_file_name_prefix"]
+                print(f'use a general model')
+                model_paths.append(f"{model_dir}{model_file_prefix}.zip")
 
+        elif rl.config.rl_cur_parameters["dataset"] and env.env_name in ['ContractEnv_55']:
+            data['flag_whole'] = True
+            model_dir = f'{model_path}{rl.config.rl_cur_parameters["model_folder"]}\\'
+            model_file_prefix = rl.config.rl_cur_parameters[
+                "model_file_name_prefix"]
+            print(f'use a general model')
+            model_paths.append(f"{model_dir}{model_file_prefix}.zip")
+
+
+        results={}
         for target in env.conEnvData_wsa["target_functions_in_integer"]:
             env.goal = target
+            goal_name=env.conEnvData_wsa["function_data"][str(target)]["name"]
+            results[goal_name]=[]
 
-            # print(f'target : {target} : {env.conEnvData_wsa["function_data"][str(target)]["name"]}')
-            predict_results=my_model_prediction(model, env, rl.config.rl_cur_parameters["NUM_episode"],flag_maskable=rl.config.rl_cur_parameters["flag_maskable"])
-            select_sequences=get_top_k_sequences(predict_results,top_k=top_k)
-            clean_sequence=self.remove_contract_name_from_function_name(select_sequences,contract_name)
-            results[env.conEnvData_wsa["function_data"][str(target)]["name"]]=clean_sequence
+        for m_path in model_paths:
+            model=retrieve_model(m_path)
+            for target in env.conEnvData_wsa["target_functions_in_integer"]:
+                env.goal = target
+                goal_name = env.conEnvData_wsa["function_data"][str(target)][
+                    "name"]
+                # print(f'target : {target} : {goal_name}')
+                predict_results=my_model_prediction(model, env,rl.config.rl_cur_parameters["NUM_episode"],flag_maskable=rl.config.rl_cur_parameters["flag_maskable"])
+                clean_sequence=self.remove_contract_name_from_function_name(predict_results,contract_name)
+                for seq in clean_sequence:
+                    if seq not in results[goal_name]:
+                        results[goal_name].append(seq)
+
+        for k in results.keys():
+            results[k]=refine_sequences(get_top_k_sequences(results[k], top_k=top_k))
+
         return results
 
 wrapper = SeqGeneration()

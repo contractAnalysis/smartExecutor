@@ -44,15 +44,13 @@ def get_env(solidity_name: str, contract_name: str, solc_version:str="0.4.25", s
     env.solidity_name = solidity_name
     return env
 
-def retrieve_model(models_dir:str, model_file_prefix:str, flag_maskable:bool=True):
+def retrieve_model(model_path:str):
 
     flag_maskable = rl.config.rl_cur_parameters["flag_maskable"]
-    if '.zip' in model_file_prefix:
-        model_file_prefix=model_file_prefix.rstrip(".zip")
     if flag_maskable:
-        model = MaskablePPO.load(f"{models_dir}{model_file_prefix}.zip")
+        model = MaskablePPO.load(model_path)
     else:
-        model = PPO.load(f"{models_dir}{model_file_prefix}.zip")
+        model = PPO.load(model_path)
     return model
 
 
@@ -146,7 +144,32 @@ def remove_repeated_sequences(sequences):
 
 def get_top_k_sequences(sequences:list, top_k:int=2):
     unique_sequences=remove_repeated_sequences(sequences)
+    unique_sequences.sort(key=len,reverse=False)
     if len(unique_sequences)>top_k:
         return random.sample(unique_sequences,top_k)
     else:
         return unique_sequences
+
+
+def refine_sequences(sequences:list)->list:
+    kept=[]
+    for seq in sequences:
+        if len(seq) - len(set(seq)) >=2:
+            seq_=[]
+            for ftn in seq:
+                if ftn not in seq_:
+                    seq_.append(ftn)
+            if seq_ not in kept:
+                kept.append(seq_)
+        elif len(seq) - len(set(seq))==1 and len(seq)==4:
+            seq_ = []
+            for ftn in seq:
+                if ftn not in seq_:
+                    seq_.append(ftn)
+            if seq_ not in kept:
+                kept.append(seq_)
+        else:
+            if seq not in kept:
+                kept.append(seq)
+    return kept
+

@@ -74,7 +74,7 @@ class ContractEnv_55(gymnasium.Env):
         self.mode=mode
         
         self.score=0
-        self.test=test
+
         
         self.goal_indicator=goal_indicator
         self.goals=self.conEnvData_wsa["target_functions_in_integer"]       
@@ -230,13 +230,13 @@ class ContractEnv_55(gymnasium.Env):
                 self.print_(f'valid:{self.func_seq}')
                 if action==1:
                     if self.mode=='train':    
-                        reward,terminate=goal_rewarding(action,self.goal,self.func_seq,self.goal_indicator,self.goals,flag_test=self.test)
+                        reward,terminate=goal_rewarding(action,self.goal,self.func_seq,self.goal_indicator,self.goals)
                     else:
-                        reward,terminate=goal_rewarding(action,self.goal,self.func_seq,self.goal_indicator,self.goals,flag_test=self.test,mode='test')
+                        reward,terminate=goal_rewarding(action,self.goal,self.func_seq,self.goal_indicator,self.goals,mode='test')
                         
                     if reward>=5:
                         self.goal_reach_status[self.goal]+=1                   
-                        if not self.test:
+                        if self.mode in ['train']:
                             print(f'Goal reaching status:\n{self.goal_reach_status}')
                             print(f'Goal consider status:{self.goal_consider_status}')  
             
@@ -457,7 +457,7 @@ class ContractEnv_55(gymnasium.Env):
 
         #-------------------
         # find more potential functions for a target based on the sequences that lead to the target
-        if self.test:
+        if self.mode in ['test']:
             goal_children=[]
         else:
             if position > 0:
