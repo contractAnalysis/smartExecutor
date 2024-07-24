@@ -44,7 +44,7 @@ class SeqGeneration:
 
         model_paths = []
         if rl.config.rl_cur_parameters["dataset"]== 'small_dataset':
-            model_dir = f'{model_path}{rl.config.rl_cur_parameters["model_folder"]}\\'
+            model_dir = f'{model_path}{rl.config.rl_cur_parameters["model_folder"]}/'
             model_file_prefix = rl.config.rl_cur_parameters["model_file_name_prefix"]
             print(f'use a general model')
             model_paths.append(f"{model_dir}{model_file_prefix}.zip")
@@ -56,13 +56,13 @@ class SeqGeneration:
                 model_paths.append(f"{model_dir}{model_file_prefix}.zip")
             elif rl.config.MIX == 'b':
                 data['flag_whole'] = True
-                model_dir = f'{model_path}{rl.config.rl_cur_parameters["model_folder"]}\\'
+                model_dir = f'{model_path}{rl.config.rl_cur_parameters["model_folder"]}/'
                 model_file_prefix = rl.config.rl_cur_parameters[
                     "model_file_name_prefix"]
                 print(f'use a general model')
                 model_paths.append(f"{model_dir}{model_file_prefix}.zip")
             elif rl.config.MIX in [ 'c','d']:
-                model_dir = f'{model_path}{rl.config.rl_cur_parameters["model_folder"]}\\'
+                model_dir = f'{model_path}{rl.config.rl_cur_parameters["model_folder"]}/'
                 model_file_prefix = rl.config.rl_cur_parameters[
                     "model_file_name_prefix"]
                 print(f'use a general model')
@@ -74,7 +74,7 @@ class SeqGeneration:
                 if f"{model_dir}{model_file_prefix}.zip" not in model_paths:
                     model_paths.append(f"{model_dir}{model_file_prefix}.zip")
             else:
-                model_dir = f'{model_path}{rl.config.rl_cur_parameters["model_folder"]}\\'
+                model_dir = f'{model_path}{rl.config.rl_cur_parameters["model_folder"]}/'
                 model_file_prefix = rl.config.rl_cur_parameters[
                     "model_file_name_prefix"]
                 print(f'use a general model')
@@ -82,7 +82,7 @@ class SeqGeneration:
 
         elif rl.config.rl_cur_parameters["dataset"] and env.env_name in ['ContractEnv_55']:
             data['flag_whole'] = True
-            model_dir = f'{model_path}{rl.config.rl_cur_parameters["model_folder"]}\\'
+            model_dir = f'{model_path}{rl.config.rl_cur_parameters["model_folder"]}/'
             model_file_prefix = rl.config.rl_cur_parameters[
                 "model_file_name_prefix"]
             print(f'use a general model')

@@ -175,9 +175,7 @@ initialize(address,address,uint256),initialize(address) (se) vs initialize(addre
                                  ftn not in ['symbol()', 'name()',
                                              'decimals()']]
                 else:
-                    dk_func = [ftn for ftn, _ in dk_functions]
-                    functions_1 = [ftn for ftn in self.target_functions_no_seq
-                                   if ftn in dk_func]
+                    functions_1 = [ftn for ftn, _ in dk_functions]
                 if len(functions_1)>0:
                     return {state_key: functions_1}, True
 
