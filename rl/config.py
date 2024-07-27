@@ -21,7 +21,7 @@ seq_len_limit=4
 env_name='ContractEnv_33'
 top_k=2
 MIX="a"
-
+NUM_episode=5
 model_groups={
     "group_1": ["ContractEnv_33_group_1_1718941700", "14430000"],
     "group_2": ["ContractEnv_33_group_2_1718941700", "14680000"],

@@ -44,10 +44,7 @@ class RL_MLP_Policy(FunctionSearchStrategy):
         self.preprocess_timeout = preprocess_timeout
         self.preprocess_coverage = preprocess_coverage
 
-        self.all_functions=all_functions
-        self.functionAssignment = FunctionAssignment(all_functions,
-                                                     fwrg_manager)
-        #
+
         self.start_functions=start_functions
         self.target_functions=target_functions
         self.target_functions_no_seq=[]
@@ -58,8 +55,11 @@ class RL_MLP_Policy(FunctionSearchStrategy):
         self.flag_rl_mlp_policy=True
         self.request_sequences() # obtain sequences
 
+        self.all_functions = all_functions
+        self.functionAssignment = FunctionAssignment(all_functions,
+                                                     fwrg_manager,sequences=self.sequences)
 
-
+        self.functionAssignment.targets_with_no_seq=self.target_functions_no_seq
         self.fwrg_manager=fwrg_manager
 
 
@@ -175,104 +175,28 @@ class RL_MLP_Policy(FunctionSearchStrategy):
                     targets)  # order the states in self.queue and pick up the one has the highest weight
 
                 # assign functions
-                assigned_children = self.functionAssignment.assign_functions(
+                assigned_functions = self.functionAssignment.assign_functions(
                     state_key, dk_functions, to_execute_children,
                     not_to_execute)
 
-                seq = get_ftn_seq_from_key_1(state_key)
-                functions = []
-                for seq_ in self.sequences:
-                    if len(seq) == len(seq_): continue
-                    if len(seq) < len(seq_):
-                        flag_add = True
-                        for i in range(len(seq)):
-                            """
-                            a speical case
-                            0x7f0C14F2F72ca782Eea2835B9f63d3833B6669Ab.sol	0.4.24	UFragmentsPolicy
-    initialize(address,address,uint256),initialize(address) (se) vs initialize(address,UFragments,uint256) (generated)
-                            """
-                            if seq[i] != seq_[i]:
-                                pure_name = seq[i].split(f'(') if '(' in seq[
-                                    i] else seq[i]
-                                if seq[i][0:len(pure_name)] != seq_[i][0:len(
-                                    pure_name)]:
-                                    flag_add = False
-                                    break
-                        if flag_add:
-                            if seq_[len(seq)] not in functions:
-                                functions.append(seq_[len(seq)])
-
-                if len(functions) > 0:
-                    self.state_key_assigned_at_last = state_key
-                    dk_func = [ftn for ftn, _ in dk_functions]
-                    left_target = [ftn for ftn in self.target_functions_no_seq
-                                   if ftn in dk_func]
-                    return {state_key: functions+left_target}, flag_can_be_deleted
+                if len(assigned_functions)>0:
+                    return {state_key: assigned_functions}, flag_can_be_deleted
                 else:
-                    if rl.config.MIX in ['d']:
-                        functions_1 = self.random_policy(state_key,
-                                                         dk_functions)
+                    percent_of_functions = 3
+                    if self.preprocess_timeout or fdg.global_config.preprocessing_exception:
+                        if self.preprocess_coverage < 50:
+                            percent_of_functions = 7
+                        elif self.preprocess_coverage < 80:
+                            percent_of_functions = 5
+                        elif self.preprocess_coverage < 90:
+                            percent_of_functions = 3
 
-                        dk_func = [ftn for ftn, _ in dk_functions]
-                        left_target = [ftn for ftn in
-                                       self.target_functions_no_seq
-                                       if ftn in dk_func]
+                    functions_1=self.functionAssignment.assign_functions_when_no_function_assigned(state_key,dk_functions,percent_of_functions)
 
-                        functions_1 = list(set(functions_1 + left_target))
-                        functions_1 = [ftn for ftn in functions_1 if
-                                       ftn not in ['symbol()', 'name()',
-                                                   'decimals()']]
-                    else:
-                        functions_1 = [ftn for ftn, _ in dk_functions]
-                        functions_1 = [ftn for ftn in functions_1 if
-                                       ftn not in ['symbol()', 'name()',
-                                                   'decimals()']]
                     if len(functions_1) > 0:
                         self.state_key_assigned_at_last = state_key
                         return {state_key: functions_1}, True
 
-
-
-    def random_policy(self,state_key:str,dk_functions:list):
-        seq = get_ftn_seq_from_key_1(state_key)
-        random_selected = self.random_select_functions()
-        targets = [dk for dk, _ in dk_functions]
-        if len(seq)==1:
-            return list(set(random_selected+targets))
-        elif len(seq)==2:
-            return list(set(random_selected+targets))
-        else:
-            random_targets = self.random_select_targets(targets)
-            return list(set(random_targets + random_selected))
-
-    def random_select_functions(self):
-        percent_of_functions=2
-        if self.preprocess_timeout or fdg.global_config.preprocessing_exception:
-            if self.preprocess_coverage<50:
-                percent_of_functions= 7
-            elif self.preprocess_coverage<80:
-                percent_of_functions= 5
-            elif self.preprocess_coverage<90:
-                percent_of_functions= 3
-            else:
-                percent_of_functions= 2
-        random_selected_functions = self.functionAssignment.select_functions_randomly(
-            percent_of_functions)
-        return random_selected_functions
-
-    def random_select_targets(self,targets:list):
-        percent_of_functions=2
-        if self.preprocess_timeout or fdg.global_config.preprocessing_exception:
-            if self.preprocess_coverage<50:
-                percent_of_functions= 7
-            elif self.preprocess_coverage<80:
-                percent_of_functions= 5
-            elif self.preprocess_coverage<90:
-                percent_of_functions= 3
-            else:
-                percent_of_functions= 2
-        random_selected_functions = self.functionAssignment.select_functions_randomly_1( targets,percent_of_functions)
-        return random_selected_functions
 
     def update_states(self, states_dict:dict)->list:
         """
@@ -288,14 +212,6 @@ class RL_MLP_Policy(FunctionSearchStrategy):
                     self.queue.append(key)
                     self.state_storage[key] = state.accounts[
                         address].storage.printable_storage
-
-                    # # save the parent state key for a state
-                    # if len(self.state_key_assigned_at_last) > 0:
-                    #     if key not in self.parent_state_keys.keys():
-                    #         self.parent_state_keys[key] = self.state_key_assigned_at_last
-                    #     else:
-                    #         my_print(f'Why a state has two or more parent state keys')
-                    #         self.parent_state_keys[key] = self.state_key_assigned_at_last
 
                     # get written slots for this state
                     # get written slots from its parent, the key of which is saved in self.state_key_assigned_at_last

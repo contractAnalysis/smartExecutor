@@ -561,6 +561,13 @@ def add_fwrg_analysis_args(options):
         help="indicate the style in the rl_mlp_policy",
     )
 
+    options.add_argument(
+        "-episode",
+        default=5,
+        type=int,
+        help="indicate the number of episodes for sequence generation",
+    )
+
 def parse_list_of_lists(value):
     try:
         # Parse the string representation of the list of lists into an actual list of lists
@@ -588,6 +595,7 @@ def add_fwrg_arguments(args: Namespace):
     rl.config.env_name=args.env
     rl.config.top_k=args.topk
     rl.config.MIX = args.mix
+    rl.config.NUM_episode=args.episode
     if args.no_guidance:
         fdg.global_config.flag_fwrg=False
     else:

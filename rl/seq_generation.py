@@ -102,7 +102,7 @@ class SeqGeneration:
                 goal_name = env.conEnvData_wsa["function_data"][str(target)][
                     "name"]
                 # print(f'target : {target} : {goal_name}')
-                predict_results=my_model_prediction(model, env,rl.config.rl_cur_parameters["NUM_episode"],flag_maskable=rl.config.rl_cur_parameters["flag_maskable"])
+                predict_results=my_model_prediction(model, env,rl.config.NUM_episode,flag_maskable=rl.config.rl_cur_parameters["flag_maskable"])
                 clean_sequence=self.remove_contract_name_from_function_name(predict_results,contract_name)
                 for seq in clean_sequence:
                     if seq not in results[goal_name]:
