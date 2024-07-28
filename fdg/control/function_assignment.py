@@ -338,6 +338,9 @@ class FunctionAssignment():
         print_function_assignmnets(self.assignment_times)
 
         ftn_seq = get_ftn_seq_from_key_1(state_key)
+        fallback_case = self.fallback_case(ftn_seq)
+        if len(fallback_case) > 0:
+            return fallback_case
 
         # identify the functions to be considered
         to_be_considered_functions = []

@@ -180,9 +180,10 @@ class RL_MLP_Policy(FunctionSearchStrategy):
                     not_to_execute)
 
                 if len(assigned_functions)>0:
+                    self.state_key_assigned_at_last = state_key
                     return {state_key: assigned_functions}, flag_can_be_deleted
                 else:
-                    percent_of_functions = 3
+                    percent_of_functions = 1
                     if self.preprocess_timeout or fdg.global_config.preprocessing_exception:
                         if self.preprocess_coverage < 50:
                             percent_of_functions = 7
