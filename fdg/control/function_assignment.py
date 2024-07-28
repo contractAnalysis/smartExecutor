@@ -116,7 +116,7 @@ class FunctionAssignment():
                 return ['original_instruction_list']
         return []
 
-    def assign_functions(self,state_key:str,dk_functions:list,to_execute_functions:list=[],not_to_execute:list=[]):
+    def assign_functions(self,state_key:str,dk_functions:list,to_execute_functions:list=[],not_to_execute:list=[], percentage:int=3):
 
         print_function_assignmnets(self.assignment_times)
 
@@ -168,7 +168,11 @@ class FunctionAssignment():
 
                 left_target = [ftn for ftn in self.targets_with_no_seq
                                if ftn in dk_left]
-                children=list(set(functions+left_target))
+                random_functions=[]
+                if rl.config.MIX in ['d']:
+                    random_functions = self.functionAssignment.select_functions_randomly(percentage)
+
+                children=list(set(functions+left_target+random_functions))
 
             else:
 
@@ -334,7 +338,7 @@ class FunctionAssignment():
 
         return assigned_functions
 
-    def assign_functions_when_no_function_assigned(self, state_key: str,dk_functions:list,randomly_selected_functions:list,percentage:int=5):
+    def assign_functions_when_no_function_assigned(self, state_key: str,dk_functions:list,percentage:int=5):
         print_function_assignmnets(self.assignment_times)
 
         ftn_seq = get_ftn_seq_from_key_1(state_key)
@@ -354,22 +358,19 @@ class FunctionAssignment():
             if cov < 70:
                 to_be_considered_functions.append(ftn)
 
-        if rl.config.MIX in ['d']:
-            functions_1 = self.select_functions_randomly(percentage)
 
-            # dk_func = [ftn for ftn, _ in dk_functions]
-            left_target = [ftn for ftn in
-                           self.targets_with_no_seq
-                           if ftn in to_be_considered_functions]
+        functions_1 = self.select_functions_randomly(percentage)
 
-            functions_1 = list(set(functions_1 + left_target))
-            functions_1 = [ftn for ftn in functions_1 if
-                           ftn not in ['symbol()', 'name()',
-                                       'decimals()',"version()"]]
-        else:
-            functions_1 = [ftn for ftn in to_be_considered_functions if
-                           ftn not in ['symbol()', 'name()',
-                                       'decimals()',"version()"]]
+        # dk_func = [ftn for ftn, _ in dk_functions]
+        left_target = [ftn for ftn in
+                       self.targets_with_no_seq
+                       if ftn in to_be_considered_functions]
+
+        functions_1 = list(set(functions_1 + left_target))
+        functions_1 = [ftn for ftn in functions_1 if
+                       ftn not in ['symbol()', 'name()',
+                                   'decimals()',"version()"]]
+
         # permit self dependency once
         if len(ftn_seq) >= 2:
             functions_1 = [child for child in functions_1 if

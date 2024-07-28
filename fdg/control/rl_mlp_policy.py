@@ -174,16 +174,27 @@ class RL_MLP_Policy(FunctionSearchStrategy):
                 state_key = self.pickup_a_state(
                     targets)  # order the states in self.queue and pick up the one has the highest weight
 
+
+
+
+                percent_of_functions=2
+                if rl.config.MIX in ['d']:
+                    if self.preprocess_timeout or fdg.global_config.preprocessing_exception:
+                        if self.preprocess_coverage < 50:
+                            percent_of_functions = 7
+                        elif self.preprocess_coverage < 80:
+                            percent_of_functions =5
+                        elif self.preprocess_coverage < 90:
+                            percent_of_functions =3
                 # assign functions
                 assigned_functions = self.functionAssignment.assign_functions(
                     state_key, dk_functions, to_execute_children,
-                    not_to_execute)
-
+                    not_to_execute,percentage=percent_of_functions)
                 if len(assigned_functions)>0:
                     self.state_key_assigned_at_last = state_key
                     return {state_key: assigned_functions}, flag_can_be_deleted
                 else:
-                    percent_of_functions = 1
+                    percent_of_functions = 2
                     if self.preprocess_timeout or fdg.global_config.preprocessing_exception:
                         if self.preprocess_coverage < 50:
                             percent_of_functions = 7
@@ -192,7 +203,7 @@ class RL_MLP_Policy(FunctionSearchStrategy):
                         elif self.preprocess_coverage < 90:
                             percent_of_functions = 3
 
-                    functions_1=self.functionAssignment.assign_functions_when_no_function_assigned(state_key,dk_functions,percent_of_functions)
+                    functions_1=self.functionAssignment.assign_functions_when_no_function_assigned(state_key,dk_functions,percentage=percent_of_functions)
 
                     if len(functions_1) > 0:
                         self.state_key_assigned_at_last = state_key
