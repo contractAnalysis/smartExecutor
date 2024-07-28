@@ -117,7 +117,9 @@ class FunctionAssignment():
         return []
 
     def assign_functions(self,state_key:str,dk_functions:list,to_execute_functions:list=[],not_to_execute:list=[]):
-
+        """
+                RL policy or Graph-based function selection
+        """
         print_function_assignmnets(self.assignment_times)
 
         if len(to_execute_functions)>0:
@@ -206,6 +208,123 @@ class FunctionAssignment():
 
             self.record_assignment(children)
             return children
+
+    def assign_functions_mix(self,state_key:str,dk_functions:list,to_execute_functions:list=[],not_to_execute:list=[],flag_pre_timeout:bool=False,percent_of_functions:int=3):
+        """
+        RL policy and Graph-based function selection
+        """
+        print_function_assignmnets(self.assignment_times)
+
+        if len(to_execute_functions)>0:
+            self.record_assignment(to_execute_functions)
+            return to_execute_functions
+        else:
+            ftn_seq = get_ftn_seq_from_key_1(state_key)
+
+            fallback_case = self.fallback_case(ftn_seq)
+            if len(fallback_case) > 0:
+                return fallback_case
+
+            # identify the dk functions for a particular state
+            dk_left = []
+            for ftn, cov in dk_functions:
+                # if ftn=='fallback':continue
+                if self.assignment_times[ftn] < self.times_limit:
+                    dk_left.append(ftn)
+                    continue
+                if self.assignment_times[ftn] >= 2 * self.times_limit:
+                    continue
+                if cov < 70:
+                    dk_left.append(ftn)
+
+            # ---- get functions ----
+            functions = []
+            if len(self.sequences)>0:
+                for seq_ in self.sequences:
+                    if len(ftn_seq) == len(seq_): continue
+                    if len(ftn_seq) < len(seq_):
+                        flag_add = True
+                        for i in range(len(ftn_seq)):
+                            """
+                            a speical case
+                            0x7f0C14F2F72ca782Eea2835B9f63d3833B6669Ab.sol	0.4.24	UFragmentsPolicy
+    initialize(address,address,uint256),initialize(address) (se) vs initialize(address,UFragments,uint256) (generated)
+                            """
+                            if ftn_seq[i] != seq_[i]:
+                                pure_name = ftn_seq[i].split(f'(') if '(' in ftn_seq[
+                                    i] else ftn_seq[i]
+                                if ftn_seq[i][0:len(pure_name)] != seq_[i][0:len(
+                                    pure_name)]:
+                                    flag_add = False
+                                    break
+                        if flag_add:
+                            if seq_[len(ftn_seq)] not in functions:
+                                functions.append(seq_[len(ftn_seq)])
+
+                left_target = [ftn for ftn in self.targets_with_no_seq
+                               if ftn in dk_left]
+                functions=list(set(functions+left_target))
+
+            print(f'from RL: {functions}')
+
+            # get children from the augmented graph
+            if not flag_pre_timeout:
+                children = self.fwrg_manager.get_children_fwrg_T_A(ftn_seq[-1])
+                # another case to get children: when the flag is set that all reads in a function are considered
+                if fdg.global_config.flag_consider_all_reads == 1:
+                    children_o = self.fwrg_manager.get_children_all_reads(
+                        ftn_seq[-1])
+                    children += children_o
+                    children = list(set(children))
+                # consider children that are target or can reach a target
+                children = [child for child in children if
+                            self.can_reach_targets(child,
+                                                   dk_left,
+                                                   fdg.global_config.seq_len_limit - len(
+                                                       ftn_seq) - 1
+                                                   )
+                            ]
+                # ----------------
+                # consider a function that no function can reach it in the graph (because the reads in conditions are not captured)
+                considered = self.consider_dk_functions_not_reachable()
+                for ftn in considered:
+                    if ftn not in children:
+                        children.append(ftn)
+            else:
+                # get children when all reads are considered due to preprocessing timeout,read/write info is partly obtained. so, consider all reads
+                children = self.fwrg_manager.get_children_all_reads(ftn_seq[-1])
+                random_selected_functions = self.select_functions_randomly(percent_of_functions)
+                # consider children that are target or can reach a target
+                children = [child for child in children if
+                            self.can_reach_targets(child,
+                                                   dk_left,
+                                                   fdg.global_config.seq_len_limit - len(
+                                                       ftn_seq) - 1
+                                                   )
+                            ]
+
+                # select functions from to be considered functions
+                children = list(
+                    set(random_selected_functions  + children))
+
+            # permit self dependency once
+            if len(ftn_seq) >= 2:
+                children = [child for child in children if
+                            child not in ftn_seq[0:-1]]
+
+            # remove children that should not be executed (i.e. already considered)
+            children = [child for child in children if
+                        child not in not_to_execute]
+            print(f'from Graph: {children}')
+
+            self.record_assignment(children)
+
+            children = list(set(children + functions))
+            print(f'merged: {children}')
+
+            return children
+
+
 
     def consider_dk_functions_not_reachable(self)->list:
         """
@@ -328,7 +447,7 @@ class FunctionAssignment():
         # select functions from to be considered functions
 
         assigned_functions= list(set(randomly_selected_functions + children))
-
+        print(f'from Graph: {assigned_functions}')
         if len(assigned_functions)>0:
             self.record_assignment(assigned_functions)
 
@@ -338,6 +457,9 @@ class FunctionAssignment():
         print_function_assignmnets(self.assignment_times)
 
         ftn_seq = get_ftn_seq_from_key_1(state_key)
+        fallback_case = self.fallback_case(ftn_seq)
+        if len(fallback_case) > 0:
+            return fallback_case
 
         # identify the functions to be considered
         to_be_considered_functions = []

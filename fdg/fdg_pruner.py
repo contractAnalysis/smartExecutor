@@ -1,6 +1,7 @@
 
 # support FDG-guided execution and sequence execution
 from fdg.control.mine import Mine
+from fdg.control.mix import MIX
 from fdg.control.rl_mlp_policy import RL_MLP_Policy
 from fdg.preprocessing.address_collection import collect_addresses_in_constructor
 
@@ -65,6 +66,8 @@ class FDG_pruner(LaserPlugin):
             self.search_stragety=Mine()
         elif fdg.global_config.function_search_strategy=='seq':
             self.search_stragety=Seq()
+        elif fdg.global_config.function_search_strategy=='mix':
+            self.search_stragety=MIX()
         else:
             self.search_stragety = BFS()
 
@@ -151,8 +154,8 @@ class FDG_pruner(LaserPlugin):
                 return
 
             else:
-                #--------------------
-                if self.search_stragety.name in ['rl_mlp_policy']:
+                #===========================================
+                if self.search_stragety.name in ['rl_mlp_policy','mix']:
                     if self._iteration_ == 2:
                         # execute all possible functions to find start functions and target functions
                         pass
@@ -166,7 +169,7 @@ class FDG_pruner(LaserPlugin):
                             laserEVM.open_states = []
                     return
 
-                # -------------------
+                # =============================================
                 if self._iteration_<=fdg.global_config.p1_dl+1:
                     # Phase 1
                     ...
@@ -285,8 +288,8 @@ class FDG_pruner(LaserPlugin):
                     return
 
 
-            #--------------------------
-            if self.search_stragety.name in ['rl_mlp_policy']:
+            # ++++++++++++++++++++++++++++++++++++++++++++++++++
+            if self.search_stragety.name in ['rl_mlp_policy','mix']:
                 if self._iteration_ == 2:
                     # initialize guider
                     self.get_depth_k_functions()
@@ -316,10 +319,9 @@ class FDG_pruner(LaserPlugin):
                             # make sure that when there is only one state generated at depth1,
                             # the execution does not terminate
                             fdg.global_config.transaction_count = self._iteration_
-
                 return
 
-            #--------------------------
+            # ++++++++++++++++++++++++++++++++++++++++++++++++++
             if self._iteration_<=fdg.global_config.p1_dl:
                 # the basic symbolic execution
                 ...
@@ -338,8 +340,6 @@ class FDG_pruner(LaserPlugin):
                     start_functions = [seq[-1] for seq in sequences if len(seq)>0 ]
                     start_functions = list(set(start_functions))
                     self.guider.init(start_functions,self.depth_k,self.preprocess)
-
-
             else:
                 # belong to Phase 2
                 self.guider.end_iteration(laserEVM,self._iteration_)

@@ -19,12 +19,8 @@ from rl.config import rl_cur_parameters, top_k
 from rl.seq_generation import wrapper
 
 
-class RL_MLP_Policy(FunctionSearchStrategy):
+class MIX(FunctionSearchStrategy):
     def __init__(self):
-        # self.queue = []
-        # self.sequences = []
-        # super().__init__('rl_mlp_policy')
-
         self.preprocess_timeout = False
         self.preprocess_coverage = 0
 
@@ -36,7 +32,7 @@ class RL_MLP_Policy(FunctionSearchStrategy):
 
         self.state_key_assigned_at_last = ""
         self.flag_one_start_function = False
-        super().__init__('rl_mlp_policy')
+        super().__init__('mix')
 
 
     def initialize(self, flag_one_start_function:bool, preprocess_timeout:bool, preprocess_coverage:float, all_functions:list, fwrg_manager:FWRG_manager,start_functions:list, target_functions:list, solidity_name:str, contract_name:str,solc_version:str=""):
@@ -63,36 +59,6 @@ class RL_MLP_Policy(FunctionSearchStrategy):
         self.fwrg_manager=fwrg_manager
 
 
-
-    def request_sequences_0(self):
-        # Define the JSON data to send in the POST request
-        data = {"solidity_name": f"{self.solidity_name}",
-                "contract_name": f"{self.contract_name}",
-                "top_k":f'{rl.config.top_k}',
-                "flag_whole":False,
-                "dataset":'small_dataset',
-                }
-        print(f'Request data:{data}')
-
-        # Send a POST request to the server
-        model_service_url = "http://127.0.0.1:5000/generate_simple"
-        response = requests.post(model_service_url, json=data)
-
-        # Check if the request was successful (status code 200)
-        if response.status_code == 200:
-            # Parse the JSON response
-            result = response.json()
-            print(f'Response data:{result["result"]}')
-
-            for k, v in result['result'].items():
-                print(f'{k}')
-                for seq in v:
-                    self.sequences.append(seq)
-                    print(f'\t{seq}')
-        else:
-            print("Error:", response.status_code)
-            self.flag_rl_mlp_policy=False
-
     def request_sequences(self):
         # Define the JSON data to send in the POST request
         data = {"solidity_name": f"{self.solidity_name}",
@@ -116,7 +82,7 @@ class RL_MLP_Policy(FunctionSearchStrategy):
             targets_with_seq=[ftn.split(f'.')[-1] if '.' in ftn else ftn for ftn in result.keys()]
             for target,_ in self.target_functions:
                 if target not in targets_with_seq:
-                    if target not in ['symbol()','name()','decimals()']:
+                    if target not in ['symbol()','name()','decimals()','version()']:
                         self.target_functions_no_seq.append(target)
         else:
             print("Error:", "no sequences are generated")
@@ -174,29 +140,25 @@ class RL_MLP_Policy(FunctionSearchStrategy):
                 state_key = self.pickup_a_state(
                     targets)  # order the states in self.queue and pick up the one has the highest weight
 
+                percent_of_functions = 1
+                if self.preprocess_timeout or fdg.global_config.preprocessing_exception:
+                    if self.preprocess_coverage < 50:
+                        percent_of_functions = 7
+                    elif self.preprocess_coverage < 80:
+                        percent_of_functions = 5
+                    elif self.preprocess_coverage < 90:
+                        percent_of_functions = 1
+
                 # assign functions
-                assigned_functions = self.functionAssignment.assign_functions(
+                assigned_functions = self.functionAssignment.assign_functions_mix(
                     state_key, dk_functions, to_execute_children,
-                    not_to_execute)
+                    not_to_execute,flag_pre_timeout=self.preprocess_timeout,percent_of_functions=percent_of_functions)
+
 
                 if len(assigned_functions)>0:
                     self.state_key_assigned_at_last = state_key
                     return {state_key: assigned_functions}, flag_can_be_deleted
-                else:
-                    percent_of_functions = 3
-                    if self.preprocess_timeout or fdg.global_config.preprocessing_exception:
-                        if self.preprocess_coverage < 50:
-                            percent_of_functions = 7
-                        elif self.preprocess_coverage < 80:
-                            percent_of_functions = 5
-                        elif self.preprocess_coverage < 90:
-                            percent_of_functions = 3
 
-                    functions_1=self.functionAssignment.assign_functions_when_no_function_assigned(state_key,dk_functions,percent_of_functions)
-
-                    if len(functions_1) > 0:
-                        self.state_key_assigned_at_last = state_key
-                        return {state_key: functions_1}, True
 
 
     def update_states(self, states_dict:dict)->list:

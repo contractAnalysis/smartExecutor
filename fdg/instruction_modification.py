@@ -284,7 +284,13 @@ class InstructionModification():
         fct_selectors = []
         for ftn in functions:
             if ftn in ['fallback']: continue
-            if ftn not in self.function_identifier.keys(): continue  # can  not do anything
+            if ftn not in self.function_identifier.keys():
+                pure_name=ftn.split(f'(')[0] if '(' in ftn else ftn
+                for func_full_name in self.function_identifier.keys():
+                    if pure_name in func_full_name:
+                        fct_selectors.append(self.function_identifier[func_full_name])
+                        break
+                continue  # can  not do anything
             fct_selectors.append(self.function_identifier[ftn])
 
         final_instructions = self._get_modified_instructions_1(fct_selectors)
