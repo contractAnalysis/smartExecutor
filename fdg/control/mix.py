@@ -140,14 +140,14 @@ class MIX(FunctionSearchStrategy):
                 state_key = self.pickup_a_state(
                     targets)  # order the states in self.queue and pick up the one has the highest weight
 
-                percent_of_functions = 1
+                percent_of_functions = 2
                 if self.preprocess_timeout or fdg.global_config.preprocessing_exception:
                     if self.preprocess_coverage < 50:
                         percent_of_functions = 7
                     elif self.preprocess_coverage < 80:
                         percent_of_functions = 5
                     elif self.preprocess_coverage < 90:
-                        percent_of_functions = 1
+                        percent_of_functions = 3
 
                 # assign functions
                 assigned_functions = self.functionAssignment.assign_functions_mix(
