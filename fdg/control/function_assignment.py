@@ -170,7 +170,7 @@ class FunctionAssignment():
                                if ftn in dk_left]
                 random_functions=[]
                 if rl.config.MIX in ['d']:
-                    random_functions = self.functionAssignment.select_functions_randomly(percentage)
+                    random_functions = self.select_functions_randomly(percentage)
 
                 children=list(set(functions+left_target+random_functions))
 
