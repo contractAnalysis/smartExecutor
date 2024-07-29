@@ -291,6 +291,7 @@ class FDG_pruner(LaserPlugin):
             # ++++++++++++++++++++++++++++++++++++++++++++++++++
             if self.search_stragety.name in ['rl_mlp_policy','mix']:
                 if self._iteration_ == 2:
+                    self.guider.end_iteration(laserEVM, self._iteration_)
                     # initialize guider
                     self.get_depth_k_functions()
                     sequences = self.guider.get_start_sequence(laserEVM)

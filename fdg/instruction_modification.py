@@ -309,7 +309,7 @@ class InstructionModification():
         """
 
         ftn_selectors_valid = [selector for selector in fct_selectors if selector in self.functions_to_positions.keys()]
-
+        ftn_selectors_valid=list(set(ftn_selectors_valid))
 
         # find positions not kept
         # keep the functions having two positions(there are branches in the function dispatcher)

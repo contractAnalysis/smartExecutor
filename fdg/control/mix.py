@@ -9,7 +9,7 @@ from fdg.control.function_assignment import FunctionAssignment
 from fdg.expression_slot import identify_slot_from_symbolic_slot_expression, \
     common_elements
 from fdg.fwrg_manager import FWRG_manager
-from fdg.output_data import my_print
+from fdg.output_data import my_print, print_data_for_mine_strategy
 from fdg.utils import get_ftn_seq_from_key_1, random_select_from_list, \
     get_key_1_prefix
 from mythril.laser.plugin.plugins.dependency_pruner import \
@@ -112,6 +112,8 @@ class MIX(FunctionSearchStrategy):
             # save the new states
             self.update_states(states_dict)
             self.filter_states()
+        # ---------------
+        print_data_for_mine_strategy(self.queue)
 
         while True:
             # --------------
