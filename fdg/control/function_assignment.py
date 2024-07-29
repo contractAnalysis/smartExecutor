@@ -170,7 +170,7 @@ class FunctionAssignment():
                                if ftn in dk_left]
                 random_functions=[]
                 if rl.config.MIX in ['d']:
-                    random_functions = self.functionAssignment.select_functions_randomly(percentage)
+                    random_functions = self.select_functions_randomly(percentage)
 
                 children=list(set(functions+left_target+random_functions))
 
@@ -263,36 +263,45 @@ class FunctionAssignment():
                             if seq_[len(ftn_seq)] not in functions:
                                 functions.append(seq_[len(ftn_seq)])
 
-                left_target = [ftn for ftn in self.targets_with_no_seq
-                               if ftn in dk_left]
-                functions=list(set(functions+left_target))
+
+
 
             print(f'from RL: {functions}')
-
+            left_target = [ftn for ftn in self.targets_with_no_seq
+                           if ftn in dk_left]
             # get children from the augmented graph
-            if not flag_pre_timeout:
-                children = self.fwrg_manager.get_children_fwrg_T_A(ftn_seq[-1])
-                # another case to get children: when the flag is set that all reads in a function are considered
-                if fdg.global_config.flag_consider_all_reads == 1:
-                    children_o = self.fwrg_manager.get_children_all_reads(
-                        ftn_seq[-1])
-                    children += children_o
-                    children = list(set(children))
-                # consider children that are target or can reach a target
+
+            children = self.fwrg_manager.get_children_fwrg_T_A(ftn_seq[-1])
+            # another case to get children: when the flag is set that all reads in a function are considered
+            if fdg.global_config.flag_consider_all_reads == 1:
+                children_o = self.fwrg_manager.get_children_all_reads(
+                    ftn_seq[-1])
+                children += children_o
+                children = list(set(children))
+            # consider children that are target or can reach a target
+            children = [child for child in children if
+                        self.can_reach_targets(child,
+                                               dk_left,
+                                               fdg.global_config.seq_len_limit - len(
+                                                   ftn_seq) - 1
+                                               )
+                        ]
+
+
+            # permit self dependency once
+            if len(ftn_seq) >= 2:
                 children = [child for child in children if
-                            self.can_reach_targets(child,
-                                                   dk_left,
-                                                   fdg.global_config.seq_len_limit - len(
-                                                       ftn_seq) - 1
-                                                   )
-                            ]
-                # ----------------
-                # consider a function that no function can reach it in the graph (because the reads in conditions are not captured)
-                considered = self.consider_dk_functions_not_reachable()
-                for ftn in considered:
-                    if ftn not in children:
-                        children.append(ftn)
-            else:
+                            child not in ftn_seq[0:-1]]
+
+            # # remove children that should not be executed (i.e. already considered)
+            # children = [child for child in children if
+            #             child not in not_to_execute]
+
+            print(f'from Graph: {children}')
+
+            functions = list(set(functions + children))
+
+            if len(functions)==0:
                 # get children when all reads are considered due to preprocessing timeout,read/write info is partly obtained. so, consider all reads
                 children = self.fwrg_manager.get_children_all_reads(ftn_seq[-1])
                 random_selected_functions = self.select_functions_randomly(percent_of_functions)
@@ -309,22 +318,28 @@ class FunctionAssignment():
                 children = list(
                     set(random_selected_functions  + children))
 
-            # permit self dependency once
-            if len(ftn_seq) >= 2:
-                children = [child for child in children if
-                            child not in ftn_seq[0:-1]]
+                # permit self dependency once
+                if len(ftn_seq) >= 2:
+                    children = [child for child in children if
+                                child not in ftn_seq[0:-1]]
+                functions=children
+                print(f'from random+graph (no functions assigned): {children}')
 
-            # remove children that should not be executed (i.e. already considered)
-            children = [child for child in children if
-                        child not in not_to_execute]
-            print(f'from Graph: {children}')
+            # ----------------
+            # consider targets that no sequences are generated
+            for ftn in left_target:
+                if ftn not in functions:
+                    functions.append(ftn)
+            # ----------------
+            # consider a function that no function can reach it in the graph (because the reads in conditions are not captured)
+            considered = self.consider_dk_functions_not_reachable()
+            for ftn in considered:
+                if ftn not in functions:
+                    functions.append(ftn)
 
-
-
-            children = list(set(children + functions))
-            print(f'merged: {children}')
-            self.record_assignment(children)
-            return children
+            print(f'assigned functions: {functions}')
+            self.record_assignment(functions)
+            return functions
 
 
 

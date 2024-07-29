@@ -11,7 +11,8 @@ from rl.env_data_preparation.contract_env_data_preparation import collect_env_da
 from rl.envs.contract_env_discrete_action_space_03_3 import  ContractEnv_33
 from rl.envs.contract_env_discrete_action_space_05_5 import ContractEnv_55
 
-from rl.utils import  get_key_from_list, load_a_json_file, euclidean_distance
+from rl.utils import get_key_from_list, load_a_json_file, euclidean_distance, \
+    get_seq_from_key
 
 from rl.config import rl_cur_parameters,contract_json_file_path,model_path,model_groups
 
@@ -144,32 +145,37 @@ def remove_repeated_sequences(sequences):
 
 def get_top_k_sequences(sequences:list, top_k:int=2):
     unique_sequences=remove_repeated_sequences(sequences)
+    seq_counts=[[get_key_from_list(seq),sequences.count(seq)] for seq in unique_sequences]
+    seq_counts.sort(key=lambda x:x[1], reverse=True)
     unique_sequences.sort(key=len,reverse=False)
-    if len(unique_sequences)>top_k:
-        return random.sample(unique_sequences,top_k)
+    if len(seq_counts)>top_k:
+        if top_k>=2:
+            if len(get_seq_from_key(seq_counts[0][0]))==4 and len(get_seq_from_key(seq_counts[1][0]))==4:
+                for key, _ in seq_counts[top_k:]:
+                    if len(get_seq_from_key(key))==2:
+                        return [get_seq_from_key(key) for key, _ in seq_counts[0:top_k-1]]+[get_seq_from_key(key)]
+        return [get_seq_from_key(key) for key,_ in seq_counts[0:top_k]]
     else:
-        return unique_sequences
+        return [get_seq_from_key(key) for key,_ in seq_counts]
+
+
 
 
 def refine_sequences(sequences:list)->list:
     kept=[]
     for seq in sequences:
-        if len(seq) - len(set(seq)) >=2:
+        if len(seq) - len(set(seq)) >=2 or (len(seq) - len(set(seq))==1 and len(seq)==4):
             seq_=[]
-            for ftn in seq:
+            for ftn in seq[0:-1]:
                 if ftn not in seq_:
                     seq_.append(ftn)
+            seq_.append(seq[-1])
             if seq_ not in kept:
                 kept.append(seq_)
-        elif len(seq) - len(set(seq))==1 and len(seq)==4:
-            seq_ = []
-            for ftn in seq:
-                if ftn not in seq_:
-                    seq_.append(ftn)
-            if seq_ not in kept:
-                kept.append(seq_)
+
         else:
             if seq not in kept:
                 kept.append(seq)
     return kept
+
 

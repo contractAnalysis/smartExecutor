@@ -104,9 +104,7 @@ class SeqGeneration:
                 # print(f'target : {target} : {goal_name}')
                 predict_results=my_model_prediction(model, env,rl.config.NUM_episode,flag_maskable=rl.config.rl_cur_parameters["flag_maskable"])
                 clean_sequence=self.remove_contract_name_from_function_name(predict_results,contract_name)
-                for seq in clean_sequence:
-                    if seq not in results[goal_name]:
-                        results[goal_name].append(seq)
+                results[goal_name] += clean_sequence
 
         for k in results.keys():
             results[k]=refine_sequences(get_top_k_sequences(results[k], top_k=top_k))
