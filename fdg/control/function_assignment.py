@@ -156,7 +156,7 @@ class FunctionAssignment():
     initialize(address,address,uint256),initialize(address) (se) vs initialize(address,UFragments,uint256) (generated)
                             """
                             if ftn_seq[i] != seq_[i]:
-                                pure_name = ftn_seq[i].split(f'(') if '(' in ftn_seq[
+                                pure_name = ftn_seq[i].split(f'(')[0] if '(' in ftn_seq[
                                     i] else ftn_seq[i]
                                 if ftn_seq[i][0:len(pure_name)] != seq_[i][0:len(
                                     pure_name)]:
