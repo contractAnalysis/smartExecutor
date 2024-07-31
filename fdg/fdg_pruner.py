@@ -2,6 +2,7 @@
 # support FDG-guided execution and sequence execution
 from fdg.control.mine import Mine
 from fdg.control.mix import MIX
+from fdg.control.mix1 import MIX1
 from fdg.control.rl_mlp_policy import RL_MLP_Policy
 from fdg.preprocessing.address_collection import collect_addresses_in_constructor
 
@@ -68,6 +69,8 @@ class FDG_pruner(LaserPlugin):
             self.search_stragety=Seq()
         elif fdg.global_config.function_search_strategy=='mix':
             self.search_stragety=MIX()
+        elif fdg.global_config.function_search_strategy=='mix1':
+            self.search_stragety=MIX1()
         else:
             self.search_stragety = BFS()
 
@@ -155,7 +158,7 @@ class FDG_pruner(LaserPlugin):
 
             else:
                 #===========================================
-                if self.search_stragety.name in ['rl_mlp_policy','mix']:
+                if self.search_stragety.name in ['rl_mlp_policy','mix','mix1']:
                     if self._iteration_ == 2:
                         # execute all possible functions to find start functions and target functions
                         pass
@@ -289,7 +292,7 @@ class FDG_pruner(LaserPlugin):
 
 
             # ++++++++++++++++++++++++++++++++++++++++++++++++++
-            if self.search_stragety.name in ['rl_mlp_policy','mix']:
+            if self.search_stragety.name in ['rl_mlp_policy','mix','mix1']:
                 if self._iteration_ == 2:
                     self.guider.end_iteration(laserEVM, self._iteration_)
                     # initialize guider
@@ -311,11 +314,6 @@ class FDG_pruner(LaserPlugin):
                 if self.functionCoverage.coverage >= fdg.global_config.function_coverage_threshold:
 
                     if self.functionCoverage.coverage >= fdg.global_config.function_coverage_threshold + 1:
-                        if not self.search_stragety.flag_one_start_function:
-                            # make sure that when there is only one state generated at depth1,
-                            # the execution does not terminate
-                            fdg.global_config.transaction_count = self._iteration_
-                    else:
                         if not self.search_stragety.flag_one_start_function:
                             # make sure that when there is only one state generated at depth1,
                             # the execution does not terminate

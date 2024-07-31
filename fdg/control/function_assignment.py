@@ -156,7 +156,7 @@ class FunctionAssignment():
     initialize(address,address,uint256),initialize(address) (se) vs initialize(address,UFragments,uint256) (generated)
                             """
                             if ftn_seq[i] != seq_[i]:
-                                pure_name = ftn_seq[i].split(f'(') if '(' in ftn_seq[
+                                pure_name = ftn_seq[i].split(f'(')[0] if '(' in ftn_seq[
                                     i] else ftn_seq[i]
                                 if ftn_seq[i][0:len(pure_name)] != seq_[i][0:len(
                                     pure_name)]:
@@ -260,7 +260,7 @@ class FunctionAssignment():
     initialize(address,address,uint256),initialize(address) (se) vs initialize(address,UFragments,uint256) (generated)
                             """
                             if ftn_seq[i] != seq_[i]:
-                                pure_name = ftn_seq[i].split(f'(') if '(' in ftn_seq[
+                                pure_name = ftn_seq[i].split(f'(')[0] if '(' in ftn_seq[
                                     i] else ftn_seq[i]
                                 if ftn_seq[i][0:len(pure_name)] != seq_[i][0:len(
                                     pure_name)]:
@@ -375,6 +375,104 @@ class FunctionAssignment():
 
             return assigned_functions
 
+
+    def assign_functions_mix1(self,state_key:str,dk_functions:list,not_to_execute:list=[],flag_pre_timeout:bool=False,percent_of_functions:int=3):
+        """
+        RL policy and Graph-based function selection
+        """
+        print_function_assignmnets(self.assignment_times)
+
+        ftn_seq = get_ftn_seq_from_key_1(state_key)
+        fallback_case = self.fallback_case(ftn_seq)
+        if len(fallback_case) > 0:
+            return fallback_case
+
+        # identify the dk functions for a particular state
+        dk_left = []
+        for ftn, cov in dk_functions:
+            # if ftn=='fallback':continue
+            if self.assignment_times[ftn] < self.times_limit:
+                dk_left.append(ftn)
+                continue
+            if self.assignment_times[ftn] >= 2 * self.times_limit:
+                continue
+            if cov < 70:
+                dk_left.append(ftn)
+
+
+
+        # print(f'from RL: {functions}')
+        left_target = [ftn for ftn in self.targets_with_no_seq
+                       if ftn in dk_left]
+        if not flag_pre_timeout:
+            # get children from the augmented graph
+            children = self.fwrg_manager.get_children_fwrg_T_A(ftn_seq[-1])
+            # another case to get children: when the flag is set that all reads in a function are considered
+            if fdg.global_config.flag_consider_all_reads == 1:
+                children_o = self.fwrg_manager.get_children_all_reads(
+                    ftn_seq[-1])
+                children += children_o
+                children = list(set(children))
+            # consider children that are target or can reach a target
+            children = [child for child in children if
+                        self.can_reach_targets(child,
+                                               dk_left,
+                                               fdg.global_config.seq_len_limit - len(
+                                                   ftn_seq) - 1
+                                               )
+                        ]
+
+            # permit self dependency once
+            if len(ftn_seq) >= 2:
+                children = [child for child in children if
+                            child not in ftn_seq[0:-1]]
+
+            assigned_functions=children
+
+        else:
+            from_conditions = [ftn for ftn in dk_left if
+                               ftn not in ['decimals()', 'symbol()',
+                                           'owner()',
+                                           'name()', 'version()']]
+
+            random_selected_functions = self.select_functions_randomly_1(
+                from_conditions,
+                percent_of_functions)
+
+            # get children when all reads are considered due to preprocessing timeout,read/write info is partly obtained. so, consider all reads
+            children = self.fwrg_manager.get_children_all_reads(ftn_seq[-1])
+            # consider children that are target or can reach a target
+            children = [child for child in children if
+                        self.can_reach_targets(child,
+                                               dk_left,
+                                               fdg.global_config.seq_len_limit - len(
+                                                   ftn_seq) - 1
+                                               )]
+            assigned_functions = list(set(children + random_selected_functions))
+
+        #=========================================
+        # handle no sequences generated
+        # ----------------
+        # consider targets that no sequences are generated
+        for ftn in left_target:
+            if ftn not in assigned_functions:
+                assigned_functions.append(ftn)
+
+
+        # ----------------
+        # consider a function that no function can reach it in the graph (because the reads in conditions are not captured)
+        considered = self.consider_dk_functions_not_reachable()
+        for ftn in considered:
+            if ftn not in assigned_functions:
+                assigned_functions.append(ftn)
+
+        # filter functions
+        assigned_functions=[ftn for ftn in assigned_functions if ftn not in ['symbol()', 'name()','decimals()',"version()","totalSupply()","owner()"]]
+
+        # print(f'assigned functions: {assigned_functions}')
+        self.record_assignment(assigned_functions)
+
+        return assigned_functions
 
 
 

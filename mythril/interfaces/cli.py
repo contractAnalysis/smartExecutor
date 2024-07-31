@@ -474,7 +474,7 @@ def add_fwrg_analysis_args(options):
     options.add_argument(
         "-fss",
         "--function-search-strategy",
-        choices=["dfs", "bfs", "mine", 'seq','rl_mlp_policy','mix'],
+        choices=["dfs", "bfs", "mine", 'seq','rl_mlp_policy','mix','mix1'],
         default="mix",
 
         help="Function data flow graph search strategy",
@@ -613,7 +613,7 @@ def add_fwrg_arguments(args: Namespace):
                 fdg.global_config.contract_name = solidity_contract.split(f':')[
                     -1]
 
-                if fdg.global_config.function_search_strategy in ['rl_mlp_policy','mix']:
+                if fdg.global_config.function_search_strategy in ['rl_mlp_policy','mix','mix1']:
                     if args.env in ['ContractEnv_55']:
                         rl.config.rl_cur_parameters=rl.config.rl_parameters["sGuard_env55"]
                     else:

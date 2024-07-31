@@ -29,11 +29,11 @@ class Guider():
         fwrg_manager=FWRG_manager(start_functions, depth_k_functions, preprocess)
         if self.ftn_search_strategy.name in ['seq']:
             self.ftn_search_strategy.initialize(fwrg_manager.acyclicPaths.main_paths_sf, fwrg_manager.updateFWRG.main_paths_df, fwrg_manager)
-        elif self.ftn_search_strategy.name in ['mine','bfs','dfs','rl_mlp_policy','mix']:
+        elif self.ftn_search_strategy.name in ['mine','bfs','dfs','rl_mlp_policy','mix','mix1']:
             flag_one_start_function=True if len(start_functions)==1 else False  #to-do: how to update flag_one_state_dpeht1
             if preprocess.coverage is None:
                 preprocess.coverage=0
-            if self.ftn_search_strategy.name in ['rl_mlp_policy','mix']:
+            if self.ftn_search_strategy.name in ['rl_mlp_policy','mix','mix1']:
                 self.ftn_search_strategy.initialize(flag_one_start_function,preprocess.timeout,preprocess.coverage,preprocess.write_read_info.all_functions,fwrg_manager,start_functions,depth_k_functions,fdg.global_config.solidity_name,fdg.global_config.contract_name)
             else:
                 self.ftn_search_strategy.initialize(flag_one_start_function,
@@ -133,11 +133,14 @@ class Guider():
                 self.termination=True
 
             # get the states for the state keys in data states_functions returned from assign_states
-            if self.ftn_search_strategy.name in ['dfs','mine','bfs','rl_mlp_policy','mix']:
+            if self.ftn_search_strategy.name in ['dfs','mine','bfs','rl_mlp_policy','mix','mix1']:
                 organize_states_dict = {}
                 for key,function in states_functions.items():
                     if len(function)>0:
-                        organize_states_dict[key]=self.ftn_search_strategy.world_states[key]
+                        if key in self.ftn_search_strategy.world_states.keys():
+                            organize_states_dict[key]=self.ftn_search_strategy.world_states[key]
+                        else:
+                            print(f'why {key} is not available?')
 
             print_assigned_functions(states_functions)
             self._prepare_states(laserEVM, organize_states_dict, states_functions,flag_world_state_del)
@@ -173,6 +176,7 @@ class Guider():
             # delete states
             # print(f'\nbefore state delete:{self.ftn_search_strategy.world_states.keys()}')
             for key in states_dict.keys():
+                print(f'delete: {key}')
                 self.ftn_search_strategy.delete_state(key)
             # print(f'\n after state delete:{self.ftn_search_strategy.world_states.keys()}')
 
