@@ -170,7 +170,13 @@ class FunctionAssignment():
                                if ftn in dk_left]
                 random_functions=[]
                 if rl.config.MIX in ['d']:
-                    random_functions = self.select_functions_randomly(percentage)
+                    from_conditions=[ftn for ftn in self.all_functions if ftn not in ['decimals()', 'symbol()', 'owner()','name()','version()']]
+                    from_conditions = [ftn for ftn in dk_left if ftn not in ['decimals()', 'symbol()', 'owner()',
+                                       'name()', 'version()']]
+
+                    random_functions=self.select_functions_randomly_1(from_conditions,
+                                                     percentage)
+
 
                 children=list(set(functions+left_target+random_functions))
 
@@ -358,8 +364,12 @@ class FunctionAssignment():
             if cov < 70:
                 to_be_considered_functions.append(ftn)
 
-
-        functions_1 = self.select_functions_randomly(percentage)
+        from_conditions = [ftn for ftn in self.all_functions if
+                           ftn not in ['decimals()', 'symbol()', 'owner()',
+                                       'name()', 'version()']]
+        functions_1=self.select_functions_randomly_1(from_conditions,
+                                         percentage)
+        # functions_1 = self.select_functions_randomly(percentage)
 
         # dk_func = [ftn for ftn, _ in dk_functions]
         left_target = [ftn for ftn in
@@ -367,9 +377,7 @@ class FunctionAssignment():
                        if ftn in to_be_considered_functions]
 
         functions_1 = list(set(functions_1 + left_target))
-        functions_1 = [ftn for ftn in functions_1 if
-                       ftn not in ['symbol()', 'name()',
-                                   'decimals()',"version()"]]
+
 
         # permit self dependency once
         if len(ftn_seq) >= 2:
