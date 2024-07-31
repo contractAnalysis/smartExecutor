@@ -169,9 +169,16 @@ class FunctionAssignment():
                 left_target = [ftn for ftn in self.targets_with_no_seq
                                if ftn in dk_left]
                 random_functions=[]
-                if rl.config.MIX in ['d']:
-                    random_functions = self.select_functions_randomly(percentage)
 
+                if rl.config.MIX in ['d']:
+                    from_conditions = [ftn for ftn in dk_left if
+                                       ftn not in ['decimals()', 'symbol()',
+                                                   'owner()',
+                                                   'name()', 'version()']]
+
+                    random_functions = self.select_functions_randomly_1(
+                        from_conditions,
+                        percentage)
                 children=list(set(functions+left_target+random_functions))
 
             else:
@@ -293,15 +300,29 @@ class FunctionAssignment():
             if len(functions)>0 and len(children)>0:
                 assigned_functions = list(set(functions + children))
                 if rl.config.MIX in ['d']:
-                    random_functions = self.select_functions_randomly(
+                    from_conditions = [ftn for ftn in dk_left if
+                                       ftn not in ['decimals()', 'symbol()',
+                                                   'owner()',
+                                                   'name()', 'version()']]
+
+                    random_functions = self.select_functions_randomly_1(
+                        from_conditions,
                         percent_of_functions)
+
                     assigned_functions=list(set(assigned_functions+random_functions))
 
             elif len(functions)==0:
                 assigned_functions=children
                 if flag_pre_timeout:
-                    random_selected_functions = self.select_functions_randomly(
+                    from_conditions = [ftn for ftn in dk_left if
+                                       ftn not in ['decimals()', 'symbol()',
+                                                   'owner()',
+                                                   'name()', 'version()']]
+
+                    random_selected_functions = self.select_functions_randomly_1(
+                        from_conditions,
                         percent_of_functions)
+
                     # get children when all reads are considered due to preprocessing timeout,read/write info is partly obtained. so, consider all reads
                     children = self.fwrg_manager.get_children_all_reads(ftn_seq[-1])
                     # consider children that are target or can reach a target
@@ -316,7 +337,13 @@ class FunctionAssignment():
             elif len(functions)>0 and len(children)==0:
                 assigned_functions=functions
                 if rl.config.MIX in ['d']:
-                    random_functions = self.select_functions_randomly(
+                    from_conditions = [ftn for ftn in dk_left if
+                                       ftn not in ['decimals()', 'symbol()',
+                                                   'owner()',
+                                                   'name()', 'version()']]
+
+                    random_functions = self.select_functions_randomly_1(
+                        from_conditions,
                         percent_of_functions)
 
                     assigned_functions = list(
@@ -501,7 +528,12 @@ class FunctionAssignment():
                 to_be_considered_functions.append(ftn)
 
 
-        functions_1 = self.select_functions_randomly(percentage)
+
+        from_conditions = [ftn for ftn in self.all_functions if
+                           ftn not in ['decimals()', 'symbol()', 'owner()',
+                                       'name()', 'version()']]
+        functions_1 = self.select_functions_randomly_1(from_conditions,
+                                                       percentage)
 
         # dk_func = [ftn for ftn, _ in dk_functions]
         left_target = [ftn for ftn in
@@ -509,9 +541,6 @@ class FunctionAssignment():
                        if ftn in to_be_considered_functions]
 
         functions_1 = list(set(functions_1 + left_target))
-        functions_1 = [ftn for ftn in functions_1 if
-                       ftn not in ['symbol()', 'name()',
-                                   'decimals()',"version()"]]
 
         # permit self dependency once
         if len(ftn_seq) >= 2:
