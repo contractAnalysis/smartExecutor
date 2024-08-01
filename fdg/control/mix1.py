@@ -33,7 +33,8 @@ class MIX1(FunctionSearchStrategy):
         self.state_key_assigned_at_last = ""
         self.flag_one_start_function = False
         self.not_executes={}
-        self.flag_seq=True
+        self.flag_rl=True
+
         super().__init__('mix1')
 
 
@@ -87,11 +88,13 @@ class MIX1(FunctionSearchStrategy):
                     if target not in ['symbol()','name()','decimals()','version()']:
                         self.target_functions_no_seq.append(target)
             if len(self.sequences)==0:
-                self.flag_seq=False
+                self.flag_rl=False
+
         else:
             print("Error:", "no sequences are generated")
             self.flag_rl_mlp_policy = False
-            self.flag_seq=False
+            self.flag_rl=False
+
 
 
 
@@ -122,26 +125,22 @@ class MIX1(FunctionSearchStrategy):
         print_data_for_mine_strategy(self.queue)
 
         while True:
-            if len(self.queue)==0:
-                if self.flag_seq:
-                    self.flag_seq=False
-                else:
-                    # put all keys in the self.not_execute to self.queue
-                    if len(self.not_executes)>0:
-                        self.queue=list(set(self.not_executes.keys()))
-                    else:
-                        return {},False
-                continue
 
-            if self.flag_seq:
+
+            if self.flag_rl:
                 while True:
                     # pick up a state from the queue
-                    targets = [dk for dk, _ in dk_functions]
                     state_key=""
                     if len(self.queue)>0:
                         state_key=self.queue.pop(0)
                     else:
-                        self.flag_seq=False
+                        self.flag_rl=False
+                        # put all keys in the self.not_execute to self.queue
+                        if len(self.not_executes) > 0:
+                            self.queue = list(set(self.not_executes.keys()))
+                        else:
+                            # no states to explore, end
+                            return {}, False
                         break
 
                     # get the functions
@@ -158,13 +157,8 @@ class MIX1(FunctionSearchStrategy):
         initialize(address,address,uint256),initialize(address) (se) vs initialize(address,UFragments,uint256) (generated)
                                 """
                                 if ftn_seq[i] != seq_[i]:
-                                    pure_name = ftn_seq[i].split(f'(')[0] if '(' in \
-                                                                          ftn_seq[
-                                                                              i] else \
-                                    ftn_seq[i]
-                                    if ftn_seq[i][0:len(pure_name)] != seq_[i][
-                                                                       0:len(
-                                                                           pure_name)]:
+                                    pure_name = ftn_seq[i].split(f'(')[0] if '(' in ftn_seq[i] else ftn_seq[i]
+                                    if ftn_seq[i][0:len(pure_name)] != seq_[i][0:len(pure_name)]:
                                         flag_add = False
                                         break
                             if flag_add:
@@ -194,9 +188,8 @@ class MIX1(FunctionSearchStrategy):
                     if len(self.queue) == 0:
                         return {}, False
 
-                    to_execute_children = []
                     not_to_execute = []
-                    flag_can_be_deleted = True
+                    flag_can_be_deleted =True
 
                     # pick up a state from the queue
                     targets = [dk for dk, _ in dk_functions]
@@ -213,6 +206,7 @@ class MIX1(FunctionSearchStrategy):
                             percent_of_functions = 5
                         elif self.preprocess_coverage < 90:
                             percent_of_functions = 3
+
 
                     # assign functions
                     assigned_functions = self.functionAssignment.assign_functions_mix1(
