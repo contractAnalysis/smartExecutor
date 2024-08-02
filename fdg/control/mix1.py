@@ -1,4 +1,4 @@
-from copy import deepcopy
+from copy import deepcopy, copy
 
 import requests
 
@@ -34,6 +34,7 @@ class MIX1(FunctionSearchStrategy):
         self.flag_one_start_function = False
         self.not_executes={}
         self.flag_rl=True
+        self.queue_backup=[]
 
         super().__init__('mix1')
 
@@ -136,8 +137,11 @@ class MIX1(FunctionSearchStrategy):
                     else:
                         self.flag_rl=False
                         # put all keys in the self.not_execute to self.queue
-                        if len(self.not_executes) > 0:
-                            self.queue = list(set(self.not_executes.keys()))
+                        # if len(self.not_executes) > 0:
+                        #     self.queue = list(set(self.not_executes.keys()))
+                        if len(self.queue_backup) > 0:
+                            self.queue = copy(self.queue_backup)
+                            self.queue_backup=[]
                         else:
                             # no states to explore, end
                             return {}, False
@@ -229,6 +233,8 @@ class MIX1(FunctionSearchStrategy):
             for state in states:
                 ftn_seq=get_ftn_seq_from_key_1(key)
                 if 'constructor' not in ftn_seq:
+                    if len(ftn_seq)==1:
+                        self.queue_backup.append(key)
                     self.world_states[key]=[deepcopy(state)]
                     self.queue.append(key)
                     self.state_storage[key] = state.accounts[

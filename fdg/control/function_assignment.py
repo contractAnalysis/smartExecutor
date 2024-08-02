@@ -474,8 +474,7 @@ class FunctionAssignment():
 
         # filter functions
         assigned_functions=[ftn for ftn in assigned_functions if ftn not in ['symbol()', 'name()','decimals()',"version()","totalSupply()","owner()"]]
-        assigned_functions = [ftn for ftn in assigned_functions if
-                              ftn not in not_to_execute]
+        assigned_functions = [ftn for ftn in assigned_functions if ftn not in not_to_execute]
         # print(f'assigned functions: {assigned_functions}')
         self.record_assignment(assigned_functions)
 
