@@ -193,14 +193,23 @@ class MIX1(FunctionSearchStrategy):
                         return {}, False
 
                     not_to_execute = []
-                    flag_can_be_deleted =True
 
                     # pick up a state from the queue
                     targets = [dk for dk, _ in dk_functions]
+
+                    state_key,functions=self.reintroduce_state_at_depth_1(targets)
+                    if len(state_key)>0:
+                        print(f'Reintroduce state {state_key} and assign functions: {functions}')
+                        self.state_key_assigned_at_last = state_key
+                        return {state_key: functions}, True
+
                     state_key = self.pickup_a_state(
-                        targets)  # order the states in self.queue and pick up the one has the highest weight
+                        targets)
+                          # order the states in self.queue and pick up the one has the highest weight
                     if state_key in self.not_executes.keys():
                         not_to_execute=self.not_executes[state_key]
+
+                    flag_can_be_deleted = False if len(get_ftn_seq_from_key_1(state_key))==1 else True
 
                     percent_of_functions = 2
                     if self.preprocess_timeout or fdg.global_config.preprocessing_exception:
@@ -218,6 +227,10 @@ class MIX1(FunctionSearchStrategy):
 
 
                     if len(assigned_functions)>0:
+                        if state_key in self.not_executes.keys():
+                            if not flag_can_be_deleted:
+                                self.not_executes[state_key]+=assigned_functions
+
                         self.state_key_assigned_at_last = state_key
                         return {state_key: assigned_functions}, flag_can_be_deleted
 
@@ -342,6 +355,28 @@ class MIX1(FunctionSearchStrategy):
         else:
             return self.written_slots_in_depth_str[state_key]
 
+    def reintroduce_state_at_depth_1(self,targets:list):
+        def has_depth_1_states_in_queue() -> bool:
+            for key in self.queue:
+                if len(get_ftn_seq_from_key_1(key)) == 1:
+                    return True
+            return False
+
+        def reintroduce_a_state_at_depth_1(targets: list):
+            for key in self.not_executes.keys():
+                ftn_seq = get_ftn_seq_from_key_1(key)
+                if len(ftn_seq) == 1:
+                    possible_functions = [t for t in targets if
+                                          t not in self.not_executes[key]]
+                    if len(possible_functions) > 0:
+                        return key, possible_functions
+
+        if not has_depth_1_states_in_queue():
+            key,functions=reintroduce_a_state_at_depth_1(targets)
+            return key,functions
+        else:
+            return "",[]
+
     def pickup_a_state(self,targets:list):
         """
         order states in self.queue
@@ -381,6 +416,9 @@ class MIX1(FunctionSearchStrategy):
             my_print(f'\twrite slots:{written_slots_str_all} (writes at each depth)')
 
             return written_slots_str
+
+
+
         if len(self.queue)==0:return None
         if len(self.queue)==1:
             return self.queue.pop(0)
