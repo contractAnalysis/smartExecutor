@@ -1,5 +1,6 @@
 
 # support FDG-guided execution and sequence execution
+from fdg.control.llm import Gpt
 from fdg.control.mine import Mine
 from fdg.preprocessing.address_collection import collect_addresses_in_constructor
 
@@ -62,6 +63,8 @@ class FDG_pruner(LaserPlugin):
             self.search_stragety=Mine()
         elif fdg.global_config.function_search_strategy=='seq':
             self.search_stragety=Seq()
+        elif fdg.global_config.function_search_strategy=='gpt':
+            self.search_stragety=Gpt()
         else:
             self.search_stragety = BFS()
 
@@ -148,6 +151,22 @@ class FDG_pruner(LaserPlugin):
                 return
 
             else:
+                # ===========================================
+                if self.search_stragety.name in ['gpt']:
+                    if self._iteration_ == 2:
+                        # execute all possible functions to find start functions and target functions
+                        pass
+                    else:
+                        self.get_depth_k_functions()
+                        self.guider.start_iteration(laserEVM, self.depth_k,
+                                                    self._iteration_)
+                        flag_terminate = self.guider.should_terminate()
+                        if flag_terminate:
+                            fdg.global_config.transaction_count = self._iteration_
+                            laserEVM.open_states = []
+                    return
+
+                # =============================================
                 if self._iteration_<=fdg.global_config.p1_dl+1:
                     # Phase 1
                     ...
@@ -262,7 +281,38 @@ class FDG_pruner(LaserPlugin):
                     # terminate
                     fdg.global_config.transaction_count = self._iteration_
                     return
+            # ++++++++++++++++++++++++++++++++++++++++++++++++++
+            if self.search_stragety.name in ['gpt']:
+                if self._iteration_ == 2:
+                    self.guider.end_iteration(laserEVM,
+                                              self._iteration_)
+                    # initialize guider
+                    self.get_depth_k_functions()
+                    sequences = self.guider.get_start_sequence(laserEVM)
+                    start_functions = [seq[-1] for seq in sequences if
+                                       len(seq) > 0]
+                    start_functions = list(set(start_functions))
+                    self.guider.init(start_functions, self.depth_k,
+                                     self.preprocess)
+                else:
+                    self.guider.end_iteration(laserEVM,
+                                              self._iteration_)
 
+                flag_termination = self.guider.should_terminate()
+                if flag_termination:
+                    fdg.global_config.transaction_count = self._iteration_
+
+                # termination based on the coverage of the contract
+                if self.functionCoverage.coverage >= fdg.global_config.function_coverage_threshold:
+
+                    if self.functionCoverage.coverage >= fdg.global_config.function_coverage_threshold + 1:
+                        if not self.search_stragety.flag_one_start_function:
+                            # make sure that when there is only one state generated at depth1,
+                            # the execution does not terminate
+                            fdg.global_config.transaction_count = self._iteration_
+                return
+
+            # ++++++++++++++++++++++++++++++++++++++++++++++++++
             if self._iteration_<=fdg.global_config.p1_dl:
                 # the basic symbolic execution
                 ...

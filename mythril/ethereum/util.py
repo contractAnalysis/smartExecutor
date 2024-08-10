@@ -6,6 +6,8 @@ import sys
 import os
 import platform
 import logging
+
+import fdg.global_config
 import solc
 import re
 import typing
@@ -20,6 +22,8 @@ import semantic_version as semver
 from semantic_version import Version, NpmSpec
 from pyparsing import Word, Group, Optional, ZeroOrMore, oneOf, Regex, Combine
 
+import llm.llm_config
+from llm.utils import read_a_file, remove_comments, get_related_source_code
 from mythril.exceptions import CompilerError
 from mythril.support.support_args import args
 
@@ -64,13 +68,13 @@ def get_solc_json(file, solc_binary="solc", solc_settings_json=None):
         {
             "outputSelection": {
                 "*": {
-                    "": ["ast"],
                     "*": [
                         "metadata",
                         "evm.bytecode",
                         "evm.deployedBytecode",
-                        "evm.methodIdentifiers",
+                        "evm.methodIdentifiers"
                     ],
+                    "": ["ast"]
                 }
             },
         }
@@ -83,6 +87,18 @@ def get_solc_json(file, solc_binary="solc", solc_settings_json=None):
             "settings": settings,
         }
     )
+    # file_content = read_a_file(file)
+    # file_content = remove_comments(file_content)
+    # input_json = json.dumps(
+    #     {
+    #         "language": "Solidity",
+    #         "sources": {file: {"content": f"{file_content}"}},
+    #         "settings": settings,
+    #     }
+    # )
+
+
+
 
     try:
         p = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
@@ -106,6 +122,9 @@ def get_solc_json(file, solc_binary="solc", solc_settings_json=None):
             raise CompilerError(
                 "Solc experienced a fatal error.\n\n%s" % error["formattedMessage"]
             )
+
+    # @wei get the source code related to the target contract
+    get_related_source_code(fdg.global_config.contract_name,file,result)
 
     return result
 

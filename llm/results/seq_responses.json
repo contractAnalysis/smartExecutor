@@ -1,0 +1,199 @@
+{
+    "Crowdsale.sol_Crowdsale_sequence_iter_1": {
+        "refund": [
+            "invest",
+            "setPhase"
+        ],
+        "withdraw": [
+            "invest",
+            "setPhase"
+        ],
+        "invest": [
+            "invest"
+        ]
+    },
+    "HoloToken.sol_HoloToken_sequence_iter_1": {
+        "transferFrom": [
+            "setMinter",
+            "finishMinting",
+            "approve",
+            "transferFrom"
+        ],
+        "mint": [
+            "setMinter",
+            "mint"
+        ],
+        "burn": [
+            "setDestroyer",
+            "burn"
+        ],
+        "transfer": [
+            "setMinter",
+            "finishMinting",
+            "transfer"
+        ],
+        "approve": [
+            "setMinter",
+            "finishMinting",
+            "approve"
+        ],
+        "finishMinting": [
+            "setMinter",
+            "finishMinting"
+        ],
+        "decreaseApproval": [
+            "setMinter",
+            "finishMinting",
+            "approve",
+            "decreaseApproval"
+        ]
+    },
+    "HoloToken.sol_HoloToken_sequence_iter_2": {
+        "burn": [
+            "setDestroyer",
+            "mint",
+            "burn"
+        ],
+        "mint": [
+            "setMinter",
+            "mint",
+            "finishMinting",
+            "mint"
+        ]
+    },
+    "HoloToken.sol_HoloToken_sequence_iter_3": {
+        "burn": [
+            "setDestroyer",
+            "setMinter",
+            "mint",
+            "burn"
+        ]
+    },
+    "0x899f4ee077f83a7747e4ccec8ee7aa74831a1de3.sol_USMT_sequence_iter_1": {
+        "changeFeePool": [
+            "setFeePool",
+            "changeFeePool"
+        ],
+        "transfer": [
+            "transfer"
+        ],
+        "feePoolTransfer": [
+            "setFeePool",
+            "feePoolTransfer"
+        ],
+        "transferFrom": [
+            "approve",
+            "transferFrom"
+        ],
+        "approve": [
+            "approve"
+        ],
+        "increaseAllowance": [
+            "approve",
+            "increaseAllowance"
+        ],
+        "decreaseAllowance": [
+            "approve",
+            "decreaseAllowance"
+        ],
+        "burnFrom": [
+            "approve",
+            "burnFrom"
+        ]
+    },
+    "0x899f4ee077f83a7747e4ccec8ee7aa74831a1de3.sol_USMT_sequence_iter_2": {
+        "transfer": [
+            "addMinter",
+            "mint",
+            "transfer"
+        ],
+        "transferFrom": [
+            "addMinter",
+            "mint",
+            "approve",
+            "transferFrom"
+        ],
+        "feePoolTransfer": [
+            "addMinter",
+            "mint",
+            "setFeePool",
+            "feePoolTransfer"
+        ],
+        "approve": [
+            "addMinter",
+            "mint",
+            "approve"
+        ],
+        "increaseAllowance": [
+            "addMinter",
+            "mint",
+            "approve",
+            "increaseAllowance"
+        ],
+        "decreaseAllowance": [
+            "addMinter",
+            "mint",
+            "approve",
+            "decreaseAllowance"
+        ],
+        "burnFrom": [
+            "addMinter",
+            "mint",
+            "approve",
+            "burnFrom"
+        ]
+    },
+    "0x899f4ee077f83a7747e4ccec8ee7aa74831a1de3.sol_USMT_sequence_iter_3": {
+        "transfer": [],
+        "transferFrom": [],
+        "feePoolTransfer": [
+            "addMinter",
+            "mint",
+            "transferOwnership",
+            "setFeePool",
+            "feePoolTransfer"
+        ],
+        "approve": [
+            "renounceOwnership",
+            "transferOwnership",
+            "approve"
+        ],
+        "increaseAllowance": [],
+        "decreaseAllowance": [
+            "renounceOwnership",
+            "transferOwnership",
+            "approve",
+            "decreaseAllowance"
+        ],
+        "burnFrom": []
+    },
+    "0x899f4ee077f83a7747e4ccec8ee7aa74831a1de3.sol_USMT_sequence_iter_4": {
+        "transfer": [],
+        "transferFrom": [],
+        "feePoolTransfer": [],
+        "approve": [
+            "addMinter",
+            "mint",
+            "burn",
+            "approve"
+        ],
+        "increaseAllowance": [],
+        "decreaseAllowance": [
+            "addMinter",
+            "mint",
+            "burn",
+            "approve",
+            "decreaseAllowance"
+        ],
+        "burnFrom": []
+    },
+    "0x899f4ee077f83a7747e4ccec8ee7aa74831a1de3.sol_USMT_sequence_iter_5": {
+        "transfer": [],
+        "transferFrom": [],
+        "feePoolTransfer": [],
+        "approve": [],
+        "increaseAllowance": [],
+        "decreaseAllowance": [],
+        "burnFrom": []
+    }
+}

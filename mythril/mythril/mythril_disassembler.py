@@ -4,6 +4,8 @@ import os
 from pathlib import Path
 import re
 import shutil
+
+import fdg.global_config
 import solc
 import subprocess
 import sys
@@ -246,7 +248,10 @@ class MythrilDisassembler:
             if ":" in file:
                 #file, contract_name = file.split(":")
                 file, contract_name = file.split(".sol:") # in case the path contains colon. e.g., "c:\xxx\
+                fdg.global_config.contract_name=contract_name
                 file+=".sol"
+                print(
+                    f'mythril_disassembler:contract_name:{contract_name}')
             else:
                 contract_name = None
 

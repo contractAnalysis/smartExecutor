@@ -12,6 +12,7 @@ class InstructionModification():
 
     def __init__(self,ftn_identifier:dict):
         self.function_identifier=ftn_identifier
+        self.pure_func_name_to_identifier={key.split(f'(')[0] if '(' in key else key: value for key,value in self.function_identifier.items()}
         self.contract_address=None # used to identity the instructions of the contract
 
         self.instruction_list = []
@@ -245,25 +246,6 @@ class InstructionModification():
         for p in self.functions_to_positions.values():
             positions+=p
         self.all_positions_related_function=positions
-    def modify_on_a_state__str(self, state: WorldState, functions: list):
-        """
-            update the instructions on multiple states
-        """
-        if len(functions)>=len(self.function_identifier.keys()):
-            final_instructions=self.instruction_list
-            state.accounts[self.contract_address.value].code.instruction_list = final_instructions
-
-        else:
-            fct_selectors=[]
-            for ftn in functions:
-                if ftn in ['fallback']:continue
-                if ftn not in self.function_identifier.keys():continue # can  not do anything
-                fct_selectors.append(self.function_identifier[ftn])
-            final_instructions=self._get_modified_instructions_1(fct_selectors)
-
-            # update instructions for states
-            state.accounts[self.contract_address.value].code.instruction_list = final_instructions
-            state.accounts[self.contract_address.value].code.func_hashes = fct_selectors
 
     def modity_on_multiple_states(self,states:[WorldState],functions:list):
         if 'original_instruction_list' in functions:
@@ -284,7 +266,10 @@ class InstructionModification():
         fct_selectors = []
         for ftn in functions:
             if ftn in ['fallback']: continue
-            if ftn not in self.function_identifier.keys(): continue  # can  not do anything
+            if ftn not in self.function_identifier.keys():
+                if ftn in self.pure_func_name_to_identifier.keys():
+                    fct_selectors.append(self.pure_func_name_to_identifier[ftn])
+                continue
             fct_selectors.append(self.function_identifier[ftn])
 
         final_instructions = self._get_modified_instructions_1(fct_selectors)
@@ -303,7 +288,7 @@ class InstructionModification():
         """
 
         ftn_selectors_valid = [selector for selector in fct_selectors if selector in self.functions_to_positions.keys()]
-
+        ftn_selectors_valid=list(set(ftn_selectors_valid))
 
         # find positions not kept
         # keep the functions having two positions(there are branches in the function dispatcher)

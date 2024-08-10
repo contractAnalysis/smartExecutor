@@ -2,3 +2,5 @@ include mythril/support/assets/*
 include mythril/analysis/templates/*
 include requirements.txt
 include images/*
+recursive-include llm/prompts/ *.json
+recursive-include llm/ *.py

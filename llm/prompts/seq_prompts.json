@@ -1,0 +1,56 @@
+{
+  "get_sequence_single":{
+    "system": {
+      "content": "You are a Solidity smart contract expert understanding Solidity language. You can identify the conditions that need to be satisfied to cover functions and then know how to make the conditions satisfied by identifying function sequences, the execution of which can result in the conditions satisfied.",
+      "data": []
+  },
+    "user": {
+      "content": "Here is the contract code related to the contract ##contract_name##: ##contract_code##\nThe start functions are ##start_functions##.\nThe target functions are ##target_functions##.\nFor each target function, please find one function name sequence with the length less than ##seq_length## based on contract ##contract_name##. The function sequence must start with a start function and end with this target function such that the execution of this function sequence can have this target function covered. ##not_included_sequences##. Please return the sequences in json format: {\"target function\":function sequence,...}.",
+      "data": [
+         "contract_name",
+         "contract_code",
+         "start_functions",
+         "target_functions",
+        "seq_length",
+        "not_included_sequences"
+      ]
+   }
+  },
+  "get_sequence":{
+    "system": {
+      "content": "You are a Solidity smart contract expert understanding Solidity language. You can identify the conditions that need to be satisfied to cover functions and then know how to make the conditions satisfied by identifying function sequences, the execution of which can result in the conditions satisfied.",
+      "data": []
+  },
+    "user": {
+      "content": "Here is the contract code related to the contract ##contract_name##: ##contract_code##\nThe start functions are ##start_functions##.\nThe target functions are ##target_functions##.\nFor each target function, please find a function name sequence with the length less than ##seq_length## based on contract ##contract_name##. The function sequence must start with a start function and end with this target function such that the execution of this function sequence can have this target function covered. Please return the sequences in json format: {\"target function\":function sequence,...}.",
+      "data": [
+         "contract_name",
+         "contract_code",
+         "start_functions",
+         "target_functions",
+        "seq_length"
+      ]
+   }
+  },
+  "get_sequence_1":{
+    "user": {
+      "content": "The target functions are updated to ##target_functions## after executing the previous provided sequences. The feedback about the sequences generated for some target functions are here: ##feedback##.\n Only for each of the updated target functions, please re-find a function name sequence with the length less than ##seq_length## with the awareness of the feedback. The function sequence must be different from the sequences generated for this target in previous iterations as the previous sequences have validated not helpful or sufficient to cover the target. The function sequence must start with a start function and end with this target as mentioned before. If there is no such a sequence, just use \"[]\" instead.  Please return the sequences in json format: {\"target function\":function sequence,...}.",
+      "data": [
+         "target_functions",
+         "feedback",
+         "seq_length"
+      ]
+   }
+  },
+
+  "extract_correct_response": {
+    "system": {
+      "content": "You are good at understanding analysis results. Please find the correct response from a response with explanation details.",
+      "data": []
+    },
+    "user":{
+      "content": "Here is the response either with explanation or description (not in Json format):##given_response##. Could you please only extract the correct response in the Json format for easy data collection? Thank you!",
+      "data": ["given_response"]
+    }
+  }
+}
