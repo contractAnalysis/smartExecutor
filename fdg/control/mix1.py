@@ -11,7 +11,7 @@ from fdg.expression_slot import identify_slot_from_symbolic_slot_expression, \
 from fdg.fwrg_manager import FWRG_manager
 from fdg.output_data import my_print, print_data_for_mine_strategy
 from fdg.utils import get_ftn_seq_from_key_1, random_select_from_list, \
-    get_key_1_prefix
+    get_key_1_prefix, is_equal_list
 from mythril.laser.plugin.plugins.dependency_pruner import \
     get_writes_annotation_from_ws
 from rl.config import rl_cur_parameters, top_k
@@ -203,11 +203,21 @@ class MIX1(FunctionSearchStrategy):
                         self.state_key_assigned_at_last = state_key
                         return {state_key: functions}, True
 
-                    state_key = self.pickup_a_state(
-                        targets)
-                          # order the states in self.queue and pick up the one has the highest weight
+                    state_key = self.pickup_a_state(targets)  # order the states in self.queue and pick up the one has the highest weight
                     if state_key in self.not_executes.keys():
                         not_to_execute=self.not_executes[state_key]
+
+                    # get back the states that should be generated after this state
+                    if len(not_to_execute)>0:
+                        state_key_seq=get_ftn_seq_from_key_1(state_key)
+                        for key in self.world_states.keys():
+                            key_seq=get_ftn_seq_from_key_1(key)
+                            for ftn in not_to_execute:
+                                target_seq=state_key_seq+[ftn]
+                                if is_equal_list(target_seq,key_seq):
+                                    if key not in self.queue:
+                                        self.queue.append(key)
+                                        break
 
                     flag_can_be_deleted = False if len(get_ftn_seq_from_key_1(state_key))==1 else True
 
@@ -230,7 +240,6 @@ class MIX1(FunctionSearchStrategy):
                         if state_key in self.not_executes.keys():
                             if not flag_can_be_deleted:
                                 self.not_executes[state_key]+=assigned_functions
-
                         self.state_key_assigned_at_last = state_key
                         return {state_key: assigned_functions}, flag_can_be_deleted
 
@@ -307,9 +316,11 @@ class MIX1(FunctionSearchStrategy):
             key_prefix = get_key_1_prefix(key)
             if '#' in key_prefix: # a state at depth 2 or deeper
                 if key_prefix.startswith('fallback') and key_prefix.endswith('fallback'):
+                    self.delete_state(key)
                     continue
                 else:
                     if key_prefix.endswith('fallback#fallback'):
+                        self.delete_state(key)
                         continue
 
             if key_prefix not in count.keys():
@@ -348,6 +359,8 @@ class MIX1(FunctionSearchStrategy):
                         if not two_list_equal(cur_writes,recent_writes):
                             self.queue.append(key)
                             cur_writes = recent_writes   # update cur_writes
+                        else:
+                            self.delete_state(key)
 
     def get_written_slots_in_depth_str(self, state_key:str):
         if state_key not in self.written_slots_in_depth_str.keys():

@@ -152,4 +152,11 @@ def get_ftn_seq_from_key_1(key:str)->list:
 
 
 
+def is_equal_list(seq1:list,seq2:list)->bool:
+    if len(seq1)>len(seq2):return False
+    if len(seq1)<len(seq2): return False
+    for i in range(len(seq1)):
+        if seq1[i] not in [seq2[i]]:
+            return False
+    return True
 
