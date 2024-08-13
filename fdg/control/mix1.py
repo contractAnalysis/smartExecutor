@@ -1,6 +1,6 @@
 from copy import deepcopy, copy
 
-import requests
+
 
 import fdg.global_config
 import rl
@@ -14,8 +14,7 @@ from fdg.utils import get_ftn_seq_from_key_1, random_select_from_list, \
     get_key_1_prefix, is_equal_list
 from mythril.laser.plugin.plugins.dependency_pruner import \
     get_writes_annotation_from_ws
-from rl.config import rl_cur_parameters, top_k
-
+from rl.config import rl_cur_parameters
 from rl.seq_generation import wrapper
 
 
@@ -32,7 +31,7 @@ class MIX1(FunctionSearchStrategy):
 
         self.state_key_assigned_at_last = ""
         self.flag_one_start_function = False
-        self.not_executes={}
+        self.executed_functions_on_states={}
         self.flag_rl=True
         self.queue_backup=[]
 
@@ -115,7 +114,8 @@ class MIX1(FunctionSearchStrategy):
         :param states_dict:
         :return:
         """
-        if len(dk_functions) == 0: return {}, False
+        if not self.preprocess_timeout or fdg.global_config.preprocessing_exception:
+            if len(dk_functions) == 0: return {}, None
 
         if len(states_dict)>0:
             # save the new states
@@ -126,8 +126,6 @@ class MIX1(FunctionSearchStrategy):
         print_data_for_mine_strategy(self.queue)
 
         while True:
-
-
             if self.flag_rl:
                 while True:
                     # pick up a state from the queue
@@ -142,34 +140,34 @@ class MIX1(FunctionSearchStrategy):
                         if len(self.queue_backup) > 0:
                             self.queue = copy(self.queue_backup)
                             self.queue_backup=[]
+                            break
                         else:
                             # no states to explore, end
                             return {}, False
-                        break
+
 
                     # get the functions
                     functions=[]
                     ftn_seq = get_ftn_seq_from_key_1(state_key)
                     for seq_ in self.sequences:
-                        if len(ftn_seq) == len(seq_): continue
-                        if len(ftn_seq) < len(seq_):
-                            flag_add = True
-                            for i in range(len(ftn_seq)):
-                                """
-                                a speical case
-                                0x7f0C14F2F72ca782Eea2835B9f63d3833B6669Ab.sol	0.4.24	UFragmentsPolicy
-        initialize(address,address,uint256),initialize(address) (se) vs initialize(address,UFragments,uint256) (generated)
-                                """
-                                if ftn_seq[i] != seq_[i]:
-                                    pure_name = ftn_seq[i].split(f'(')[0] if '(' in ftn_seq[i] else ftn_seq[i]
-                                    if ftn_seq[i][0:len(pure_name)] != seq_[i][0:len(pure_name)]:
-                                        flag_add = False
-                                        break
-                            if flag_add:
-                                if seq_[len(ftn_seq)] not in functions:
-                                    functions.append(seq_[len(ftn_seq)])
+                        if len(ftn_seq) >= len(seq_): continue
+                        flag_add = True
+                        for i in range(len(ftn_seq)):
+                            """
+                            a speical case
+                            0x7f0C14F2F72ca782Eea2835B9f63d3833B6669Ab.sol	0.4.24	UFragmentsPolicy
+    initialize(address,address,uint256),initialize(address) (se) vs initialize(address,UFragments,uint256) (generated)
+                            """
+                            if ftn_seq[i] not in [seq_[i]]:
+                                pure_name = ftn_seq[i].split(f'(')[0] if '(' in ftn_seq[i] else ftn_seq[i]
+                                if pure_name not in [seq_[i][0:len(pure_name)]]:
+                                    flag_add = False
+                                    break
+                        if flag_add:
+                            if seq_[len(ftn_seq)] not in functions:
+                                functions.append(seq_[len(ftn_seq)])
 
-                    self.not_executes[state_key]=functions
+                    self.executed_functions_on_states[state_key]=functions
                     if len(functions)>0:
                         self.state_key_assigned_at_last = state_key
                         return {state_key: functions}, False
@@ -204,24 +202,25 @@ class MIX1(FunctionSearchStrategy):
                         return {state_key: functions}, True
 
                     state_key = self.pickup_a_state(targets)  # order the states in self.queue and pick up the one has the highest weight
-                    if state_key in self.not_executes.keys():
-                        not_to_execute=self.not_executes[state_key]
 
-                    # get back the states that should be generated after this state
-                    if len(not_to_execute)>0:
-                        state_key_seq=get_ftn_seq_from_key_1(state_key)
-                        for key in self.world_states.keys():
-                            key_seq=get_ftn_seq_from_key_1(key)
+                    if state_key in self.executed_functions_on_states.keys():
+                        not_to_execute=self.executed_functions_on_states[state_key]
+                        # get back the states that should be generated after this state
+                        if len(not_to_execute)>0:
+                            state_key_seq=get_ftn_seq_from_key_1(state_key)
                             for ftn in not_to_execute:
                                 target_seq=state_key_seq+[ftn]
-                                if is_equal_list(target_seq,key_seq):
-                                    if key not in self.queue:
-                                        self.queue.append(key)
-                                        break
+                                for key in self.world_states.keys():
+                                    key_seq=get_ftn_seq_from_key_1(key)
+                                    if is_equal_list(target_seq,key_seq):
+                                        if key not in self.queue:
+                                            self.queue.append(key)
+                                            break
+
 
                     flag_can_be_deleted = False if len(get_ftn_seq_from_key_1(state_key))==1 else True
 
-                    percent_of_functions = 2
+                    percent_of_functions = 1
                     if self.preprocess_timeout or fdg.global_config.preprocessing_exception:
                         if self.preprocess_coverage < 50:
                             percent_of_functions = 7
@@ -229,19 +228,27 @@ class MIX1(FunctionSearchStrategy):
                             percent_of_functions = 5
                         elif self.preprocess_coverage < 90:
                             percent_of_functions = 3
+                    children=[]
+                    if self.preprocess_timeout or fdg.global_config.preprocessing_exception:
+                        random_selected_functions = self.functionAssignment.select_functions_randomly(
+                            percent_of_functions)
+                        # assign functions
+                        children = self.functionAssignment.assign_functions_timeout_mine(
+                            state_key, dk_functions, random_selected_functions)
+                    else:
+                        children = self.functionAssignment.assign_functions(
+                            state_key,
+                            dk_functions)
 
+                    children=[child for child in children if child not in not_to_execute]
+                    if len(children)>0:
+                        if state_key in self.executed_functions_on_states.keys():
+                            self.executed_functions_on_states[state_key]+=children
+                        else:
+                            self.executed_functions_on_states[state_key] = children
 
-                    # assign functions
-                    assigned_functions = self.functionAssignment.assign_functions_mix1(
-                        state_key, dk_functions,  not_to_execute,flag_pre_timeout=self.preprocess_timeout,percent_of_functions=percent_of_functions)
-
-
-                    if len(assigned_functions)>0:
-                        if state_key in self.not_executes.keys():
-                            if not flag_can_be_deleted:
-                                self.not_executes[state_key]+=assigned_functions
                         self.state_key_assigned_at_last = state_key
-                        return {state_key: assigned_functions}, flag_can_be_deleted
+                        return {state_key: children}, flag_can_be_deleted
 
 
 
@@ -376,13 +383,15 @@ class MIX1(FunctionSearchStrategy):
             return False
 
         def reintroduce_a_state_at_depth_1(targets: list):
-            for key in self.not_executes.keys():
+            for key in self.executed_functions_on_states.keys():
                 ftn_seq = get_ftn_seq_from_key_1(key)
                 if len(ftn_seq) == 1:
                     possible_functions = [t for t in targets if
-                                          t not in self.not_executes[key]]
+                                          t not in self.executed_functions_on_states[key]]
                     if len(possible_functions) > 0:
+                        self.executed_functions_on_states.pop(key)
                         return key, possible_functions
+            return "",[]
 
         if not has_depth_1_states_in_queue():
             key,functions=reintroduce_a_state_at_depth_1(targets)

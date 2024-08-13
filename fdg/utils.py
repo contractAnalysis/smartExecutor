@@ -153,10 +153,17 @@ def get_ftn_seq_from_key_1(key:str)->list:
 
 
 def is_equal_list(seq1:list,seq2:list)->bool:
+    """
+    a special case
+    ['initialize(address,address,uint256)', 'setCpiOracle(IOracle)']
+    ['initialize(address)', 'setCpiOracle(address)']
+    """
     if len(seq1)>len(seq2):return False
     if len(seq1)<len(seq2): return False
     for i in range(len(seq1)):
         if seq1[i] not in [seq2[i]]:
-            return False
+            pure_name=seq1[i].split(f'(')[0] if '(' in seq1[i] else seq1[i]
+            if pure_name not in [seq2[i][0:len(pure_name)]]:
+                return False
     return True
 

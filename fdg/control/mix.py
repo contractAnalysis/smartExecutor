@@ -1,6 +1,6 @@
 from copy import deepcopy
 
-import requests
+
 
 import fdg.global_config
 import rl
@@ -14,7 +14,7 @@ from fdg.utils import get_ftn_seq_from_key_1, random_select_from_list, \
     get_key_1_prefix
 from mythril.laser.plugin.plugins.dependency_pruner import \
     get_writes_annotation_from_ws
-from rl.config import rl_cur_parameters, top_k
+from rl.config import rl_cur_parameters
 
 from rl.seq_generation import wrapper
 
@@ -106,7 +106,8 @@ class MIX(FunctionSearchStrategy):
         :param states_dict:
         :return:
         """
-        if len(dk_functions) == 0: return {}, None
+        if not self.preprocess_timeout or fdg.global_config.preprocessing_exception:
+            if len(dk_functions) == 0: return {}, None
 
         if len(states_dict)>0:
             # save the new states
@@ -142,25 +143,52 @@ class MIX(FunctionSearchStrategy):
                 state_key = self.pickup_a_state(
                     targets)  # order the states in self.queue and pick up the one has the highest weight
 
-                percent_of_functions = 2
+                ftn_seq = get_ftn_seq_from_key_1(state_key)
+
+                # get functions from generated sequences
+                # --------------------
+                functions = []
+                if len(self.sequences) > 0:
+                    for seq_ in self.sequences:
+                        if len(ftn_seq) >= len(seq_): continue
+                        flag_add = True
+                        for i in range(len(ftn_seq)):
+                            if ftn_seq[i] not in [seq_[i]]:
+                                pure_name = ftn_seq[i].split(f'(')[0] if '(' in ftn_seq[i] else ftn_seq[i]
+                                if pure_name not in [seq_[i][0:len(pure_name)]]:
+                                    flag_add = False
+                                    break
+                        if flag_add:
+                            if seq_[len(ftn_seq)] not in functions:
+                                functions.append(seq_[len(ftn_seq)])
+
+                #--------------------
+                # get children from
+                percent_of_functions = 1
                 if self.preprocess_timeout or fdg.global_config.preprocessing_exception:
                     if self.preprocess_coverage < 50:
-                        percent_of_functions = 7
+                        percent_of_functions=7
                     elif self.preprocess_coverage < 80:
-                        percent_of_functions = 5
+                        percent_of_functions=5
                     elif self.preprocess_coverage < 90:
-                        percent_of_functions = 3
+                        percent_of_functions=3
+                    else:
+                        percent_of_functions=1
 
-                # assign functions
-                assigned_functions = self.functionAssignment.assign_functions_mix(
-                    state_key, dk_functions, to_execute_children,
-                    not_to_execute,flag_pre_timeout=self.preprocess_timeout,percent_of_functions=percent_of_functions)
+                if self.preprocess_timeout or fdg.global_config.preprocessing_exception:
+                    random_selected_functions = self.functionAssignment.select_functions_randomly(
+                        percent_of_functions)
+                    # assign functions
+                    children = self.functionAssignment.assign_functions_timeout_mine(
+                        state_key, dk_functions, random_selected_functions)
+                else:
+                    children=self.functionAssignment.assign_functions(state_key,
+                                                             dk_functions)
 
-
+                assigned_functions=list(set(functions+children))
                 if len(assigned_functions)>0:
                     self.state_key_assigned_at_last = state_key
                     return {state_key: assigned_functions}, flag_can_be_deleted
-
 
 
     def update_states(self, states_dict:dict)->list:
