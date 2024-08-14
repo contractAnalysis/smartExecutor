@@ -82,6 +82,7 @@ class Gpt(FunctionSearchStrategy):
     def add_sequence(self,sequence:list):
         if sequence not in self.all_sequences:
             self.all_sequences.append(sequence)
+
     def gen_sequences(self,feedback:dict={},msg_so_far:list=[],):
         self.cur_iteration+=1
         if self.cur_iteration>SEQ_iteration:
@@ -162,8 +163,7 @@ class Gpt(FunctionSearchStrategy):
 
 
     def find_start_states(self):
-        print(f'before getting start states')
-        print_data_for_mine_strategy(self.queue)
+
         def be_a_prefix(seq1:list,seq2:list)->bool:
             if len(seq1)>=len(seq2):return False
             for i,e1 in enumerate(seq1):
@@ -188,8 +188,6 @@ class Gpt(FunctionSearchStrategy):
                             if key not in self.queue:
                                 if len(ftn_seq_temp)==max_prefix_len:
                                     self.queue.append(key)
-        print(f'after getting start states')
-        print_data_for_mine_strategy(self.queue)
 
     def identify_functions(self,state_key:str):
         """
@@ -256,6 +254,7 @@ class Gpt(FunctionSearchStrategy):
         :param states_dict:
         :return:
         """
+
         if len(dk_functions) == 0: return {}, None
         if len(states_dict) > 0:
             # save the new states
