@@ -3,18 +3,13 @@ from stable_baselines3 import PPO
 import random
 
 import rl
-from rl.contract_env_data.contract_info import sGuard_test_1, \
-    sGuard_contract_info_into_groups, sGuard_train_1
-
 from rl.env_data_preparation.contract_env_data_preparation import collect_env_data
-
-from rl.envs.contract_env_discrete_action_space_03_3 import  ContractEnv_33
 from rl.envs.contract_env_discrete_action_space_05_5 import ContractEnv_55
 
 from rl.utils import get_key_from_list, load_a_json_file, euclidean_distance, \
     get_seq_from_key
 
-from rl.config import rl_cur_parameters,contract_json_file_path,model_path,model_groups
+from rl.config import rl_cur_parameters,contract_json_file_path,model_path
 
 
 
@@ -34,13 +29,12 @@ def get_env(solidity_name: str, contract_name: str, solc_version:str="0.4.25", s
     mode = rl.config.rl_cur_parameters["mode"]
 
 
-    if ENV_NAME in ["ContractEnv_33"]:
-        env = ContractEnv_33(conDynamics, conEnvData_wsa, flag_model=flag_model,goal_indicator=goal_indicator,
-                             mode=mode,action_size=NUM_actions,num_state_variable=NUM_state_var)
-    elif ENV_NAME in ["ContractEnv_55"]:
+    if ENV_NAME in ["ContractEnv_55"]:
         env = ContractEnv_55(conDynamics, conEnvData_wsa, flag_model=flag_model,
-                             goal_indicator=goal_indicator,
+                             goal_indicator=goal_indicator,num_state_svar=NUM_state_var,
                              mode=mode)
+    else:
+        return None
     env.contract_name = contract_name
     env.solidity_name = solidity_name
     return env
@@ -161,10 +155,12 @@ def get_top_k_sequences(sequences:list, top_k:int=2):
 
 
 
-def refine_sequences(sequences:list)->list:
+def refine_sequences(sequences:list,target:str)->list:
+    target_name = target.split(f'.')[-1] if '.' in target else target
     kept=[]
     for seq in sequences:
-        if len(seq) - len(set(seq)) >=2 or (len(seq) - len(set(seq))==1 and len(seq)==4):
+        # if len(seq) - len(set(seq)) >=2 or (len(seq) - len(set(seq))==1 and len(seq)==4):
+        if len(seq) - len(set(seq)) >= 2:
             seq_=[]
             for ftn in seq[0:-1]:
                 if ftn not in seq_:
@@ -174,8 +170,14 @@ def refine_sequences(sequences:list)->list:
                 kept.append(seq_)
 
         else:
-            if seq not in kept:
-                kept.append(seq)
+            if len(seq)==1:
+                if seq+[target_name] not in kept:
+                    kept.append(seq+[target_name])
+            else:
+                if seq not in kept:
+                    kept.append(seq)
+
+    kept=[seq+[target_name] if seq[-1] not in [target_name] else seq for seq in kept]
     return kept
 
 

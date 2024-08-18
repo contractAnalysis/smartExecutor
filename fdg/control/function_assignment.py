@@ -368,8 +368,8 @@ class FunctionAssignment():
                 to_be_considered_functions.append(ftn)
 
 
-
-        from_conditions = [ftn for ftn in self.all_functions if
+        targets=[ftn for ftn,_ in dk_functions]
+        from_conditions = [ftn for ftn in targets if
                            ftn not in ['decimals()', 'symbol()', 'owner()',
                                        'name()', 'version()']]
         functions_1 = self.select_functions_randomly_1(from_conditions,

@@ -15,6 +15,7 @@ class SeqGeneration:
     def remove_contract_name_from_function_name(self, sequences:list,contract_name:str):
         temp_sequences= [ [ func.split(f'{contract_name}.')[-1] if f'{contract_name}.' in func else func for func in seq] for seq in sequences]
         return [[func.split(".")[-1] if "." in func else func for func in seq] for seq in temp_sequences]
+
     def generate_simple(self, data):
 
         solidity_name=data['solidity_name']
@@ -46,48 +47,11 @@ class SeqGeneration:
         if rl.config.rl_cur_parameters["dataset"]== 'small_dataset':
             model_dir = f'{model_path}{rl.config.rl_cur_parameters["model_folder"]}/'
             model_file_prefix = rl.config.rl_cur_parameters["model_file_name_prefix"]
-            print(f'use a general model')
             model_paths.append(f"{model_dir}{model_file_prefix}.zip")
-        elif rl.config.rl_cur_parameters["dataset"] == 'sGuard' and env.env_name in ['ContractEnv_33']:
-            if rl.config.MIX == "a":
-                data['flag_whole'] = False
-                model_dir, model_file_prefix = find_the_model_for_a_contract(
-                    solidity_name, contract_name, env, data["flag_whole"])
-                model_paths.append(f"{model_dir}{model_file_prefix}.zip")
-            elif rl.config.MIX == 'b':
-                data['flag_whole'] = True
-                model_dir = f'{model_path}{rl.config.rl_cur_parameters["model_folder"]}/'
-                model_file_prefix = rl.config.rl_cur_parameters[
-                    "model_file_name_prefix"]
-                print(f'use a general model')
-                model_paths.append(f"{model_dir}{model_file_prefix}.zip")
-            elif rl.config.MIX in [ 'c','d']:
-                model_dir = f'{model_path}{rl.config.rl_cur_parameters["model_folder"]}/'
-                model_file_prefix = rl.config.rl_cur_parameters[
-                    "model_file_name_prefix"]
-                print(f'use a general model')
-                model_paths.append(f"{model_dir}{model_file_prefix}.zip")
-
-                data['flag_whole'] = False
-                model_dir, model_file_prefix = find_the_model_for_a_contract(
-                    solidity_name, contract_name, env, data["flag_whole"])
-                if f"{model_dir}{model_file_prefix}.zip" not in model_paths:
-                    model_paths.append(f"{model_dir}{model_file_prefix}.zip")
-            else:
-                model_dir = f'{model_path}{rl.config.rl_cur_parameters["model_folder"]}/'
-                model_file_prefix = rl.config.rl_cur_parameters[
-                    "model_file_name_prefix"]
-                print(f'use a general model')
-                model_paths.append(f"{model_dir}{model_file_prefix}.zip")
-
-        elif rl.config.rl_cur_parameters["dataset"] and env.env_name in ['ContractEnv_55']:
-            data['flag_whole'] = True
+        elif rl.config.rl_cur_parameters["dataset"] == 'sGuard':
             model_dir = f'{model_path}{rl.config.rl_cur_parameters["model_folder"]}/'
-            model_file_prefix = rl.config.rl_cur_parameters[
-                "model_file_name_prefix"]
-            print(f'use a general model')
+            model_file_prefix = rl.config.rl_cur_parameters["model_file_name_prefix"]
             model_paths.append(f"{model_dir}{model_file_prefix}.zip")
-
 
         results={}
         for target in env.conEnvData_wsa["target_functions_in_integer"]:
@@ -107,7 +71,7 @@ class SeqGeneration:
                 results[goal_name] += clean_sequence
 
         for k in results.keys():
-            results[k]=refine_sequences(get_top_k_sequences(results[k], top_k=top_k))
+            results[k]=refine_sequences(get_top_k_sequences(results[k],top_k=top_k), k)
 
         return results
 

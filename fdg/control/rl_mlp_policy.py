@@ -140,7 +140,8 @@ class RL_MLP_Policy(FunctionSearchStrategy):
         :param states_dict:
         :return:
         """
-        if len(dk_functions) == 0: return {}, None
+        if not self.preprocess_timeout or fdg.global_config.preprocessing_exception:
+            if len(dk_functions) == 0: return {}, None
 
         if len(states_dict)>0:
             # save the new states
@@ -173,8 +174,6 @@ class RL_MLP_Policy(FunctionSearchStrategy):
                 targets = [dk for dk, _ in dk_functions]
                 state_key = self.pickup_a_state(
                     targets)  # order the states in self.queue and pick up the one has the highest weight
-
-
 
 
                 percent_of_functions=2

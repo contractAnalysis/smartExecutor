@@ -8,12 +8,10 @@ Created on Thu Apr  4 23:39:11 2024
 
 
 # -*- coding: utf-8 -*-
-
+from rl.config import max_svar_value, max_func_value_element
 from rl.env_data_preparation.contract_dynamics import ContractDynamics
 from rl.env_data_preparation.fwrg_manager import FWRG_manager
 from rl.utils import scale_value_continous, random_selection, weighted_choice, sort_lists, goal_rewarding
-import rl
-from rl.config import rl_cur_parameters
 
 """
 require static analysis from source code
@@ -56,7 +54,7 @@ class ContractEnv_55(gymnasium.Env):
     
     training: randomly select a goal when reset() is invoked
     """
-    def __init__(self, contract_dynamics: ContractDynamics, conEnvData_wsa, goal=1, test:bool=False, goal_indicator:int=2, flag_model:int=5, mode:str= 'train'):
+    def __init__(self, contract_dynamics: ContractDynamics, conEnvData_wsa, goal=1, test:bool=False, goal_indicator:int=2, num_state_svar:int=16, flag_model:int=5, mode:str= 'train'):
         super(ContractEnv_55, self).__init__()
         
         self.env_name="ContractEnv_55"
@@ -68,13 +66,13 @@ class ContractEnv_55(gymnasium.Env):
         self.num_reads=3
         self.num_writes=3
         
-        self.num_state_var=24
+        self.num_state_var=num_state_svar
         self.flag_model=flag_model
         print(f'flag_model={self.flag_model}')
         self.mode=mode
         
         self.score=0
-
+        self.test=test
         
         self.goal_indicator=goal_indicator
         self.goals=self.conEnvData_wsa["target_functions_in_integer"]       
@@ -96,10 +94,7 @@ class ContractEnv_55(gymnasium.Env):
         self.func_seq=[]
         
         self.select_idx=0
-        self.select_times=0
-
-        max_func_value_element = rl.config.rl_cur_parameters[
-            "max_func_value_element"]
+        self.select_times=0   
 
         self.num_functions=len(self.conEnvData_wsa["function_data"].keys())
 
@@ -111,8 +106,8 @@ class ContractEnv_55(gymnasium.Env):
         self.max_function_int_value=max(self.function_keys)+1
         print(f'function keys: {self.function_keys}; len:{len(self.function_keys)}') 
         
-        function_value=self.conEnvData_wsa["function_value"]
-
+        function_value=self.conEnvData_wsa["function_value"]            
+       
         # scale to 0 and 1 (max max_func_value_element on a small set of contracts)
         self.function_for_identifier=[scale_value_continous(value,0,max_func_value_element) for value in function_value]
         
@@ -127,7 +122,6 @@ class ContractEnv_55(gymnasium.Env):
         
         self.action_space = spaces.Discrete(2)
         self.action_size =self.action_space.n
-        max_svar_value=rl.config.rl_cur_parameters['max_svar_value']
         if self.flag_model==0:
             # state variables, function identifier, constructor/rw record,4 functions,given function
             # presentation: function idx and function vector (r+w format)
@@ -201,7 +195,6 @@ class ContractEnv_55(gymnasium.Env):
 
 
     def env_dynamics(self, action):
-        max_svar_value = rl.config.rl_cur_parameters['max_svar_value']
         reward= 0
         terminate = False
 
@@ -230,9 +223,9 @@ class ContractEnv_55(gymnasium.Env):
                 self.print_(f'valid:{self.func_seq}')
                 if action==1:
                     if self.mode=='train':    
-                        reward,terminate=goal_rewarding(action,self.goal,self.func_seq,self.goal_indicator,self.goals)
+                        reward,terminate=goal_rewarding(action,self.goal,self.func_seq,self.goal_indicator,self.goals,flag_test=self.test)
                     else:
-                        reward,terminate=goal_rewarding(action,self.goal,self.func_seq,self.goal_indicator,self.goals,mode='test')
+                        reward,terminate=goal_rewarding(action,self.goal,self.func_seq,self.goal_indicator,self.goals,flag_test=self.test,mode='test')
                         
                     if reward>=5:
                         self.goal_reach_status[self.goal]+=1                   
@@ -568,8 +561,8 @@ class ContractEnv_55(gymnasium.Env):
        
         pass
 
-    def reset(self,seed:int=None,options={}):
-        max_svar_value = rl.config.rl_cur_parameters['max_svar_value']
+    def reset(self,seed:int=None,options={}):        
+        
         self.score = 0
         self.done = False
         self.previous_actions = []

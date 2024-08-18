@@ -542,7 +542,7 @@ def add_fwrg_analysis_args(options):
     options.add_argument(
 
         "-env",
-        default="ContractEnv_33",
+        default="ContractEnv_55",
         type=str,
         help="the environment for rl_mlp_policy",
     )
@@ -610,23 +610,22 @@ def add_fwrg_arguments(args: Namespace):
                 solidity_contract=""
             if len(solidity_contract)>0 and ':' in solidity_contract:
                 fdg.global_config.solidity_name=solidity_contract.split(f':')[0]
-                fdg.global_config.contract_name = solidity_contract.split(f':')[
-                    -1]
+                fdg.global_config.contract_name = solidity_contract.split(f':')[-1]
 
                 if fdg.global_config.function_search_strategy in ['rl_mlp_policy','mix','mix1']:
-                    if args.env in ['ContractEnv_55']:
-                        rl.config.rl_cur_parameters=rl.config.rl_parameters["sGuard_env55"]
+                    path = rl.config.project_path
+                    contracts_static_data = load_a_json_file(
+                        f'{path}rl/contract_env_data/{small_dataset_json_file}')
+
+                    if f'{fdg.global_config.solidity_name}{fdg.global_config.contract_name}' in contracts_static_data.keys():
+                        rl.config.rl_cur_parameters = rl.config.rl_parameters[
+                            "small_dataset"]
+                        rl.config.max_svar_value=80
+                        rl.config.max_func_value_element=30
                     else:
-                        path= rl.config.project_path
-                        contracts_static_data = load_a_json_file(
-                            f'{path}rl/contract_env_data/{small_dataset_json_file}')
-
-                        if f'{fdg.global_config.solidity_name}{fdg.global_config.contract_name}' in contracts_static_data.keys():
-                            rl.config.rl_cur_parameters= rl.config.rl_parameters["small_dataset"]
-                        else:
-                            rl.config.rl_cur_parameters=rl.config.rl_parameters["sGuard"]
-
-                    print(f'rl.config.rl_cur_parameters:{rl.config.rl_cur_parameters}')
+                        rl.config.rl_cur_parameters = rl.config.rl_parameters[
+                            "sGuard"]
+                    print(f'rl parameters:{rl.config.rl_cur_parameters}')
             else:
                 if fdg.global_config.function_search_strategy in ['rl_mlp_policy']:
                     # rl_mlp_policy is based on the source code
