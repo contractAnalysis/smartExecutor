@@ -189,7 +189,7 @@ class FunctionAssignment():
                         ftn_seq[-1])
                     children += children_o
                     children = list(set(children))
-                # consider children that are target or can reach a target
+                #consider children that are targets or can reach a target
                 children = [child for child in children if
                             self.can_reach_targets(child,
                                                    dk_left,
@@ -369,11 +369,13 @@ class FunctionAssignment():
 
 
         targets=[ftn for ftn,_ in dk_functions]
-        from_conditions = [ftn for ftn in targets if
+        from_conditions = [ftn for ftn in self.all_functions if
                            ftn not in ['decimals()', 'symbol()', 'owner()',
                                        'name()', 'version()']]
         functions_1 = self.select_functions_randomly_1(from_conditions,
                                                        percentage)
+        functions_1+=targets
+        functions_1=list(set(functions_1))
 
         # dk_func = [ftn for ftn, _ in dk_functions]
         left_target = [ftn for ftn in
