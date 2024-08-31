@@ -626,6 +626,7 @@ def add_fwrg_arguments(args: Namespace):
                             "small_dataset"]
                         rl.config.max_svar_value=80
                         rl.config.max_func_value_element=30
+
                     else:
                         rl.config.rl_cur_parameters = rl.config.rl_parameters[
                             "sGuard"]

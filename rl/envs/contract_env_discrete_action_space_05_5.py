@@ -8,7 +8,6 @@ Created on Thu Apr  4 23:39:11 2024
 
 
 # -*- coding: utf-8 -*-
-from rl.config import max_svar_value, max_func_value_element
 from rl.env_data_preparation.contract_dynamics import ContractDynamics
 from rl.env_data_preparation.fwrg_manager import FWRG_manager
 from rl.utils import scale_value_continous, random_selection, weighted_choice, sort_lists, goal_rewarding
@@ -54,7 +53,7 @@ class ContractEnv_55(gymnasium.Env):
     
     training: randomly select a goal when reset() is invoked
     """
-    def __init__(self, contract_dynamics: ContractDynamics, conEnvData_wsa, goal=1, test:bool=False, goal_indicator:int=2, num_state_svar:int=16, flag_model:int=5, mode:str= 'train'):
+    def __init__(self, contract_dynamics: ContractDynamics, conEnvData_wsa, goal=1, test:bool=False, goal_indicator:int=2, num_state_svar:int=16, flag_model:int=5, mode:str= 'train',max_svar_value:int=80,max_func_value_element:int=30):
         super(ContractEnv_55, self).__init__()
         
         self.env_name="ContractEnv_55"
@@ -92,6 +91,9 @@ class ContractEnv_55(gymnasium.Env):
     
         self.previous_actions=[]
         self.func_seq=[]
+
+        self.max_svar_value=max_svar_value
+        self.max_func_value_element= max_func_value_element
         
         self.select_idx=0
         self.select_times=0   
@@ -109,11 +111,11 @@ class ContractEnv_55(gymnasium.Env):
         function_value=self.conEnvData_wsa["function_value"]            
        
         # scale to 0 and 1 (max max_func_value_element on a small set of contracts)
-        self.function_for_identifier=[scale_value_continous(value,0,max_func_value_element) for value in function_value]
+        self.function_for_identifier=[scale_value_continous(value,0,self.max_func_value_element) for value in function_value]
         
         function_value_n0=self.conEnvData_wsa["function_value_n0"]            
 
-        self.function_for_identifier_n0=[scale_value_continous(value,0,max_func_value_element) for value in function_value_n0]
+        self.function_for_identifier_n0=[scale_value_continous(value,0,self.max_func_value_element) for value in function_value_n0]
         
         # print(f'self.function_for_identifier: {self.function_for_identifier}')
         # print(f'self.function_for_identifier_n0: {self.function_for_identifier_n0}')
@@ -127,8 +129,8 @@ class ContractEnv_55(gymnasium.Env):
             # presentation: function idx and function vector (r+w format)
             #
             self.observation_space = spaces.MultiDiscrete(
-                [max_svar_value]*self.num_state_var+   # state variables
-                [max_func_value_element]*self.num_state_var+ # serve as a feature
+                [self.max_svar_value]*self.num_state_var+   # state variables
+                [self.max_func_value_element]*self.num_state_var+ # serve as a feature
                 [self.max_function_int_value]+
                 [4]*self.num_state_var+
                 [self.max_function_int_value]+
@@ -150,8 +152,8 @@ class ContractEnv_55(gymnasium.Env):
         elif self.flag_model==2:
             # use a single integer to present a function (not normalized)
             self.observation_space = spaces.MultiDiscrete(
-                [max_svar_value]*self.num_state_var+   # state variables
-                [max_func_value_element]*self.num_state_var+ # serve as a feature
+                [self.max_svar_value]*self.num_state_var+   # state variables
+                [self.max_func_value_element]*self.num_state_var+ # serve as a feature
                 [self.max_function_int_value]*6
                 )
         elif self.flag_model==3:
@@ -163,20 +165,20 @@ class ContractEnv_55(gymnasium.Env):
         elif self.flag_model==4:
             # function presentation: integer and function vector (in RW format)
             self.observation_space = spaces.MultiDiscrete(
-                [max_svar_value] * self.num_state_var +  # state variables
-                [max_func_value_element] * self.num_state_var +  # serve as a feature
+                [self.max_svar_value] * self.num_state_var +  # state variables
+                [self.max_func_value_element] * self.num_state_var +  # serve as a feature
                 [self.max_function_int_value]+
-                [max_svar_value]*(self.num_reads+self.num_writes)+
+                [self.max_svar_value]*(self.num_reads+self.num_writes)+
                 [self.max_function_int_value]+
-                [max_svar_value]*(self.num_reads+self.num_writes)+
+                [self.max_svar_value]*(self.num_reads+self.num_writes)+
                 [self.max_function_int_value]+
-                [max_svar_value]*(self.num_reads+self.num_writes)+
+                [self.max_svar_value]*(self.num_reads+self.num_writes)+
                 [self.max_function_int_value]+
-                [max_svar_value]*(self.num_reads+self.num_writes)+
+                [self.max_svar_value]*(self.num_reads+self.num_writes)+
                 [self.max_function_int_value]+
-                [max_svar_value]*(self.num_reads+self.num_writes)+
+                [self.max_svar_value]*(self.num_reads+self.num_writes)+
                 [self.max_function_int_value]+
-                [max_svar_value]*(self.num_reads+self.num_writes)
+                [self.max_svar_value]*(self.num_reads+self.num_writes)
             )
         elif self.flag_model in [5,7]:
             # function presentation: integer and function vector (in RW format)
@@ -271,7 +273,7 @@ class ContractEnv_55(gymnasium.Env):
                start_idx_1 = 2*self.num_state_var + (1+self.num_reads+self.num_writes) * (cur_length - 1)
                func_vector = self.conEnvData_wsa["function_data"][str(self.select_function_key)]['vector_rw_in_concate']
                func_vector_1 = [scale_value_continous(self.select_function_key, 0, self.max_function_int_value)] +\
-                               [ scale_value_continous(v, 0, max_svar_value) for v in func_vector]
+                               [ scale_value_continous(v, 0, self.max_svar_value) for v in func_vector]
 
                self.state[start_idx_1:start_idx_1+7]= func_vector_1
 
@@ -281,7 +283,7 @@ class ContractEnv_55(gymnasium.Env):
                func_vector2 = self.conEnvData_wsa["function_data"][str(self.select_function_key)]['vector_in_index_rw']
                
                func_vector1_1 = [scale_value_continous(self.select_function_key, 0, self.max_function_int_value)] +\
-                               [scale_value_continous(v, 0, max_svar_value) for v in func_vector1]
+                               [scale_value_continous(v, 0, self.max_svar_value) for v in func_vector1]
                func_vector2_1 = [scale_value_continous(v, 0, 4) for v in func_vector2]
                func_vector_1_2=func_vector1_1+func_vector2_1
                self.state[start_idx_1:start_idx_1+(1+self.num_reads+self.num_writes+self.num_state_var)]= func_vector_1_2
@@ -321,7 +323,7 @@ class ContractEnv_55(gymnasium.Env):
                func_vector = self.conEnvData_wsa["function_data"][str(self.select_function_key)]['vector_rw_in_concate']
 
                func_vector_1=[scale_value_continous(self.select_function_key, 0, self.max_function_int_value)] + [
-                                scale_value_continous(v, 0, max_svar_value) for v in func_vector]
+                                scale_value_continous(v, 0, self.max_svar_value) for v in func_vector]
                self.state[-(1+self.num_reads+self.num_writes):] =  func_vector_1
            elif self.flag_model==6:
                
@@ -329,7 +331,7 @@ class ContractEnv_55(gymnasium.Env):
                func_vector2 = self.conEnvData_wsa["function_data"][str(self.select_function_key)]['vector_in_index_rw']
                
                func_vector1_1 = [scale_value_continous(self.select_function_key, 0, self.max_function_int_value)] +\
-                               [ scale_value_continous(v, 0, max_svar_value) for v in func_vector1]
+                               [ scale_value_continous(v, 0, self.max_svar_value) for v in func_vector1]
                func_vector2_1 = [ scale_value_continous(v, 0, 4) for v in func_vector2]
                func_vector_1_2=func_vector1_1+func_vector2_1
                self.state[-(1+self.num_reads+self.num_writes+self.num_state_var):]= func_vector_1_2
@@ -590,7 +592,7 @@ class ContractEnv_55(gymnasium.Env):
             goal_vector=self.conEnvData_wsa["function_data"][str(self.goal)]['vector_in_index_rw']
             func_vector=self.conEnvData_wsa["function_data"][str(self.select_function_key)]['vector_in_index_rw']
             
-            self.state=[scale_value_continous(idx,0,max_svar_value) for idx in self.conEnvData_wsa["state_variables_selected"]]+\
+            self.state=[scale_value_continous(idx,0,self.max_svar_value) for idx in self.conEnvData_wsa["state_variables_selected"]]+\
                 self.function_for_identifier+[0]*4*((1+self.num_state_var))+\
                     [scale_value_continous(self.goal,0, self.max_function_int_value)]+[scale_value_continous(v,0, 4) for v in goal_vector] + \
                     [scale_value_continous(self.select_function_key,0, self.max_function_int_value)]+[scale_value_continous(v,0, 4) for v in func_vector]
@@ -601,7 +603,7 @@ class ContractEnv_55(gymnasium.Env):
                 [self.goal]+\
                     [self.select_function_key]
         elif self.flag_model==3:
-            self.state=[scale_value_continous(idx,0,max_svar_value) for idx in self.conEnvData_wsa["state_variables_selected"]]+\
+            self.state=[scale_value_continous(idx,0,self.max_svar_value) for idx in self.conEnvData_wsa["state_variables_selected"]]+\
                 self.function_for_identifier+[0]*4+\
                     [scale_value_continous(self.goal,0, self.max_function_int_value)]+\
                         [scale_value_continous(self.select_function_key,0, self.max_function_int_value)]
@@ -618,17 +620,17 @@ class ContractEnv_55(gymnasium.Env):
             goal_vector=self.conEnvData_wsa["function_data"][str(self.goal)]['vector_rw_in_concate']
             func_vector=self.conEnvData_wsa["function_data"][str(self.select_function_key)]['vector_rw_in_concate']
             if self.flag_model==5:
-                self.state = [scale_value_continous(idx,0,max_svar_value) for idx in self.conEnvData_wsa["state_variables_selected"]] + \
+                self.state = [scale_value_continous(idx,0,self.max_svar_value) for idx in self.conEnvData_wsa["state_variables_selected"]] + \
                              self.function_for_identifier + \
                              [0] * (1+self.num_reads+self.num_writes) * 4 +\
-                             [scale_value_continous(self.goal,0, self.max_function_int_value)]+[scale_value_continous(v,0, max_svar_value) for v in goal_vector] + \
-                             [scale_value_continous(self.select_function_key,0, self.max_function_int_value)]+[scale_value_continous(v,0, max_svar_value) for v in func_vector]
+                             [scale_value_continous(self.goal,0, self.max_function_int_value)]+[scale_value_continous(v,0, self.max_svar_value) for v in goal_vector] + \
+                             [scale_value_continous(self.select_function_key,0, self.max_function_int_value)]+[scale_value_continous(v,0, self.max_svar_value) for v in func_vector]
             else:
-                self.state = [scale_value_continous(idx,0,max_svar_value) for idx in self.conEnvData_wsa["state_variables_selected"]] + \
+                self.state = [scale_value_continous(idx,0,self.max_svar_value) for idx in self.conEnvData_wsa["state_variables_selected"]] + \
                              self.function_for_identifier_n0 + \
                              [0] * (1+self.num_reads+self.num_writes) * 4 +\
-                             [scale_value_continous(self.goal,0, self.max_function_int_value)]+[scale_value_continous(v,0, max_svar_value) for v in goal_vector] + \
-                             [scale_value_continous(self.select_function_key,0, self.max_function_int_value)]+[scale_value_continous(v,0, max_svar_value) for v in func_vector]
+                             [scale_value_continous(self.goal,0, self.max_function_int_value)]+[scale_value_continous(v,0, self.max_svar_value) for v in goal_vector] + \
+                             [scale_value_continous(self.select_function_key,0, self.max_function_int_value)]+[scale_value_continous(v,0, self.max_svar_value) for v in func_vector]
 
         
         elif self.flag_model==6:
@@ -636,7 +638,7 @@ class ContractEnv_55(gymnasium.Env):
             func_vector2 = self.conEnvData_wsa["function_data"][str(self.select_function_key)]['vector_in_index_rw']
             
             func_vector1_1 = [scale_value_continous(self.select_function_key, 0, self.max_function_int_value)] +\
-                            [ scale_value_continous(v, 0, max_svar_value) for v in func_vector1]
+                            [ scale_value_continous(v, 0, self.max_svar_value) for v in func_vector1]
             func_vector2_1 = [ scale_value_continous(v, 0, 4) for v in func_vector2]
             func_vector_1_2=func_vector1_1+func_vector2_1
             
@@ -645,11 +647,11 @@ class ContractEnv_55(gymnasium.Env):
             func_vector2_g = self.conEnvData_wsa["function_data"][str(self.goal)]['vector_in_index_rw']
             
             func_vector1_1_g = [scale_value_continous(self.goal, 0, self.max_function_int_value)] +\
-                            [ scale_value_continous(v, 0, max_svar_value) for v in func_vector1_g]
+                            [ scale_value_continous(v, 0, self.max_svar_value) for v in func_vector1_g]
             func_vector2_1_g = [ scale_value_continous(v, 0, 4) for v in func_vector2_g]
             func_vector_1_2_g=func_vector1_1_g+func_vector2_1_g
             
-            self.state = [scale_value_continous(idx,0,max_svar_value) for idx in self.conEnvData_wsa["state_variables_selected"]] + \
+            self.state = [scale_value_continous(idx,0,self.max_svar_value) for idx in self.conEnvData_wsa["state_variables_selected"]] + \
                          self.function_for_identifier + [0] * ((1+self.num_reads+self.num_writes+self.num_state_var))* 4 +\
                          func_vector_1_2_g+ func_vector_1_2
 

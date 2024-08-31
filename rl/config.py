@@ -10,7 +10,7 @@ sys.path.append(project_path)
 
 # project_path='C:\\Users\\18178\\PycharmProjects\\smartExecutor\\'
 # project_path="./"
-small_dataset_json_file="rl_small_dataset_contracts_data_for_env_construction_7_4_2024_8.json"
+small_dataset_json_file="rl_small_dataset_contracts_data_for_env_construction_8_19_2024_8_in_integer.json"
 
 output_path=project_path+"temp_results/"
 contract_json_file_path=project_path+"rl/contract_env_data/"
@@ -26,6 +26,8 @@ NUM_episode=5
 max_svar_value=5740
 max_func_value_element= 70
 
+
+
 # recent: after August 19th, 2024
 # consider all Reads and Writes
 rl_parameters={
@@ -40,7 +42,7 @@ rl_parameters={
         "ENV_NAME": "ContractEnv_55",
         "NUM_episode": 5,
         "model_folder": 'ContractEnv_55_model7_sGuard_16_1724508857',
-        "model_file_name_prefix": "167290000",
+        "model_file_name_prefix": "255600000",
         "flag_model": 7,
         "goal_indicator": 2,
         "flag_maskable": False,

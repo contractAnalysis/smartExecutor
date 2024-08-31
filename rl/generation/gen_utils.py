@@ -23,15 +23,17 @@ def get_env(solidity_name: str, contract_name: str, solc_version:str="0.4.25", s
     ENV_NAME = rl.config.rl_cur_parameters["ENV_NAME"]
     flag_model = rl.config.rl_cur_parameters["flag_model"]
     goal_indicator = rl.config.rl_cur_parameters["goal_indicator"]
-    NUM_actions = rl.config.rl_cur_parameters["NUM_actions"]
+
     NUM_state_var = rl.config.rl_cur_parameters["NUM_state_var"]
     mode = rl.config.rl_cur_parameters["mode"]
+    max_svar_value = rl.config.rl_cur_parameters["max_svar_value"]
+    max_func_value_element = rl.config.rl_cur_parameters["max_func_value_element"]
 
 
     if ENV_NAME in ["ContractEnv_55"]:
         env = ContractEnv_55(conDynamics, conEnvData_wsa, flag_model=flag_model,
                              goal_indicator=goal_indicator,num_state_svar=NUM_state_var,
-                             mode=mode)
+                             mode=mode,max_svar_value=max_svar_value,max_func_value_element=max_func_value_element)
     else:
         return None
     env.contract_name = contract_name
