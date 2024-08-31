@@ -10,7 +10,7 @@ import random
 
 import os
 import json
-random.seed(10) 
+random.seed(10)
 def get_key_from_list(lst:list)->str:
     if len(lst)==0:return ""
     if len(lst)==1:
@@ -148,8 +148,8 @@ def goal_rewarding(action,goal,cur_sequence:list,goal_indicator:int=0,goals:list
  
 
 
-my_list = ['a', 'b', 'c', 'd', 'e']  
-weights = [10, 5, 1, 1, 20]
+# my_list = ['a', 'b', 'c', 'd', 'e']
+# weights = [10, 5, 1, 1, 20]
 
 def weighted_random_selection(lst, weights):
     total_weight = sum(weights)

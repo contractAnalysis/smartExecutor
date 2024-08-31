@@ -81,7 +81,7 @@ rl_parameters={
         "flag_model": 7,
         "goal_indicator": 2,
         "flag_maskable": False,
-        "mode": 'predict',
+        "mode": 'test',
         "flag_model_whole": True,
     }
 

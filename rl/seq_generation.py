@@ -3,11 +3,11 @@ import rl
 from rl.config import model_path
 
 from rl.generation.gen_utils import get_env, get_top_k_sequences, \
-    retrieve_model, find_the_model_for_a_contract, refine_sequences
+    retrieve_model, refine_sequences
 from rl.generation.prediction import my_model_prediction
 
 
-app = Flask(__name__)
+
 
 class SeqGeneration:
     def __init__(self):
@@ -78,7 +78,7 @@ class SeqGeneration:
 wrapper = SeqGeneration()
 
 
-@app.route('/generate_simple', methods=['POST'])
+
 def generate_simple():
     # Get data from the request
     data = request.json
@@ -155,5 +155,8 @@ def evaluate_compute_simple():
 
 if __name__ == '__main__':
     # app.run(debug=True)
+    rl.config.rl_cur_parameters=rl.config.rl_parameters['HoloToken']
     evaluate_compute_simple()
+
+
 

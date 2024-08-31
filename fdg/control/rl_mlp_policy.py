@@ -64,34 +64,6 @@ class RL_MLP_Policy(FunctionSearchStrategy):
 
 
 
-    def request_sequences_0(self):
-        # Define the JSON data to send in the POST request
-        data = {"solidity_name": f"{self.solidity_name}",
-                "contract_name": f"{self.contract_name}",
-                "top_k":f'{rl.config.top_k}',
-                "flag_whole":False,
-                "dataset":'small_dataset',
-                }
-        print(f'Request data:{data}')
-
-        # Send a POST request to the server
-        model_service_url = "http://127.0.0.1:5000/generate_simple"
-        response = requests.post(model_service_url, json=data)
-
-        # Check if the request was successful (status code 200)
-        if response.status_code == 200:
-            # Parse the JSON response
-            result = response.json()
-            print(f'Response data:{result["result"]}')
-
-            for k, v in result['result'].items():
-                print(f'{k}')
-                for seq in v:
-                    self.sequences.append(seq)
-                    print(f'\t{seq}')
-        else:
-            print("Error:", response.status_code)
-            self.flag_rl_mlp_policy=False
 
     def request_sequences(self):
         # Define the JSON data to send in the POST request

@@ -616,8 +616,12 @@ def add_fwrg_arguments(args: Namespace):
                     path = rl.config.project_path
                     contracts_static_data = load_a_json_file(
                         f'{path}rl/contract_env_data/{small_dataset_json_file}')
-
-                    if f'{fdg.global_config.solidity_name}{fdg.global_config.contract_name}' in contracts_static_data.keys():
+                    if fdg.global_config.contract_name in ['HoloToken']:
+                        rl.config.rl_cur_parameters = rl.config.rl_parameters[
+                            "HoloToken"]
+                        rl.config.max_svar_value = 80
+                        rl.config.max_func_value_element = 30
+                    elif f'{fdg.global_config.solidity_name}{fdg.global_config.contract_name}' in contracts_static_data.keys():
                         rl.config.rl_cur_parameters = rl.config.rl_parameters[
                             "small_dataset"]
                         rl.config.max_svar_value=80
@@ -627,7 +631,7 @@ def add_fwrg_arguments(args: Namespace):
                             "sGuard"]
                     print(f'rl parameters:{rl.config.rl_cur_parameters}')
             else:
-                if fdg.global_config.function_search_strategy in ['rl_mlp_policy']:
+                if fdg.global_config.function_search_strategy in ['rl_mlp_policy','mix','mix1']:
                     # rl_mlp_policy is based on the source code
                     print(f'need to provide the solidity file and contract name')
                     exit

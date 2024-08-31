@@ -15,9 +15,9 @@ def my_model_prediction(model, env, num_episodes, flag_maskable:bool=True):
               obs, reward, done, _, info = env.step(action)
 
       if env.env_name is not None and env.env_name in [ "ContractEnv_55",]:
-          # print(f'score:{env.score}')
-          # print(f'\taction seq:{env.previous_actions}')
-          # print(f'\t  func seq:{env.func_seq}')
+          print(f'score:{env.score}')
+          print(f'\taction seq:{env.previous_actions}')
+          print(f'\t  func seq:{env.func_seq}')
           result_list.append([env.conEnvData_wsa["function_data"][str(func)]["name"] for func in env.func_seq])
 
       elif env.env_name in ["ContractEnv_33"]:
