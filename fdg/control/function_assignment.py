@@ -116,7 +116,7 @@ class FunctionAssignment():
                 return ['original_instruction_list']
         return []
 
-    def assign_functions(self,state_key:str,dk_functions:list,to_execute_functions:list=[],not_to_execute:list=[], percentage:int=3):
+    def assign_functions(self,state_key:str,dk_functions:list,to_execute_functions:list=[],not_to_execute:list=[]):
 
         print_function_assignmnets(self.assignment_times)
 
@@ -163,21 +163,7 @@ class FunctionAssignment():
                     if flag_add:
                         if seq_[len(ftn_seq)] not in functions:
                             functions.append(seq_[len(ftn_seq)])
-
-                left_target = [ftn for ftn in self.targets_with_no_seq
-                               if ftn in dk_left]
-                random_functions=[]
-
-                if rl.config.MIX in ['d']:
-                    from_conditions = [ftn for ftn in dk_left if
-                                       ftn not in ['decimals()', 'symbol()',
-                                                   'owner()',
-                                                   'name()', 'version()']]
-
-                    random_functions = self.select_functions_randomly_1(
-                        from_conditions,
-                        percentage)
-                children=list(set(functions+left_target+random_functions))
+                children=functions
 
             else:
 
@@ -347,7 +333,7 @@ class FunctionAssignment():
 
         return assigned_functions
 
-    def assign_functions_when_no_function_assigned(self, state_key: str,dk_functions:list,percentage:int=5):
+    def assign_functions_when_no_function_assigned_rl(self, state_key: str, dk_functions:list, percentage:int=5):
         print_function_assignmnets(self.assignment_times)
 
         ftn_seq = get_ftn_seq_from_key_1(state_key)
@@ -368,19 +354,21 @@ class FunctionAssignment():
                 to_be_considered_functions.append(ftn)
 
 
-        targets=[ftn for ftn,_ in dk_functions]
-        from_conditions = [ftn for ftn in self.all_functions if
-                           ftn not in ['decimals()', 'symbol()', 'owner()',
-                                       'name()', 'version()']]
-        functions_1 = self.select_functions_randomly_1(from_conditions,
-                                                       percentage)
-        functions_1+=targets
-        functions_1=list(set(functions_1))
+
+        if percentage>2:
+            from_functions = [ftn for ftn in self.all_functions if
+                               ftn not in fdg.global_config.IGNORE_FUNC]
+            functions_1 = self.select_functions_randomly_1(from_functions,percentage)
+            functions_1 += to_be_considered_functions
+            functions_1 = list(set(functions_1))
+        else:
+            functions_1=to_be_considered_functions
+
 
         # dk_func = [ftn for ftn, _ in dk_functions]
         left_target = [ftn for ftn in
                        self.targets_with_no_seq
-                       if ftn in to_be_considered_functions]
+                       if ftn not in to_be_considered_functions]
 
         functions_1 = list(set(functions_1 + left_target))
 

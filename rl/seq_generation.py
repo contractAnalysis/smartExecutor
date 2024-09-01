@@ -1,3 +1,5 @@
+import time
+
 from flask import Flask, request, jsonify
 import rl
 from rl.config import model_path
@@ -5,6 +7,9 @@ from rl.config import model_path
 from rl.generation.gen_utils import get_env, get_top_k_sequences, \
     retrieve_model, refine_sequences
 from rl.generation.prediction import my_model_prediction
+
+
+
 
 
 
@@ -17,7 +22,7 @@ class SeqGeneration:
         return [[func.split(".")[-1] if "." in func else func for func in seq] for seq in temp_sequences]
 
     def generate_simple(self, data):
-
+        seconds_start = time.time()
         solidity_name=data['solidity_name']
         contract_name=data['contract_name']
 
@@ -72,7 +77,9 @@ class SeqGeneration:
 
         for k in results.keys():
             results[k]=refine_sequences(get_top_k_sequences(results[k],top_k=top_k), k)
-
+        seconds_end = time.time()
+        print(f'#@generation_time')
+        print(f'generation time(s):{seconds_end - seconds_start}')
         return results
 
 wrapper = SeqGeneration()

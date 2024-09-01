@@ -88,7 +88,7 @@ class RL_MLP_Policy(FunctionSearchStrategy):
             targets_with_seq=[ftn.split(f'.')[-1] if '.' in ftn else ftn for ftn in result.keys()]
             for target,_ in self.target_functions:
                 if target not in targets_with_seq:
-                    if target not in ['symbol()','name()','decimals()']:
+                    if target not in fdg.global_config.IGNORE_FUNC:
                         self.target_functions_no_seq.append(target)
         else:
             print("Error:", "no sequences are generated")
@@ -147,38 +147,55 @@ class RL_MLP_Policy(FunctionSearchStrategy):
                 state_key = self.pickup_a_state(
                     targets)  # order the states in self.queue and pick up the one has the highest weight
 
+                func_seq=get_ftn_seq_from_key_1(state_key)
 
+                # if rl.config.MIX in ['d']:
                 percent_of_functions=2
-                if rl.config.MIX in ['d']:
-                    if self.preprocess_timeout or fdg.global_config.preprocessing_exception:
-                        if self.preprocess_coverage < 50:
-                            percent_of_functions = 7
-                        elif self.preprocess_coverage < 80:
-                            percent_of_functions =5
-                        elif self.preprocess_coverage < 90:
-                            percent_of_functions =3
+                if self.preprocess_timeout or fdg.global_config.preprocessing_exception:
+                    if self.preprocess_coverage < 50:
+                        percent_of_functions = 7
+                    elif self.preprocess_coverage < 80:
+                        percent_of_functions =5
+                    elif self.preprocess_coverage < 90:
+                        percent_of_functions =3
                 # assign functions
                 assigned_functions = self.functionAssignment.assign_functions(
                     state_key, dk_functions, to_execute_children,
-                    not_to_execute,percentage=percent_of_functions)
+                    not_to_execute)
+
+                dk = [ftn for ftn, _ in dk_functions if ftn not in fdg.global_config.IGNORE_FUNC]
+                left_target = [ftn for ftn in self.target_functions_no_seq if
+                               ftn in dk]
+
+                random_functions = self.functionAssignment.select_functions_randomly_1(dk, percent_of_functions)
+
+                if rl.config.MIX in ['b']:
+                    assigned_functions = list(set(assigned_functions + left_target))
+                elif rl.config.MIX in ['c','d']:
+                    assigned_functions = list(set(assigned_functions + left_target + random_functions))
+
                 if len(assigned_functions)>0:
                     self.state_key_assigned_at_last = state_key
                     return {state_key: assigned_functions}, flag_can_be_deleted
                 else:
-                    percent_of_functions = 2
-                    if self.preprocess_timeout or fdg.global_config.preprocessing_exception:
-                        if self.preprocess_coverage < 50:
-                            percent_of_functions = 7
-                        elif self.preprocess_coverage < 80:
-                            percent_of_functions = 5
-                        elif self.preprocess_coverage < 90:
-                            percent_of_functions = 3
+                    if rl.config.MIX in ['a', 'b', 'c']:
+                        # when no functions are assigned
+                        if len(func_seq)==1:
+                            functions_1=self.functionAssignment.assign_functions_when_no_function_assigned_rl(state_key, dk_functions, percentage=percent_of_functions)
 
-                    functions_1=self.functionAssignment.assign_functions_when_no_function_assigned(state_key,dk_functions,percentage=percent_of_functions)
+                            if len(functions_1) > 0:
+                                self.state_key_assigned_at_last = state_key
+                                return {state_key: functions_1}, True
 
-                    if len(functions_1) > 0:
-                        self.state_key_assigned_at_last = state_key
-                        return {state_key: functions_1}, True
+                    elif rl.config.MIX in ['d']:
+                        functions_1 = self.functionAssignment.assign_functions_when_no_function_assigned_rl(
+                            state_key, dk_functions,
+                            percentage=percent_of_functions)
+                        if len(functions_1) > 0:
+                            self.state_key_assigned_at_last = state_key
+                            return {state_key: functions_1}, True
+
+
 
     def update_states(self, states_dict:dict)->list:
         """

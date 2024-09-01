@@ -129,3 +129,6 @@ time_temp=0
 
 global count
 count=0
+
+
+IGNORE_FUNC=['decimals()', 'symbol()', 'owner()','name()', 'version()']
