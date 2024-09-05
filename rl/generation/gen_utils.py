@@ -72,6 +72,21 @@ def get_top_k_sequences(sequences:list, top_k:int=2):
                 for key, _ in seq_counts[top_k:]:
                     if len(get_seq_from_key(key))==2:
                         return [get_seq_from_key(key) for key, _ in seq_counts[0:top_k-1]]+[get_seq_from_key(key)]
+            # check if [a,a] exits
+            special_seq=[]
+            for key,_ in seq_counts:
+                seq=get_seq_from_key(key)
+                if len(seq)==2:
+                    if len(list(set(seq)))==1:
+                        special_seq.append(seq)
+            if len(special_seq)>=top_k:
+                return special_seq[0:top_k]
+            else:
+                if len(special_seq)==1:
+                    return special_seq+[get_seq_from_key(key) for key, _ in seq_counts[0:top_k-1]]
+                else:
+                    return [get_seq_from_key(key) for key,_ in seq_counts[0:top_k]]
+
         return [get_seq_from_key(key) for key,_ in seq_counts[0:top_k]]
     else:
         return [get_seq_from_key(key) for key,_ in seq_counts]

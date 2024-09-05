@@ -42,7 +42,7 @@ rl_parameters={
         "ENV_NAME": "ContractEnv_55",
         "NUM_episode": 5,
         "model_folder": 'ContractEnv_55_model7_sGuard_16_1724508857',
-        "model_file_name_prefix": "255600000",
+        "model_file_name_prefix": "414180000",
         "flag_model": 7,
         "goal_indicator": 2,
         "flag_maskable": False,
