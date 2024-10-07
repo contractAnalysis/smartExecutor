@@ -80,22 +80,27 @@ def get_solc_json(file, solc_binary="solc", solc_settings_json=None):
         }
     )
 
-    input_json = json.dumps(
-        {
-            "language": "Solidity",
-            "sources": {file: {"urls": [file]}},
-            "settings": settings,
-        }
-    )
-    # file_content = read_a_file(file)
-    # file_content = remove_comments(file_content)
+    # by providing file, later, the source code extraction has issue. for example, "constant symbol = "HOT";...". the contract name is no where.
     # input_json = json.dumps(
     #     {
     #         "language": "Solidity",
-    #         "sources": {file: {"content": f"{file_content}"}},
+    #         "sources": {file: {"urls": [file]}},
     #         "settings": settings,
     #     }
     # )
+    # file_content=None
+
+
+    # providing file content directly, so that the source code collection can be more accurate
+    file_content = read_a_file(file)
+    file_content = remove_comments(file_content)
+    input_json = json.dumps(
+        {
+            "language": "Solidity",
+            "sources": {file: {"content": f"{file_content}"}},
+            "settings": settings,
+        }
+    )
 
 
 
@@ -124,7 +129,7 @@ def get_solc_json(file, solc_binary="solc", solc_settings_json=None):
             )
 
     # @wei get the source code related to the target contract
-    get_related_source_code(fdg.global_config.contract_name,file,result)
+    get_related_source_code(fdg.global_config.contract_name,file,result, file_content=file_content)
 
     return result
 

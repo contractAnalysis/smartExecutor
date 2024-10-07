@@ -1,4 +1,4 @@
-from copy import deepcopy
+from copy import deepcopy, copy
 
 import fdg
 import llm
@@ -79,15 +79,49 @@ class Gpt(FunctionSearchStrategy):
         self.functionAssignment=FunctionAssignment(self.all_functions,fwrg_manager)
         self.fwrg_manager=fwrg_manager
 
+        self.candidate_sequences={}
+
+        self.candidate_sequences_original = {}
+
     def add_sequence(self,sequence:list):
         if sequence not in self.all_sequences:
             self.all_sequences.append(sequence)
 
     def gen_sequences(self,feedback:dict={},msg_so_far:list=[],):
+        """
+            The iteration process to generate sequences.
+        """
         self.cur_iteration+=1
         if self.cur_iteration>SEQ_iteration:
             self.cur_sequences_dict={}
             return
+
+        # prepare for the candidate sequences for the left targets
+        if self.cur_iteration == 2:
+            # collect candidate sequences based on the graph
+            self.get_candidate_sequences()
+
+        # further remove paths from candidate sequences;
+        if self.cur_iteration >= 2 and self.cur_iteration <= SEQ_iteration:
+            self.prune_candidate_sequences()
+
+        # check if there are some targets that have only one candidate sequence so that LLM is not required to make selection
+        target_candidate_sequences_dict_for_prompt = {}
+        targets_with_1_candidate_sequence = {}
+        if self.cur_iteration > 1:
+            for target in self.cur_targets:
+                if target not in self.candidate_sequences.keys():
+                    target_candidate_sequences_dict_for_prompt[target]=[]
+                    continue
+                else:
+                    paths=self.candidate_sequences[target]
+                    if len(paths)==1:
+                        targets_with_1_candidate_sequence[target] = paths
+                    else:
+                        target_candidate_sequences_dict_for_prompt[target] =paths
+
+        targets_w1_candi_seq=list(targets_with_1_candidate_sequence.keys())
+
 
         # Define the JSON data to send in the POST request
         data = {"solidity_name": f"{self.solidity_name}",
@@ -98,15 +132,19 @@ class Gpt(FunctionSearchStrategy):
                 "feedback":feedback,
                 "msg_so_far":msg_so_far,
                 "gen_iteration":self.cur_iteration,
-                "not_included_sequences":self.all_sequences
+                "not_included_sequences":self.all_sequences,
+                "candidate_sequences":target_candidate_sequences_dict_for_prompt,
+                'targets_w1_candidate_sequence':targets_w1_candi_seq
                 }
+
         sequences,self.msg_so_far=collect_sequences(data,iteration=self.cur_iteration)
 
+        self.cur_sequences_dict = {}
+        # deal with the generated sequences
         for key,seq in sequences.items():
             if len(seq)==0:continue
             func_name=key.split(f'(')[0] if "(" in key else key
             seq_temp=[ftn.split(f'(')[0] if "(" in ftn else ftn for ftn in seq]
-
 
             # ------------------------
             # check the first function
@@ -155,10 +193,127 @@ class Gpt(FunctionSearchStrategy):
                 else:
                     self.cur_seq_status[
                         func_name] = f"the sequence {seq_temp} for {func_name} is already given before. Please give a different one for this target function."
-
-
+        # add sequences for targets with 1 candidate sequence (no need to query an LLM)
+        for key, paths in targets_with_1_candidate_sequence.items():
+            for path in paths:
+                if key not in self.all_sequences_dict.keys():
+                    self.all_sequences_dict[key] = [path]
+                    self.cur_sequences_dict[key] = path
+                    self.add_sequence(path)
+                else:
+                    if path not in self.all_sequences_dict[key]:
+                        self.all_sequences_dict[key].append(path)
+                        self.cur_sequences_dict[key] = path
+                        self.add_sequence(path)
         if self.cur_iteration>1:
             self.find_start_states() # find start states for the sequences
+
+    def get_candidate_sequences(self):
+        def find_all_paths(graph, start, target='d', max_length=4, path=None):
+            if path is None:
+                path = []
+
+            path.append(start)
+            if start == target and len(path) <= max_length:
+                return [path]
+
+            if start not in graph or len(path) > max_length:
+                return []
+
+            all_paths = []
+            if start in graph:
+                for neighbor in graph[start]:
+                    if neighbor not in path:  # Avoid cycles
+                        new_paths = find_all_paths(graph, neighbor, target,
+                                                   max_length,
+                                                   path[:])
+                        all_paths.extend(new_paths)
+            return all_paths
+
+        graph = {k.split(f'(')[0] if '(' in k else k: [
+            item.split(f'(')[0] if '(' in item else item for item in v] for k, v
+                 in self.fwrg_manager.updateFWRG.fwrg_targets_augmented.items()}
+
+        all_target_paths_dict = {}
+        for target in self.cur_targets:
+            target_paths = []
+            for start_node in self.start_functions:
+                paths = find_all_paths(graph, start_node, target=target)
+                for p in paths:
+                    if p not in target_paths and len(p)>1:
+                        target_paths.append(p)
+            all_target_paths_dict[target] = target_paths
+
+
+        self.candidate_sequences=all_target_paths_dict
+        self.candidate_sequences_original = copy(all_target_paths_dict)
+
+    def prune_candidate_sequences(self):
+        """
+        prune candidate sequences for current targets
+        """
+        def should_include(seq, seq_list):
+            def is_prefix(seq1, seq2):
+                # Check if seq1 is longer than seq2
+                if len(seq1) > len(seq2):
+                    return False
+
+                # Compare each element of seq1 with the corresponding element of seq2
+                for i in range(len(seq1)):
+                    if seq1[i] not in [seq2[i]]:
+                        return False
+                # If we've made it through the loop, seq1 is a prefix of seq2
+                return True
+
+            for path in seq_list:
+                if is_prefix(path, seq):
+                    return True
+            return False
+
+        def is_contained(seq,seq_list):
+            def is_equal(seq1, seq2):
+                if len(seq1) != len(seq2):
+                    return False
+
+                for i in range(len(seq1)):
+                    if seq1[i] not in [seq2[i]]:
+                        return False
+                return True
+
+            for path in seq_list:
+                if is_equal(seq, path):
+                    return True
+            return False
+
+
+        if self.cur_iteration==2:
+            all_cur_sequences=list( self.cur_sequences_dict.values())
+            for target in self.cur_targets:
+                refined_paths = []
+                if target not in self.candidate_sequences.keys(): continue
+                candi_seq=self.candidate_sequences[target]
+                for seq in candi_seq:
+                    # remove the sequences that are executed
+                    if is_contained(seq, all_cur_sequences):
+                        continue
+                    # keep the sequences that contains the prefix in the sequences executed successfully
+                    if should_include(seq, [path[0:2] for path in self.cur_actual_executed_seq if len(path)>=2]):
+                        refined_paths.append(seq)
+                self.candidate_sequences[target]=refined_paths
+        elif self.cur_iteration>2:
+            all_cur_sequences = list(self.cur_sequences_dict.values())
+            for target in self.cur_targets:
+                refined_paths = []
+                if target not in self.candidate_sequences.keys(): continue
+                candi_seq = self.candidate_sequences[target]
+                for seq in candi_seq:
+                    # remove the sequences that are executed
+                    if is_contained(seq, all_cur_sequences):
+                        continue
+                    refined_paths.append(seq)
+                self.candidate_sequences[target] = refined_paths
+
+
 
 
 
@@ -285,13 +440,16 @@ class Gpt(FunctionSearchStrategy):
                 left_target_cov={ftn.split(f'(')[0] if '(' in ftn else ftn:cov for ftn,cov in dk_functions}
                 left_target_cov={ftn:value for ftn,value in left_target_cov.items() if ftn not in ['symbol','name','version','owner'] }
 
+
                 self.get_feedback(left_target_cov)
 
-                self.cur_sequences_dict = {}
+
+
                 self.gen_sequences(feedback=self.cur_seq_status,msg_so_far=self.msg_so_far)
 
                 self.cur_seq_status = {}
                 self.cur_actual_executed_seq = []
+
                 if self.cur_iteration>llm.llm_config.SEQ_iteration:
                     return {},None
                 else:

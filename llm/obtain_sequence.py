@@ -20,13 +20,15 @@ else:
 
 
 
-def message_preparation(state:str, contract_name:str, contract_code:str, start_functions:list, target_functions:list, msg_history:list=[], feedback:dict={},iteration:int=1,not_included_sequences:list=[]):
+def message_preparation(state:str, contract_name:str, contract_code:str, start_functions:list, target_functions:list, msg_history:list=[], feedback:dict={},iteration:int=1,not_included_sequences:list=[],candidate_sequences:dict={}):
     # prepare prompt data
     if not llm.llm_config.FLAG_single_prompt:
         if iteration==1:
             seq_prompt= load_specific_prompt_data(prompt_path,"seq_prompts", 'get_sequence')
         elif iteration>1:
-            seq_prompt = load_specific_prompt_data(prompt_path, "seq_prompts", 'get_sequence_1')
+            # seq_prompt = load_specific_prompt_data(prompt_path, "seq_prompts", 'get_sequence_1')
+            seq_prompt = load_specific_prompt_data(prompt_path, "seq_prompts",
+                                                   'get_sequence_with_candidate_sequences')
     else:
         seq_prompt = load_specific_prompt_data(prompt_path, "seq_prompts",'get_sequence_single')
 
@@ -49,14 +51,22 @@ def message_preparation(state:str, contract_name:str, contract_code:str, start_f
         elif item == 'target_functions':
             value = present_list_as_str(target_functions)
         elif item=='feedback':
-            value=f'Feedback:{present_for_dict(feedback)}'
+            value=f'{present_for_dict(feedback)}'
         elif item=="seq_length":
             value=fdg.global_config.seq_len_limit
         elif item=='not_included_sequences':
             value="" if len(not_included_sequences)==0 else f'Please avoid the sequences listed here as they are considered: {present_list_as_str(not_included_sequences)}'
+        elif item=='iteration':
+            value=iteration
+        elif item=='targets_for_seq_selection':
+            value=present_list_as_str(list(candidate_sequences.keys()))
+        elif item=='candidate_sequences':
+            value=present_for_dict(candidate_sequences)
         else:
             print(f'{item} is not provided. ')
         all_data_items_values[item]=value
+
+
 
     cur_msg=[]
     # include the past messages
@@ -129,9 +139,11 @@ def collect_sequences(data:dict,iteration:int=1):
     feedback=data['feedback']
     gen_iteration=data['gen_iteration']
     not_included_sequences=data['not_included_sequences']
+    candidate_sequences=data['candidate_sequences']
+
 
     # prepare for message
-    msg=message_preparation('sequence',contract_name,contract_code,start_functions,target_functions,msg_history=msg_so_far,feedback=feedback,iteration=gen_iteration,not_included_sequences=not_included_sequences)
+    msg=message_preparation('sequence',contract_name,contract_code,start_functions,target_functions,msg_history=msg_so_far,feedback=feedback,iteration=gen_iteration,not_included_sequences=not_included_sequences,candidate_sequences=candidate_sequences)
 
     # save the results
     if llm.llm_config.FLAG_exp:
@@ -150,8 +162,8 @@ def collect_sequences(data:dict,iteration:int=1):
         saved_value={}
     else:
         key = f'{solidity_name}_{contract_name}_sequence_iter_{iteration}'
-        json_file_path = result_path + "seq_responses.json"
-        json_file_path_raw = result_path + "seq_raw_responses.json"
+        json_file_path = result_path + f'{solidity_name}_{contract_name}_seq_responses.json'
+        json_file_path_raw = result_path + f'{solidity_name}_{contract_name}_seq_raw_responses.json'
         if not os.path.exists(json_file_path):
             # Create the file
             with open(json_file_path, 'w') as file:
@@ -169,7 +181,8 @@ def collect_sequences(data:dict,iteration:int=1):
             response1 = gpt_request_chatComplection_new(GPT4_model, msg)
         else:
             response1 = claude_create(llm.llm_config.Claude_model, msg)
-        write_a_kv_pair_to_a_json_file(json_file_path_raw,key,response1)
+        raw_data=f'prompt:{msg}\nresponse:{response1}'
+        write_a_kv_pair_to_a_json_file(json_file_path_raw,key,raw_data)
         seq_results = get_json_data_from_response_in_dict(response1)
         if len(seq_results)==0:
             seq_results=extract_response_with_gpt(GPT4_model,response1)
@@ -185,7 +198,7 @@ def collect_sequences(data:dict,iteration:int=1):
     # for k,v in seq_results.items():
     #     color_print('Blue', f'{k}:')
     #     color_print('Gray', f'\t{v}')
-    # only keep the sequences returned instead of all the sequences.
+    # # only keep the sequences returned instead of all the sequences.
     # msg.append(
     #     {"role": "assistant",
     #      "content": f'The sequences generated at iteration {iteration}:\n{seq_results}'})

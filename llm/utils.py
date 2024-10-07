@@ -10,8 +10,8 @@ def read_a_file(file_path):
     return open(file_path, 'r', encoding="utf-8").read()
 
 def remove_comments(input_str):
-    # Remove single-line comments (// ...)
-    input_str = re.sub(r'\/\/.*', '', input_str)
+    # # Remove single-line comments (// ...)
+    # input_str = re.sub(r'\/\/.*', '', input_str)
 
     # Remove multi-line comments (/* ... */)
     input_str = re.sub(r'\/\*.*?\*\/', '', input_str, flags=re.DOTALL)
@@ -31,7 +31,7 @@ def remove_import_statements(file_content:str)->str:
     return cleaned_code
 
 
-def get_related_source_code(contract_name:str, solidity_file:str, solc_result):
+def get_related_source_code(contract_name:str, solidity_file:str, solc_result,file_content:str=""):
     """
 
     """
@@ -44,25 +44,36 @@ def get_related_source_code(contract_name:str, solidity_file:str, solc_result):
                 ast = solc_result['sources'][solidity_file]['legacyAST']
             else:
                 return
+            pragma_id=0
+            pragma_src=""
             if len(ast) > 0:
                 contract_srcmap = {}
                 target_linearized_base_contracts = []
                 contract_id_to_name = {}
                 for node in ast['nodes']:
-                    if 'name' not in node.keys(): continue
+                    if 'name' not in node.keys():
+                        if node['nodeType'] in ['PragmaDirective']:
+                            pragma_id=node['id']
+                            pragma_src = node['src']
+                        continue
                     contract_id_to_name[node['id']] = node["name"]
                     contract_srcmap[node["name"]] = node['src']
                     if node["name"] in [contract_name]:
                         target_linearized_base_contracts = node[
                             "linearizedBaseContracts"]
 
-                related_code = ""
-                file_content = read_a_file(solidity_file)
+                if file_content is None:
+                    file_content = read_a_file(solidity_file)
+                pragma_src = pragma_src.split(f':')
+                src_map = [int(e) for e in pragma_src[0:2]]
+                related_code =f'{file_content[src_map[0]:src_map[0] + src_map[1]]}\n'
                 for id in target_linearized_base_contracts:
                     src_map = contract_srcmap[contract_id_to_name[id]].split(f':')
                     src_map = [int(e) for e in src_map[0:2]]
                     related_code += f'{file_content[src_map[0]:src_map[0] + src_map[1]]}\n'
-                llm.llm_config.contract_code= remove_comments(related_code)
+
+                # llm.llm_config.contract_code= remove_comments(related_code)
+                llm.llm_config.contract_code = related_code
 
 def load_specific_prompt_data(prompt_path:str,prompt_file_name:str,prompt_key:str)->dict:
     path=prompt_path+"{}.json".format(prompt_file_name)
