@@ -26,8 +26,10 @@ def message_preparation(state:str, contract_name:str, contract_code:str, start_f
         if iteration==1:
             seq_prompt= load_specific_prompt_data(prompt_path,"seq_prompts", 'get_sequence')
         elif iteration>1:
-            # seq_prompt = load_specific_prompt_data(prompt_path, "seq_prompts", 'get_sequence_1')
-            seq_prompt = load_specific_prompt_data(prompt_path, "seq_prompts",
+            if llm.llm_config.LLM_Mode in ['gen']:
+                seq_prompt = load_specific_prompt_data(prompt_path, "seq_prompts", 'get_sequence_gen')
+            else:
+                seq_prompt = load_specific_prompt_data(prompt_path, "seq_prompts",
                                                    'get_sequence_with_candidate_sequences')
     else:
         seq_prompt = load_specific_prompt_data(prompt_path, "seq_prompts",'get_sequence_single')
@@ -53,7 +55,7 @@ def message_preparation(state:str, contract_name:str, contract_code:str, start_f
         elif item=='feedback':
             value=f'{present_for_dict(feedback)}'
         elif item=="seq_length":
-            value=fdg.global_config.seq_len_limit
+            value=fdg.global_config.seq_len_limit-1
         elif item=='not_included_sequences':
             value="" if len(not_included_sequences)==0 else f'Please avoid the sequences listed here as they are considered: {present_list_as_str(not_included_sequences)}'
         elif item=='iteration':
@@ -62,6 +64,8 @@ def message_preparation(state:str, contract_name:str, contract_code:str, start_f
             value=present_list_as_str(list(candidate_sequences.keys()))
         elif item=='candidate_sequences':
             value=present_for_dict(candidate_sequences)
+        elif item=="previous_iteration":
+            value=iteration-1
         else:
             print(f'{item} is not provided. ')
         all_data_items_values[item]=value
@@ -181,8 +185,15 @@ def collect_sequences(data:dict,iteration:int=1):
             response1 = gpt_request_chatComplection_new(GPT4_model, msg)
         else:
             response1 = claude_create(llm.llm_config.Claude_model, msg)
-        raw_data=f'prompt:{msg}\nresponse:{response1}'
-        write_a_kv_pair_to_a_json_file(json_file_path_raw,key,raw_data)
+
+
+        if len(msg)==2:
+            write_a_kv_pair_to_a_json_file(json_file_path_raw, f'{key}_system',msg[0])
+        write_a_kv_pair_to_a_json_file(json_file_path_raw, f'{key}_prompt',msg[-1])
+
+        response1_={"role": "assistant","content": f'{response1}'}
+        write_a_kv_pair_to_a_json_file(json_file_path_raw,f'{key}_response',response1_)
+
         seq_results = get_json_data_from_response_in_dict(response1)
         if len(seq_results)==0:
             seq_results=extract_response_with_gpt(GPT4_model,response1)
@@ -191,13 +202,13 @@ def collect_sequences(data:dict,iteration:int=1):
         write_a_kv_pair_to_a_json_file(json_file_path, key, seq_results)
     else:
         seq_results=saved_value
-        response1=get_a_kv_pair_from_a_json(json_file_path_raw,key)
+        response1=get_a_kv_pair_from_a_json(json_file_path_raw,f'{key}_response')
 
-    # color_print('Red', f'\n\n===={solidity_name}===={contract_name}===={iteration}=====')
-    #
-    # for k,v in seq_results.items():
-    #     color_print('Blue', f'{k}:')
-    #     color_print('Gray', f'\t{v}')
+    color_print('Red', f'\n\n===={solidity_name}===={contract_name}===={iteration}=====')
+
+    for k,v in seq_results.items():
+        color_print('Blue', f'{k}:')
+        color_print('Gray', f'\t{v}')
     # # only keep the sequences returned instead of all the sequences.
     # msg.append(
     #     {"role": "assistant",

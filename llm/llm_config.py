@@ -15,8 +15,11 @@ contract_code=""
 # ChatGPT_model="gpt-4-1106-preview"
 GPT4_model= "gpt-4o-2024-05-13"
 sleep_time=0
+LLM_Mode='gen'
 
-SEQ_iteration=5
+SEQ_4_Consideration=5
+
+SEQ_iteration=3
 
 FLAG_single_prompt=False
 Flag_gpt=True

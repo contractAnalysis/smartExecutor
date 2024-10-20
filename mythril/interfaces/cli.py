@@ -17,6 +17,7 @@ import traceback
 from ast import literal_eval
 
 import fdg.global_config
+import llm.llm_config
 import mythril.support.signatures as sigs
 from argparse import ArgumentParser, Namespace, RawTextHelpFormatter
 from mythril.concolic import concolic_execution
@@ -534,6 +535,19 @@ def add_fwrg_analysis_args(options):
         help="use guided exploration",
     )
 
+    options.add_argument(
+        "--llm_model",
+        default="gpt-4o-2024-05-13",
+        type=str,
+        help="specify the version of GPT",
+    )
+
+    options.add_argument(
+        "--llm_mode",
+        default="gen",
+        type=str,
+        help="specify the style of using an LLM",
+    )
 
 def parse_list_of_lists(value):
     try:
@@ -559,6 +573,8 @@ def add_fwrg_arguments(args: Namespace):
     fdg.global_config.execution_times_limit = args.execution_times_limit
     fdg.global_config.seq_len_limit=args.seq_len_limit
     fdg.global_config.function_search_strategy=args.function_search_strategy
+    llm.llm_config.LLM_Mode=args.llm_mode
+    llm.llm_config.GPT4_model=args.llm_model
     if args.no_guidance:
         fdg.global_config.flag_fwrg=False
     else:

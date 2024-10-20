@@ -1,11 +1,11 @@
 {
   "get_sequence_single":{
     "system": {
-      "content": "You are a Solidity smart contract expert understanding Solidity language. You can identify the conditions that need to be satisfied to cover functions and then know how to make the conditions satisfied by identifying function sequences, the execution of which can result in the conditions satisfied.",
+      "content": "You are a Solidity smart contract expert understanding Solidity language. You can identify the conditions that need to be satisfied to cover functions and then know how to make the conditions satisfied by identifying function sequences, the execution of which can result in the conditions satisfied. You can reason based on the values of state variables that are either initialized or assigned in constructor function. If a state variable has no value, then use the default value 0 instead.",
       "data": []
   },
     "user": {
-      "content": "Here is the contract code related to the contract ##contract_name##: ##contract_code##\nThe start functions are ##start_functions##.\nThe target functions are ##target_functions##.\nFor each target function, please find one function name sequence with the length less than ##seq_length## based on contract ##contract_name##. The function sequence must start with a start function and end with this target function such that the execution of this function sequence can have this target function covered. ##not_included_sequences##. Please return the sequences in json format: {\"target function\":function sequence,...}.",
+      "content": "Here is the contract code related to the contract ##contract_name##: ##contract_code##\nThe start functions are ##start_functions##.\nThe target functions are ##target_functions##.\nFor each target function, please find one function call sequence with the length falling in [2, ##seq_length##] based on contract ##contract_name## such that the execution of this function sequence can have this target function covered. The function sequence must start with one of the start functions and end with this target function. ##not_included_sequences##. Please return the sequences in json format: {\"target function\":function sequence,...}.",
       "data": [
          "contract_name",
          "contract_code",
@@ -16,13 +16,14 @@
       ]
    }
   },
+
   "get_sequence":{
     "system": {
-      "content": "You are a Solidity smart contract expert understanding Solidity language. You can identify the conditions that need to be satisfied to cover functions and then know how to make the conditions satisfied by identifying function sequences, the execution of which can result in the conditions satisfied.",
+      "content": "You are a Solidity smart contract expert understanding Solidity language. You can identify the conditions that need to be satisfied to cover functions and then know how to make the conditions satisfied by identifying function sequences, the execution of which can result in the conditions satisfied. You can reason based on the values of state variables that are either initialized or assigned in constructor function. If a state variable has no value, then use the default value 0 instead.",
       "data": []
   },
     "user": {
-      "content": "Iteration ##iteration##. Here is the contract code related to the contract ##contract_name##: ##contract_code##\nThe start functions are ##start_functions##.\nThe target functions are ##target_functions##.\nFor each target function, please find a function name sequence with the length falling in [2, ##seq_length##] based on contract ##contract_name##. The function sequence must start with a start function and end with this target function such that the execution of this function sequence can have this target function covered. Please return the sequences in json format: {\"target function\":function sequence,...}.",
+      "content": "Iteration ##iteration##. Here is the contract code related to the contract ##contract_name##: ##contract_code##\nThe start functions are ##start_functions##.\nThe target functions are ##target_functions##.\nFor each target function, please find a function call sequence with the length falling in [2, ##seq_length##] based on contract ##contract_name## such that the execution of this function sequence can have this target function covered. The function sequence must start with a start function and end with this target function. Please return the sequences in json format: {\"target function\":function sequence,...}. Please also provide explanation after the json content.",
       "data": [
          "contract_name",
          "contract_code",
@@ -33,9 +34,10 @@
       ]
    }
   },
-  "get_sequence_1":{
+
+  "get_sequence_gen":{
     "user": {
-      "content": "The target functions are updated to ##target_functions## after executing the previous provided sequences. The feedback about the sequences generated for some target functions are here: ##feedback##.\n Only for each of the updated target functions, please re-find a function name sequence with the length less than ##seq_length## with the awareness of the feedback. The function sequence must be different from the sequences generated for this target in previous iterations as the previous sequences have validated not helpful or sufficient to cover the target. The function sequence must start with a start function and end with this target as mentioned before. If there is no such a sequence, just use \"[]\" instead.  Please return the sequences in json format: {\"target function\":function sequence,...}.",
+      "content": "The target functions are updated to ##target_functions## after executing the previous provided sequences. The feedback about the sequences generated for some target functions are here: ##feedback##.\n Only for each of the updated target functions, please re-find a function call sequence with the length no more than ##seq_length## with the awareness of the feedback. The function sequence must be different from the sequences generated for this target in previous iterations as the previous sequences have validated not helpful or sufficient to cover the target. The function sequence must start with a start function and end with this target as mentioned before. If there is no such a sequence, just use \"[]\" instead.  Please return the sequences in json format: {\"target function\":function sequence,...}.",
       "data": [
          "target_functions",
          "feedback",
@@ -43,18 +45,21 @@
       ]
    }
   },
+
   "get_sequence_with_candidate_sequences":{
     "user": {
-      "content": "Iteration ##iteration##. After examining and executing the generated function name sequences in Iteration ##iteration##-1. The feedback about the sequences for some target functions are here: ##feedback##.\n For each of the target functions in ##targets_for_seq_selection##, please select the best sequence from for a list of sequences of this target function given in ##candidate_sequences##. If no candidate sequences are given, then you should find the best sequence (which has the length falling in [2, ##seq_length##], starts with a start function, and ends with this target function) that you have not given for this particular target function in the previous iteration(s). If there is no such a sequence, just use \"[]\" instead.  Please return the sequences in json format: {\"target function\":function sequence,...}.",
+      "content": "Iteration ##iteration##. After examining and executing the generated function call sequences in Iteration ##previous_iteration##. The feedback about the sequences for some target functions are here: ##feedback##.\n For each of the target function(s): ##targets_for_seq_selection##, please select the best sequence from a list of sequences for this target function given in { ##candidate_sequences##}. Please keep in mind that you can have a sequence not in the given sequences. If no candidate sequences are given, then you should generate with your own knowledge the sequence (which has the length falling in [2, ##seq_length##], starts with one of the start functions, and ends with this target function). The sequence should not be the same as the previous one(s) you generate for this particular target function. If you can not find a sequence, just use \"[]\" instead.  Please return the sequences in json format: {\"target function\":function sequence,...}. Please also provide explanation after the json content.",
       "data": [
          "targets_for_seq_selection",
          "feedback",
          "seq_length",
         "candidate_sequences",
-        "iteration"
+        "iteration",
+        "previous_iteration"
       ]
    }
   },
+
   "extract_correct_response": {
     "system": {
       "content": "You are good at understanding analysis results. Please find the correct response from a response with explanation details.",

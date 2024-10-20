@@ -120,8 +120,15 @@ class Gpt(FunctionSearchStrategy):
                     else:
                         target_candidate_sequences_dict_for_prompt[target] =paths
 
-        targets_w1_candi_seq=list(targets_with_1_candidate_sequence.keys())
 
+        # filter to have at least 5 paths for selection
+        for key, paths in target_candidate_sequences_dict_for_prompt.items():
+            if len(paths)>llm.llm_config.SEQ_4_Consideration:
+                selected_indices=random_select_from_list(list(range(len(paths))),llm.llm_config.SEQ_4_Consideration)
+                target_candidate_sequences_dict_for_prompt[key]=[path for idx, path in enumerate(paths) if idx in selected_indices]
+
+        # check if there are some targets that have only one candidate sequence so that LLM is not required to make selection
+        targets_w1_candi_seq = list(targets_with_1_candidate_sequence.keys())
 
         # Define the JSON data to send in the POST request
         data = {"solidity_name": f"{self.solidity_name}",
@@ -399,7 +406,7 @@ class Gpt(FunctionSearchStrategy):
                     if idx <len(gen_seq):
                         if idx==0:idx=1 # never stops at depth 1
                         self.cur_seq_status[
-                            target] = f"{gen_seq} is invalid. The execution stops at funciton {gen_seq[idx]}."
+                            target] = f"{gen_seq} is invalid. The execution stops at function {gen_seq[idx]}."
 
     def assign_states(self, dk_functions: list = None, states_dict: dict = {}, iteration:int=0) -> list:
         """
