@@ -1,6 +1,8 @@
 
 # support FDG-guided execution and sequence execution
-from fdg.control.llm import Gpt
+import os
+
+from fdg.control.llm import LLM
 from fdg.control.mine import Mine
 from fdg.preprocessing.address_collection import collect_addresses_in_constructor
 
@@ -64,7 +66,7 @@ class FDG_pruner(LaserPlugin):
         elif fdg.global_config.function_search_strategy=='seq':
             self.search_stragety=Seq()
         elif fdg.global_config.function_search_strategy=='gpt':
-            self.search_stragety=Gpt()
+            self.search_stragety=LLM()
         else:
             self.search_stragety = BFS()
 
@@ -105,7 +107,7 @@ class FDG_pruner(LaserPlugin):
             """
             self._iteration_ += 1
             fdg.global_config.tx_len=1
-            log.info(f'\n===================================')
+            log.info(f'\n==================================={os.path.basename(__file__)}')
             log.info(f'start_iteration: self._iteration_={self._iteration_}')
 
             if self._iteration_==1:

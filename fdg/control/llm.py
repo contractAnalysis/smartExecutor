@@ -1,3 +1,4 @@
+import os.path
 from copy import deepcopy, copy
 
 import fdg
@@ -16,13 +17,13 @@ from fdg.utils import get_ftn_seq_from_key_1, get_key_1_prefix, \
     random_select_from_list
 from llm.llm_config import SEQ_iteration
 from llm.obtain_sequence import collect_sequences
-from llm.utils import present_list_as_str
+from llm.utils import present_list_as_str, color_print
 from mythril.laser.plugin.plugins.dependency_pruner import \
     get_writes_annotation_from_ws
 
 
 
-class Gpt(FunctionSearchStrategy):
+class LLM(FunctionSearchStrategy):
     def __init__(self):
         self.preprocess_timeout=False
         self.preprocess_coverage=0
@@ -50,7 +51,7 @@ class Gpt(FunctionSearchStrategy):
 
 
         self.msg_so_far=[]
-
+        self.candidate_sequences={}
         self.state_key_assigned_at_last=""
         self.flag_one_start_function=False
         super().__init__('gpt')
@@ -80,7 +81,6 @@ class Gpt(FunctionSearchStrategy):
         self.fwrg_manager=fwrg_manager
 
         self.candidate_sequences={}
-
         self.candidate_sequences_original = {}
 
     def add_sequence(self,sequence:list):
@@ -104,6 +104,13 @@ class Gpt(FunctionSearchStrategy):
         # further remove paths from candidate sequences;
         if self.cur_iteration >= 2 and self.cur_iteration <= SEQ_iteration:
             self.prune_candidate_sequences()
+
+        # print the received graph built from data dependency
+        color_print('Red', f'\n\n==== candidate sequences after pruning ===== {self.cur_iteration} ===={os.path.basename(__file__)}')
+        for k, v in self.candidate_sequences.items():
+            color_print('Blue',f'"{k}":')
+            for p in v:
+                color_print('Gray', f'{p}')
 
         # check if there are some targets that have only one candidate sequence so that LLM is not required to make selection
         target_candidate_sequences_dict_for_prompt = {}
@@ -129,6 +136,10 @@ class Gpt(FunctionSearchStrategy):
 
         # check if there are some targets that have only one candidate sequence so that LLM is not required to make selection
         targets_w1_candi_seq = list(targets_with_1_candidate_sequence.keys())
+
+        color_print('Red',f'\n\n==== all sequences considered ====')
+        for path in self.all_sequences:
+            color_print('Blue', f'{path}')
 
         # Define the JSON data to send in the POST request
         data = {"solidity_name": f"{self.solidity_name}",
@@ -212,6 +223,7 @@ class Gpt(FunctionSearchStrategy):
                         self.all_sequences_dict[key].append(path)
                         self.cur_sequences_dict[key] = path
                         self.add_sequence(path)
+
         if self.cur_iteration>1:
             self.find_start_states() # find start states for the sequences
 
@@ -241,6 +253,14 @@ class Gpt(FunctionSearchStrategy):
             item.split(f'(')[0] if '(' in item else item for item in v] for k, v
                  in self.fwrg_manager.updateFWRG.fwrg_targets_augmented.items()}
 
+        # print the received graph built from data dependency
+        color_print('Red', f'\n\n====graph===={os.path.basename(__file__)}')
+        for k, v in graph.items():
+            color_print('Blue', f'"{k}":{v}')
+
+        color_print('Red', f'start functions: {self.start_functions}===={os.path.basename(__file__)}')
+        color_print('Red',
+                    f'cur target functions: {self.cur_targets}===={os.path.basename(__file__)}')
         all_target_paths_dict = {}
         for target in self.cur_targets:
             target_paths = []
@@ -251,6 +271,12 @@ class Gpt(FunctionSearchStrategy):
                         target_paths.append(p)
             all_target_paths_dict[target] = target_paths
 
+        # print the paths grouped by targets
+        color_print('Red', f'\n\n==== paths grouped by targets===={os.path.basename(__file__)}')
+        for tar, paths in all_target_paths_dict.items():
+            color_print('Blue', f'"{tar}":')
+            for pa in paths:
+                color_print('Gray', f'{pa},')
 
         self.candidate_sequences=all_target_paths_dict
         self.candidate_sequences_original = copy(all_target_paths_dict)
@@ -270,10 +296,12 @@ class Gpt(FunctionSearchStrategy):
                     if seq1[i] not in [seq2[i]]:
                         return False
                 # If we've made it through the loop, seq1 is a prefix of seq2
+                color_print('Blue', f'{seq} should be included')
                 return True
 
             for path in seq_list:
                 if is_prefix(path, seq):
+                    color_print('Blue', f'{seq} should be included')
                     return True
             return False
 
@@ -292,30 +320,62 @@ class Gpt(FunctionSearchStrategy):
                     return True
             return False
 
+        color_print('Red',
+                    f'\n==== all current sequences ==== {self.cur_iteration} ===={os.path.basename(__file__)}')
+        for k,v in self.cur_sequences_dict.items():
+            color_print('Blue', f'{k}:{v}')
+
+        all_cur_sequences = list(self.cur_sequences_dict.values())
+
+
+
+        color_print('Red',
+                    f'\n==== all currently executed sequences ==== {self.cur_iteration} ===={os.path.basename(__file__)}')
+        for pa in self.cur_actual_executed_seq:
+            color_print('Blue', f'{pa}')
+
 
         if self.cur_iteration==2:
-            all_cur_sequences=list( self.cur_sequences_dict.values())
+
             for target in self.cur_targets:
                 refined_paths = []
+
                 if target not in self.candidate_sequences.keys(): continue
                 candi_seq=self.candidate_sequences[target]
+                color_print('Red', f'\n==== candidate sequences for {target}===={os.path.basename(__file__)}')
+                for pa in candi_seq:
+                    color_print('Blue', f'{pa}')
+
+
                 for seq in candi_seq:
                     # remove the sequences that are executed
                     if is_contained(seq, all_cur_sequences):
+                        color_print('Blue',
+                                    f'{seq} is contained in current sequences and thus should be removed')
                         continue
                     # keep the sequences that contains the prefix in the sequences executed successfully
                     if should_include(seq, [path[0:2] for path in self.cur_actual_executed_seq if len(path)>=2]):
                         refined_paths.append(seq)
+
                 self.candidate_sequences[target]=refined_paths
+
         elif self.cur_iteration>2:
-            all_cur_sequences = list(self.cur_sequences_dict.values())
+
             for target in self.cur_targets:
                 refined_paths = []
                 if target not in self.candidate_sequences.keys(): continue
                 candi_seq = self.candidate_sequences[target]
+                color_print('Red',
+                            f'\n==== candidate sequences for {target}===={os.path.basename(__file__)}')
+                for pa in candi_seq:
+                    color_print('Blue', f'{pa}')
+
+
                 for seq in candi_seq:
                     # remove the sequences that are executed
                     if is_contained(seq, all_cur_sequences):
+                        color_print('Blue',
+                                    f'{seq} is contained in current sequences and thus should be removed')
                         continue
                     refined_paths.append(seq)
                 self.candidate_sequences[target] = refined_paths
@@ -343,12 +403,16 @@ class Gpt(FunctionSearchStrategy):
                     if max_prefix_len==0:
                         max_prefix_len=len(ftn_seq_temp)
                         if key not in self.queue:
+                            color_print('Red',
+                                        f'\n get the key {key} for sequence {seq}')
                             self.queue.append(key)
                         continue
                     else:
                         if max_prefix_len>0:
                             if key not in self.queue:
                                 if len(ftn_seq_temp)==max_prefix_len:
+                                    color_print('Red',
+                                                f'\n get the key {key} for sequence {seq}')
                                     self.queue.append(key)
 
     def identify_functions(self,state_key:str):
@@ -373,6 +437,11 @@ class Gpt(FunctionSearchStrategy):
         return list(set(functions))
 
     def get_feedback(self,left_targets_and_coverage:dict):
+        color_print('Red', f'cur_targets:{self.cur_targets}')
+        color_print('Red', f'self,left_targets_and_coverage:')
+        for k,v in left_targets_and_coverage.items():
+            color_print("Blue", f'{k}:{v}')
+
         def be_a_prefix_1(seq1:list,seq2:list):
             if len(seq1)>len(seq2):return False
             for i,e1 in enumerate(seq1):
@@ -382,24 +451,27 @@ class Gpt(FunctionSearchStrategy):
         for target in self.cur_targets:
             if target in self.cur_sequences_dict.keys():
                 gen_seq=self.cur_sequences_dict[target]
-                flag_status=False
+                flag_valid=False
                 # has a valid sequence but low code coverage
                 for actual_seq in self.cur_actual_executed_seq:
                     if be_a_prefix_1(gen_seq, actual_seq):
+                        flag_valid = True
                         if target in left_targets_and_coverage.keys():
-                            self.cur_seq_status[target]=f"has the code coverage {left_targets_and_coverage[target]}, another different sequence is required."
-                            flag_status=True
-                            break
+                            self.cur_seq_status[
+                                target] = f"{gen_seq} is a valid sequence, but function {target} has the low code coverage {left_targets_and_coverage[target]} and thus another different sequence is required."
+                        else:
+                            self.cur_seq_status[
+                                target] = f"{gen_seq} is a valid sequence."
+                        break
 
                 # does not have a valid sequence
-                if not flag_status:
-                    # identify the functions that the execution fails
+                if not flag_valid:
+                    # identify the function, at which the execution fails
                     actual_seq=[seq for seq in self.cur_actual_executed_seq if len(seq)>0]
                     for idx,func in enumerate(gen_seq):
                         if func in [seq[idx] for seq in actual_seq ]:
-                            # next step
+                            # remove unmatched sequences and continue
                             actual_seq=[seq for seq in actual_seq if seq[idx] in [func] and idx+1<len(seq)]
-                            continue
                         else:
                             break
 
@@ -441,8 +513,6 @@ class Gpt(FunctionSearchStrategy):
         # assign a state and the functions to be executed on it
         while True:
             if len(self.queue) == 0:
-                self.cur_targets = [ftn.split(f'(')[0] if '(' in ftn else ftn for ftn,_ in dk_functions]
-                self.cur_targets=[ftn for ftn in  self.cur_targets if ftn not in ['symbol','name','version','owner']]
 
                 left_target_cov={ftn.split(f'(')[0] if '(' in ftn else ftn:cov for ftn,cov in dk_functions}
                 left_target_cov={ftn:value for ftn,value in left_target_cov.items() if ftn not in ['symbol','name','version','owner'] }
@@ -450,7 +520,17 @@ class Gpt(FunctionSearchStrategy):
 
                 self.get_feedback(left_target_cov)
 
+                self.cur_targets = [ftn.split(f'(')[0] if '(' in ftn else ftn
+                                    for ftn, _ in dk_functions]
+                self.cur_targets = [ftn for ftn in self.cur_targets if
+                                    ftn not in ['symbol', 'name', 'version',
+                                                'owner']]
 
+                color_print('Red',
+                            f'\n==== feedback ==== {self.cur_iteration} ===={os.path.basename(__file__)}')
+                for target, status in self.cur_seq_status.items():
+                    color_print('Blue', f'{target}')
+                    color_print('Gray', f'{status}')
 
                 self.gen_sequences(feedback=self.cur_seq_status,msg_so_far=self.msg_so_far)
 

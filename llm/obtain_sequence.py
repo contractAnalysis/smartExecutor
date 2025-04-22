@@ -204,7 +204,7 @@ def collect_sequences(data:dict,iteration:int=1):
         seq_results=saved_value
         response1=get_a_kv_pair_from_a_json(json_file_path_raw,f'{key}_response')
 
-    color_print('Red', f'\n\n===={solidity_name}===={contract_name}===={iteration}=====')
+    color_print('Red', f'\n\n===={solidity_name}===={contract_name}===={iteration}===={os.path.basename(__file__)}')
 
     for k,v in seq_results.items():
         color_print('Blue', f'{k}:')
