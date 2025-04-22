@@ -3,9 +3,13 @@ import logging
 import re
 import json
 import operator
-from eth_abi import decode_abi
+try:
+    from eth_abi import decode
+except ImportError:
+    from eth_abi import decode_abi as decode
+
 from jinja2 import PackageLoader, Environment
-from typing import Dict, List, Any, Optional
+from typing import Any, Dict, Iterable, List, Optional
 import hashlib
 
 from mythril.laser.execution_info import ExecutionInfo
@@ -230,11 +234,26 @@ class Issue:
         if len(data) % 64 > 0:
             data += "0" * (64 - len(data) % 64)
         try:
-            decoded_output = decode_abi(type_info, bytes.fromhex(data))
+            # decoded_output = decode_abi(type_info, bytes.fromhex(data))
+            decoded_output = decode(type_info, bytes.fromhex(data))
+            decoded_output = tuple(
+                convert_bytes(item) if isinstance(item, (bytes, Iterable)) else item
+                for item in decoded_output
+            )
             return decoded_output
         except Exception as e:
             return None
-
+def convert_bytes(item):
+    """
+    Converts bytes to a serializable format. Handles nested iterables.
+    """
+    if isinstance(item, bytes):
+        return item.hex()
+    elif isinstance(item, Iterable) and not isinstance(item, (str, bytes)):
+        # Recursively apply convert_bytes to each item in the iterable
+        return type(item)(convert_bytes(subitem) for subitem in item)
+    else:
+        return item
 
 class Report:
     """A report containing the content of multiple issues."""
