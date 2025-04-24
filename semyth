@@ -4,6 +4,8 @@
    https://github.com/contractAnalysis/smartExecutor
    """
 from sys import exit
+
+import llm.llm_config
 import mythril.interfaces.cli
 import time
 
@@ -15,4 +17,11 @@ if __name__ == "__main__":
     seconds_end = time.time()
     print(f'#@time')
     print(f'time used(s):{seconds_end-seconds_start}')
+
+    # compute the time used by LLMs
+    print(f'#@llm related statistics')
+    print(f'LLM model:{llm.llm_config.LLM_model}')
+    print(f'time used(s) by LLM:{sum(llm.llm_config.time_records)}')
+    print(f'input token counts:{llm.llm_config.input_tokens}')
+    print(f'output token counts:{llm.llm_config.output_tokens}')
 

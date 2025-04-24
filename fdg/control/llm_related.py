@@ -1,32 +1,10 @@
-import os.path
-from copy import copy
+import os
 
-import llm
+import fdg.global_config
+import llm.llm_config
+from llm.llm_config import NUM_max_candidate_sequences
 from llm.utils import color_print
-from tests.llm.test_data_HoloToken import graph, \
-    current_sequences_in_interations
 
-"""
-test:
-    candidate sequence generation
-    feedback collection
-    candidate sequence pruning
-
-for easy testing, I just copy the major functions here and slightly modify(no logic changing) so that they can be executed independently
-
-functions related to candidate sequences generation and refining
-    get_candidate_sequences() # called once in llm.py     
-    prune_candidate_sequences() # called iteratively in llm.py    
-    find_start_states()
-    get_feedback()
-
-"""
-
-SEQ_4_Consideration=5
-
-SEQ_iteration=3
-NUM_max_candidate_sequences=15
-NUM_min_candidate_sequences=5
 
 def is_prefix(seq1, seq2):
     # Check if seq1 is longer than seq2
@@ -40,8 +18,81 @@ def is_prefix(seq1, seq2):
     # If we've made it through the loop, seq1 is a prefix of seq2
     return True
 
+def get_feedback(cur_targets, cur_sequences_to_be_exe_dict, cur_actual_executed_seq, left_targets_and_coverage:dict, other_cur_feedback:dict={}):
+    """
+        feedback: valid sequence, or invalid (pointing the position the execution stop)
+        via: comparing with the sequences before and after sequence execution.
+        other_cur_feedback: feedback for some invalid sequences without execution to validate (e.g., the first function is not a start function).
+
+        only provide feedback for targets that more sequences are required.
+    """
+    color_print('Red', f'=============================')
+    color_print('Red', f'target(s):{ cur_targets}')
+    color_print('Red', f'target: code coverage:')
+    for k, v in left_targets_and_coverage.items():
+        color_print("Gray", f'\t{k}:{v}')
+
+
+
+    def be_a_prefix_1(seq1:list,seq2:list):
+        if len(seq1)>len(seq2):return False
+        for i,e1 in enumerate(seq1):
+            if e1 not in [seq2[i]]:
+                return False
+        return True
+
+    cur_seq_status={}
+    for target in cur_targets:
+        if target not in cur_sequences_to_be_exe_dict.keys():
+            if target in other_cur_feedback.keys():
+                cur_seq_status[target]=other_cur_feedback[target]
+            else:
+                # the status is unknown
+                if not llm.llm_config.FLAG_exp:
+                    color_print("Red",f'{target}:No sequence is found. (from file {os.path.basename(__file__)})')
+                cur_seq_status[target] = f'No sequence is found.'
+        else:
+            #
+            gen_seq=cur_sequences_to_be_exe_dict[target]
+            flag_valid=False
+            # has a valid sequence but low code coverage
+            for actual_seq in cur_actual_executed_seq:
+                if be_a_prefix_1(gen_seq, actual_seq):
+                    flag_valid = True
+                    if target in left_targets_and_coverage.keys():
+                        cur_seq_status[target]=f"{gen_seq} is a valid sequence, but function {target} has the code coverage {left_targets_and_coverage[target]} below the threshold {fdg.global_config.function_coverage_threshold} and thus another different sequence is required."
+                    else:
+                        cur_seq_status[
+                            target] = f"{gen_seq} is a valid sequence. The coverage of {target} reaches a threshold. "
+                    break
+
+            # does not have a valid sequence
+            if not flag_valid:
+                # identify the function, at which the execution fails
+                actual_seq=[seq for seq in cur_actual_executed_seq if len(seq)>0]
+                for idx,func in enumerate(gen_seq):
+                    if func in [seq[idx] for seq in actual_seq ]:
+                        # remove unmatched sequences and continue
+                        actual_seq=[seq for seq in actual_seq if seq[idx] in [func] and idx+1<len(seq)]
+                    else:
+                        break
+
+                if idx <len(gen_seq):
+                    if idx==0:idx=1 # never stops at depth 1
+                    cur_seq_status[
+                        target] = f"{gen_seq} is invalid. The execution stops at function {gen_seq[idx]}."
+
+
+    color_print('Red',
+    f'\n==== feedback on targets ======={os.path.basename(__file__)}')
+    for target, status in cur_seq_status.items():
+        color_print('Blue', f'{target}')
+        color_print('Gray', f'{status}')
+    return cur_seq_status
+
 
 def get_candidate_sequences(graph, start_functions, cur_targets):
+
     def find_all_paths(graph, start, target='d', max_length=4, path=None):
         if path is None:
             path = []
@@ -88,6 +139,7 @@ def get_candidate_sequences(graph, start_functions, cur_targets):
             color_print('Gray', f'{pa},')
 
     return all_target_paths_dict
+
 
 
 def find_invalid_sequences(sequences_bf_exe, sequences_af_exe) -> list:
@@ -217,129 +269,5 @@ def prune_candidate_sequences(cur_iteration, cur_targets,
                     f'\n{len(refined_paths)}/{len(candi_seq)} are kept ({len(refined_paths) / len(candi_seq)})')
 
     return pruned_candi_sequences
-
-
-def get_feedback(cur_targets, cur_sequences_to_be_exe_dict, cur_actual_executed_seq, left_targets_and_coverage:dict, other_cur_feedback:dict={}):
-    """
-        feedback: valid sequence, or invalid (pointing the position the execution stop)
-        via: comparing with the sequences before and after sequence execution.
-        other_cur_feedback: feedback for some invalid sequences without execution to validate (e.g., the first function is not a start function).
-
-        only provide feedback for targets that more sequences are required.
-    """
-    color_print('Red', f'cur_targets:{ cur_targets}')
-    color_print('Red', f'self,left_targets_and_coverage:')
-    for k, v in left_targets_and_coverage.items():
-        color_print("Blue", f'{k}:{v}')
-
-    def be_a_prefix_1(seq1:list,seq2:list):
-        if len(seq1)>len(seq2):return False
-        for i,e1 in enumerate(seq1):
-            if e1 not in [seq2[i]]:
-                return False
-        return True
-
-    cur_seq_status={}
-    for target in cur_targets:
-        if target not in cur_sequences_to_be_exe_dict.keys():
-            if target in other_cur_feedback.keys():
-                cur_seq_status[target]=other_cur_feedback[target]
-            else:
-                # the status is unknown
-                if not llm.llm_config.FLAG_exp:
-                    print(f'No feedback is found for target {target} in file {os.path.basename(__file__)}')
-        else:
-            #
-            gen_seq=cur_sequences_to_be_exe_dict[target]
-            flag_valid=False
-            # has a valid sequence but low code coverage
-            for actual_seq in cur_actual_executed_seq:
-                if be_a_prefix_1(gen_seq, actual_seq):
-                    flag_valid = True
-                    if target in left_targets_and_coverage.keys():
-                        cur_seq_status[target]=f"{gen_seq} is a valid sequence, but function {target} has the low code coverage {left_targets_and_coverage[target]} and thus another different sequence is required."
-                    else:
-                        cur_seq_status[
-                            target] = f"{gen_seq} is a valid sequence. The coverage of {target} reaches a threshold. "
-                    break
-
-            # does not have a valid sequence
-            if not flag_valid:
-                # identify the function, at which the execution fails
-                actual_seq=[seq for seq in cur_actual_executed_seq if len(seq)>0]
-                for idx,func in enumerate(gen_seq):
-                    if func in [seq[idx] for seq in actual_seq ]:
-                        # remove unmatched sequences and continue
-                        actual_seq=[seq for seq in actual_seq if seq[idx] in [func] and idx+1<len(seq)]
-                    else:
-                        break
-
-                if idx <len(gen_seq):
-                    if idx==0:idx=1 # never stops at depth 1
-                    cur_seq_status[
-                        target] = f"{gen_seq} is invalid. The execution stops at function {gen_seq[idx]}."
-
-
-    color_print('Red',
-    f'\n==== feedback on targets ======={os.path.basename(__file__)}')
-    for target, status in cur_seq_status.items():
-        color_print('Blue', f'{target}')
-        color_print('Gray', f'{status}')
-    return cur_seq_status
-
-
-if __name__ == "__main__":
-
-    start_functions = ['transferOwnership', 'setMinter', 'decreaseApproval',
-                       'increaseApproval', 'setDestroyer']
-
-    # ========= iteration 1 ========================
-    cur_iteration = 1
-    cur_targets = ['transferFrom', 'mint', 'burn', 'transfer', 'approve',
-    'finishMinting', 'decreaseApproval']
-    left_targets_and_coverage = {
-    'transfer': 32.68608414239482,
-    'burn': 51.072961373390555
-    }
-
-    # test feedback collection
-    feedback = get_feedback(
-        cur_targets,
-        current_sequences_in_interations[f'all_iteration_{cur_iteration}'],
-    current_sequences_in_interations[f'exe_iteration_{cur_iteration}'],
-    left_targets_and_coverage
-    )
-
-    color_print('Red',
-    f'\n==== feedback ==== {cur_iteration} ===={os.path.basename(__file__)}')
-    for target, status in feedback.items():
-        color_print('Blue', f'{target}')
-        color_print('Gray', f'{status}')
-
-
-
-    #========= iteration 2 ========================
-    cur_iteration=2
-    cur_targets=['transfer', 'burn']
-
-    candidate_sequences=get_candidate_sequences(graph,start_functions,cur_targets)
-
-    prune_candi_sequences=prune_candidate_sequences(cur_iteration,cur_targets,
-                              current_sequences_in_interations[f'all_iteration_{cur_iteration-1}'],current_sequences_in_interations[f'all_iteration_{cur_iteration-1}'],
-                              current_sequences_in_interations[f'exe_iteration_{cur_iteration-1}'],
-                              candidate_sequences,
-
-                              )
-
-    # print the received graph built from data dependency
-    color_print('Red',
-                f'\n\n==== candidate sequences after pruning ===== {cur_iteration} ===={os.path.basename(__file__)}')
-    for k, v in prune_candi_sequences.items():
-        color_print('Blue', f'"{k}":')
-        for p in v:
-            color_print('Gray', f'{p}')
-
-    for i in range(3,1,-1):
-        print(f'{i}')
 
 

@@ -13,16 +13,31 @@ contract_code=""
 
 # ChatGPT_model="gpt-3.5-turbo-0301"  # the response format is more flexible
 # ChatGPT_model="gpt-4-1106-preview"
-GPT4_model= "gpt-4o-2024-05-13"
-sleep_time=0
-LLM_Mode='gen'
+LLM_model= "gpt"
 
-SEQ_4_Consideration=5
+gpt_model= "gpt-4o-2024-05-13"
+deepseek_model="deepseek-ai/DeepSeek-R1-Distill-Llama-70B-free"
+llama_model="meta-llama/Llama-3.3-70B-Instruct-Turbo-Free"
+starcoder_model=""
+
+temperature=0
+
+
+
+sleep_time=0
+LLM_Mode='gen'  #gen, gen_sel, xxx
 
 SEQ_iteration=3
 
+SEQ_4_Consideration=5
+NUM_max_candidate_sequences=15
+NUM_min_candidate_sequences=5 #same as SEQ_4_Consideration
+
+
 FLAG_single_prompt=False
 Flag_gpt=True
+FLAG_conversation=False
+
 
 Claude_model="claude-3-5-sonnet-20240620"
 Claude_model="claude-3-opus-20240229"
@@ -38,3 +53,7 @@ color_prefix={
 "White": "\033[37m",
 "Gray": "\033[0m",
 }
+
+time_records=[]
+input_tokens=[]
+output_tokens=[]

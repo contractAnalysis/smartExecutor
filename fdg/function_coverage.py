@@ -83,7 +83,7 @@ class FunctionCoverage():
             if coverage==0:
                 print(f'{ftn_name}:{coverage} is not considered')
                 continue
-            if coverage<fdg.global_config.function_coverage_threshold:
+            if round(coverage)<fdg.global_config.function_coverage_threshold:
                 deep_ftn_coverage.append((ftn_name,coverage))
 
         self.deep_functions=deep_ftn_coverage

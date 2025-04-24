@@ -25,7 +25,7 @@ random_baseline=0
 
 # indicate the code coverage that a function should reach
 global function_coverage_threshold
-function_coverage_threshold=98
+function_coverage_threshold=97.5 # i.e., 98
 
 
 # set the timeout for the preprocessing

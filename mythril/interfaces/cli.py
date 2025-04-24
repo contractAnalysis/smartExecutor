@@ -470,9 +470,8 @@ def add_fwrg_analysis_args(options):
     options.add_argument(
         "-fss",
         "--function-search-strategy",
-        choices=["dfs", "bfs", "mine", 'seq','gpt'],
-        default="gpt",
-
+        choices=["dfs", "bfs", "mine", 'seq','llm'],
+        default="llm",
         help="Function data flow graph search strategy",
     )
 
@@ -549,6 +548,23 @@ def add_fwrg_analysis_args(options):
         help="specify the style of using an LLM",
     )
 
+    options.add_argument(
+
+        "--conversation",
+        default=True,
+        action="store_false",
+        help="indicate whether keep the conversation",
+    )
+
+    options.add_argument(
+
+        "--temperature",
+        default=0,
+        type=float,
+        help="specify the temperature for LLM models",
+    )
+
+
 def parse_list_of_lists(value):
     try:
         # Parse the string representation of the list of lists into an actual list of lists
@@ -574,7 +590,9 @@ def add_fwrg_arguments(args: Namespace):
     fdg.global_config.seq_len_limit=args.seq_len_limit
     fdg.global_config.function_search_strategy=args.function_search_strategy
     llm.llm_config.LLM_Mode=args.llm_mode
-    llm.llm_config.GPT4_model=args.llm_model
+    llm.llm_config.LLM_model=args.llm_model
+    llm.llm_config.FLAG_conversation=args.conversation
+    llm.llm_config.temperature=args.temperature
     if args.no_guidance:
         fdg.global_config.flag_fwrg=False
     else:

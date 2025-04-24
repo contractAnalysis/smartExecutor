@@ -1,0 +1,82 @@
+{
+  "get_sequence":{
+    "system": {
+      "content": "You are a Solidity smart contract expert understanding Solidity language. You can identify the conditions that need to be satisfied to cover functions and then know how to make the conditions satisfied by identifying function sequences, the execution of which can result in the conditions satisfied. You can reason based on the values of state variables that are either initialized or assigned in constructor function. If a state variable has no value, then use the default value 0 instead.",
+      "data": []
+  },
+
+
+    "user": {
+      "content": "Iteration ##iteration##. On contract ##contract_name# with the Solidity code: ##contract_code##\nFor each target function in ##target_functions##, please generate a function sequence, the execution of which can have this target function executed. The length of this function sequence must be fall in [2, ##seq_length##] and the first function in the sequence must be from the start function(s): ##start_functions##, and the last function must be this target itself. If there is no such a sequence, just use [] instead. Please note that a sequence of type [A,A] is acceptable. Please return the sequences in json format: {\"target function\":function sequence,...}. Please also provide explanation after the json content.",
+      "data": [
+         "contract_name",
+         "contract_code",
+         "start_functions",
+         "target_functions",
+        "seq_length",
+        "iteration"
+      ]
+   }
+  },
+
+   "get_sequence_gen":{
+    "user": {
+      "content": "Iteration ##iteration##. After symbolically executing the sequence(s) generated in Iteration ##one_iteration_before##:\n The target function(s):##target_functions##.\nValid sequences(s): ##valid_sequences##\nFeedback: ##feedback##\nBeing aware of the valid sequence(s) and feedback, for each target function in ##target_functions##, please re-generate a function sequence, the execution of which can have this target function executed. The length of this function sequence must be fall in [2, ##seq_length##] and the first function in the sequence must be from the start function(s): ##start_functions##, and the last function must be this target itself. If there is no such a sequence, just use [] instead. Please note that a sequence of type [A,A] is acceptable. Please return the sequences in json format: {\"target function\":function sequence,...}. Please also provide explanation after the json content.",
+      "data": [
+         "iteration",
+        "one_iteration_before",
+         "target_functions",
+        "valid_sequences",
+         "feedback",
+         "seq_length",
+        "start_functions"
+      ]
+   }
+  },
+
+
+
+  "get_sequence_gen_sel_tradition":{
+    "user": {
+      "content": "Iteration ##iteration##. After symbolically executing the sequence(s) generated in Iteration ##one_iteration_before##:\n The target function(s):##target_functions##.\nValid sequences(s): ##valid_sequences##\nFeedback: ##feedback##\nBeing aware of the valid sequence(s) and feedback, for each target function in ##target_functions##, please re-generate a function sequence by selecting one from the candidate sequences of this target in ##candidate_sequences##. If no candidate sequence is found, then you should generate with your best effort a sequence (which has the length falling in [2, ##seq_length##], starts with a start function, and ends with this target). Please note that a sequence of type [A,A] is acceptable and keep in mind that the sequence should be different from any sequences you generated previously. If you can not generate a sequence, just use [] instead. Please return the sequences in json format: {\"target function\":function sequence,...}. Please also provide explanation after the json content.",
+      "data": [
+         "iteration",
+        "one_iteration_before",
+         "target_functions",
+        "valid_sequences",
+         "feedback",
+        "candidate_sequences",
+        "seq_length"
+      ]
+   }
+  },
+
+ "get_sequence_gen_sel_llm":{
+    "user": {
+      "content": "Iteration ##iteration##. After symbolically executing the sequence(s) generated in Iteration ##one_iteration_before##:\n The target function(s):##target_functions##.\nValid sequences(s): ##valid_sequences##\nFeedback: ##feedback##\nBeing aware of the valid sequence(s) and feedback, for each target function in ##target_functions##, please re-generate a function sequence by selecting one from the candidate sequences of this target in ##candidate_sequences##. You can also re-generate a function sequence that is not from the candidate sequences if you identify a better one. If no candidate sequence is found, then you should generate with your best effort a sequence (which has the length falling in [2, ##seq_length##], starts with a start function, and ends with this target). Please note that a sequence of type [A,A] is acceptable and keep in mind that the sequence should be different from any sequences you generated previously. If you can not generate a sequence, just use [] instead. Please return the sequences in json format: {\"target function\":function sequence,...}. Please also provide explanation after the json content.",
+      "data": [
+         "iteration",
+        "one_iteration_before",
+         "target_functions",
+        "valid_sequences",
+         "feedback",
+        "candidate_sequences",
+        "seq_length"
+      ]
+   }
+  },
+
+
+  "extract_correct_response": {
+    "system": {
+      "content": "You are good at understanding analysis results. Please find the correct response from a response with explanation details.",
+      "data": []
+    },
+    "user":{
+      "content": "Here is the response either with explanation or description (not in Json format):##given_response##. Could you please only extract the correct response in the Json format for easy data collection? Thank you!",
+      "data": ["given_response"]
+    }
+  }
+
+}
+

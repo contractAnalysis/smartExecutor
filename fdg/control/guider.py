@@ -29,11 +29,11 @@ class Guider():
         fwrg_manager=FWRG_manager(start_functions, depth_k_functions, preprocess)
         if self.ftn_search_strategy.name in ['seq']:
             self.ftn_search_strategy.initialize(fwrg_manager.acyclicPaths.main_paths_sf, fwrg_manager.updateFWRG.main_paths_df, fwrg_manager)
-        elif self.ftn_search_strategy.name in ['mine','bfs','dfs','gpt']:
+        elif self.ftn_search_strategy.name in ['mine','bfs','dfs','llm']:
             flag_one_start_function=True if len(start_functions)==1 else False  #to-do: how to update flag_one_state_dpeht1
             if preprocess.coverage is None:
                 preprocess.coverage=0
-            if self.ftn_search_strategy.name in ['gpt']:
+            if self.ftn_search_strategy.name in ['llm']:
                 self.ftn_search_strategy.initialize(flag_one_start_function,preprocess.timeout,preprocess.coverage,preprocess.write_read_info.all_functions,fwrg_manager,start_functions=start_functions,target_functions=[ftn for ftn,_ in depth_k_functions])
             else:
                 self.ftn_search_strategy.initialize(flag_one_start_function,
@@ -133,7 +133,7 @@ class Guider():
                 self.termination=True
 
             # get the states for the state keys in data states_functions returned from assign_states
-            if self.ftn_search_strategy.name in ['dfs','mine','bfs','gpt']:
+            if self.ftn_search_strategy.name in ['dfs','mine','bfs','llm']:
                 organize_states_dict = {}
                 for key,function in states_functions.items():
                     if len(function)>0:
@@ -188,11 +188,11 @@ class Guider():
             if seq not in state_changing_seq:
                 state_changing_seq.append(seq)
                 if len(seq) > 1:
-                    if self.ftn_search_strategy.name in ['gpt']:
+                    if self.ftn_search_strategy.name in ['llm']:
                         ftn_seq_temp = [ftn.split(f'(')[0] if '(' in ftn else ftn
                                         for ftn in seq]
-                        if ftn_seq_temp not in self.ftn_search_strategy.cur_actual_executed_seq:
-                            self.ftn_search_strategy.cur_actual_executed_seq.append(ftn_seq_temp)
+                        # save valid sequences
+                        self.ftn_search_strategy.save_valid_sequences(ftn_seq_temp)
 
         print_list(state_changing_seq, f'current state changing sequence(s):')
 
@@ -221,7 +221,7 @@ class Guider():
 
     def save_genesis_states(self,states:list):
         self.genesis_states=deepcopy(states)
-        if self.ftn_search_strategy.name in ['mine','gpt']:
+        if self.ftn_search_strategy.name in ['mine','llm']:
             states_dict=self.organize_states(states)
             # if len(states_dict)>=2:
             #     print('Check when two or more genesis states are generated (guider.py)')

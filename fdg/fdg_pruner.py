@@ -65,7 +65,7 @@ class FDG_pruner(LaserPlugin):
             self.search_stragety=Mine()
         elif fdg.global_config.function_search_strategy=='seq':
             self.search_stragety=Seq()
-        elif fdg.global_config.function_search_strategy=='gpt':
+        elif fdg.global_config.function_search_strategy=='llm':
             self.search_stragety=LLM()
         else:
             self.search_stragety = BFS()
@@ -154,7 +154,7 @@ class FDG_pruner(LaserPlugin):
 
             else:
                 # ===========================================
-                if self.search_stragety.name in ['gpt']:
+                if self.search_stragety.name in ['llm']:
                     if self._iteration_ == 2:
                         # execute all possible functions to find start functions and target functions
                         pass
@@ -284,7 +284,7 @@ class FDG_pruner(LaserPlugin):
                     fdg.global_config.transaction_count = self._iteration_
                     return
             # ++++++++++++++++++++++++++++++++++++++++++++++++++
-            if self.search_stragety.name in ['gpt']:
+            if self.search_stragety.name in ['llm']:
                 if self._iteration_ == 2:
                     self.guider.end_iteration(laserEVM,
                                               self._iteration_)
