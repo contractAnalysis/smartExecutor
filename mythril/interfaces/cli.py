@@ -612,7 +612,7 @@ def add_fwrg_arguments(args: Namespace):
                     -1]
                 print(f'cli:fdg.global_config.contract_name:{fdg.global_config.contract_name}')
             else:
-                if fdg.global_config.function_search_strategy in ['gpt']:
+                if fdg.global_config.function_search_strategy in ['llm']:
                     # gpt is based on the source code
                     print( f'need to provide the solidity file and contract name')
                     exit

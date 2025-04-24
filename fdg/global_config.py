@@ -126,3 +126,7 @@ time_temp=0
 
 global count
 count=0
+
+
+solidity_name=""
+contract_name=""
