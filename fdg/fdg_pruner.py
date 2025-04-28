@@ -2,6 +2,7 @@
 # support FDG-guided execution and sequence execution
 import os
 
+import llm
 from fdg.control.llm import LLM
 from fdg.control.mine import Mine
 from fdg.preprocessing.address_collection import collect_addresses_in_constructor
@@ -12,7 +13,7 @@ from fdg.control.guider import Guider
 from fdg.function_coverage import FunctionCoverage
 
 from fdg.preprocessing.preprocess import Preprocessing
-
+from llm.utils import color_print
 
 from mythril.laser.ethereum.state.world_state import WorldState
 from mythril.laser.ethereum.svm import LaserEVM
@@ -92,6 +93,15 @@ class FDG_pruner(LaserPlugin):
 
         @symbolic_vm.laser_hook("stop_sym_exec")
         def stop_sym_exec_hook():
+            # compute the time used by LLMs
+            color_print("Red", f'#@llm related statistics')
+            color_print("Red", f'LLM model:{llm.llm_config.LLM_model}')
+            color_print("Red",
+                        f'time used(s) by LLM:{sum(llm.llm_config.time_records)}')
+            color_print("Red",
+                        f'input token counts:{llm.llm_config.input_tokens}')
+            color_print("Red",
+                        f'output token counts:{llm.llm_config.output_tokens}')
             if fdg.global_config.random_baseline>0:return
 
 

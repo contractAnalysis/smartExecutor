@@ -5,7 +5,7 @@
    """
 from sys import exit
 
-import llm.llm_config
+
 import mythril.interfaces.cli
 import time
 
@@ -20,10 +20,5 @@ if __name__ == "__main__":
     print(f'#@time')
     print(f'time used(s):{seconds_end-seconds_start}')
 
-    # compute the time used by LLMs
-    color_print("Red",f'#@llm related statistics')
-    color_print("Red",f'LLM model:{llm.llm_config.LLM_model}')
-    color_print("Red",f'time used(s) by LLM:{sum(llm.llm_config.time_records)}')
-    color_print("Red",f'input token counts:{llm.llm_config.input_tokens}')
-    color_print("Red",f'output token counts:{llm.llm_config.output_tokens}')
+
 
