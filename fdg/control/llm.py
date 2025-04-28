@@ -285,7 +285,8 @@ class LLM(FunctionSearchStrategy):
 
             for k,v in sequences_w1_status_dict.items():
                 if k not in sequences_to_consider.keys():
-                    sequences_to_consider[k]=v["sequence"]
+                    if v['consider']:
+                        sequences_to_consider[k]=v["sequence"]
 
 
             self.cur_sequences_to_be_exe_dict=sequences_to_consider

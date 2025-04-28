@@ -413,9 +413,9 @@ def initial_check_generated_sequences(sequences, start_functions,targets, all_fu
                                         }
 
             # manually add the target function to form a sequence of length 2.
-            seq_temp.append(targets)
+            seq_temp.append(target)
             status=f'{seq_temp} is a sequence of type [A,A] to fix the sequence of type [A], which is a bad sequence.'
-            sequences_of_length1={k: v for k, v in
+            sequences_of_length1[target]={k: v for k, v in
                                         zip(["consider", "status",
                                              "sequence"],
                                             [True,
