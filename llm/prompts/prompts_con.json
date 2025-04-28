@@ -1,13 +1,13 @@
 {
   "get_sequence":{
     "system": {
-      "content": "You are a Solidity smart contract expert understanding Solidity language. You can identify the conditions that need to be satisfied to cover functions and then know how to make the conditions satisfied by identifying function sequences, the execution of which can result in the conditions satisfied. You can reason based on the values of state variables that are either initialized or assigned in constructor function. If a state variable has no value, then use the default value 0 instead.",
+      "content": "You are a Solidity smart contract expert understanding Solidity language. You can identify the conditions that need to be satisfied to cover functions and then know how to make the conditions satisfied by identifying valid function sequences, the symbolic execution of which can result in the conditions satisfied. You can reason based on the values of state variables that are either initialized or assigned in constructor function. If a state variable has no value, then use the default value 0 instead.",
       "data": []
   },
 
 
     "user": {
-      "content": "Iteration ##iteration##. On contract ##contract_name# with the Solidity code: ##contract_code##\nFor each target function in ##target_functions##, please generate a function sequence, the execution of which can have this target function executed. The length of this function sequence must be fall in [2, ##seq_length##] and the first function in the sequence must be from the start function(s): ##start_functions##, and the last function must be this target itself. If there is no such a sequence, just use [] instead. Please note that a sequence of type [A,A] is acceptable. Please return the sequences in json format: {\"target function\":function sequence,...}. Please also provide explanation after the json content.",
+      "content": "Iteration ##iteration##. On contract ##contract_name## with the Solidity code given at the end, for each target function in ##target_functions##, please generate a valid function sequence, the execution of which can have this target function executed. The length of this sequence must be fall in [2, ##seq_length##] and the first function in the sequence must be from the start function(s): ##start_functions##, and the last function must be this target itself. If there is no such a sequence, just use [] instead. Please note that a sequence of type [A,A] is acceptable but you need to have a reason. Please return the sequences in json format: {\"target function\":function sequence,...}. Please also provide explanation after the json content. Solidity code:##contract_code##",
       "data": [
          "contract_name",
          "contract_code",
@@ -21,12 +21,13 @@
 
    "get_sequence_gen":{
     "user": {
-      "content": "Iteration ##iteration##. After symbolically executing the sequence(s) generated in Iteration ##one_iteration_before##:\n The target function(s):##target_functions##.\nValid sequences(s): ##valid_sequences##\nFeedback: ##feedback##\nBeing aware of the valid sequence(s) and feedback, for each target function in ##target_functions##, please re-generate a function sequence, the execution of which can have this target function executed. The length of this function sequence must be fall in [2, ##seq_length##] and the first function in the sequence must be from the start function(s): ##start_functions##, and the last function must be this target itself. If there is no such a sequence, just use [] instead. Please note that a sequence of type [A,A] is acceptable. Please return the sequences in json format: {\"target function\":function sequence,...}. Please also provide explanation after the json content.",
+      "content": "Iteration ##iteration##. After symbolically executing the sequence(s) generated in Iteration ##one_iteration_before##:\n The target function(s):##target_functions##.\nFeedback: ##feedback##. \nValid sequences(s): ##valid_sequences##. \n Bad sequence(s): ##bad_sequences##.\nBeing aware of the valid sequence(s) and feedback, for each target function in ##target_functions##, please re-generate a valid function sequence, the execution of which can have this target function executed. The length of this sequence must be fall in [2, ##seq_length##] and the first function in the sequence must be from the start function(s): ##start_functions##, and the last function must be this target itself. If there is no such a sequence, just use [] instead. Please note that a sequence of type [A,A] is acceptable. Please return the sequences in json format: {\"target function\":function sequence,...}. Please also provide explanation after the json content.",
       "data": [
          "iteration",
         "one_iteration_before",
          "target_functions",
         "valid_sequences",
+        "bad_sequences",
          "feedback",
          "seq_length",
         "start_functions"
@@ -36,9 +37,9 @@
 
 
 
-  "get_sequence_gen_sel_tradition":{
+  "get_sequence_gen_sel":{
     "user": {
-      "content": "Iteration ##iteration##. After symbolically executing the sequence(s) generated in Iteration ##one_iteration_before##:\n The target function(s):##target_functions##.\nValid sequences(s): ##valid_sequences##\nFeedback: ##feedback##\nBeing aware of the valid sequence(s) and feedback, for each target function in ##target_functions##, please re-generate a function sequence by selecting one from the candidate sequences of this target in ##candidate_sequences##. If no candidate sequence is found, then you should generate with your best effort a sequence (which has the length falling in [2, ##seq_length##], starts with a start function, and ends with this target). Please note that a sequence of type [A,A] is acceptable and keep in mind that the sequence should be different from any sequences you generated previously. If you can not generate a sequence, just use [] instead. Please return the sequences in json format: {\"target function\":function sequence,...}. Please also provide explanation after the json content.",
+      "content": "Iteration ##iteration##. After symbolically executing the sequence(s) generated in Iteration ##one_iteration_before##:\n The target function(s):##target_functions##.\nValid sequences(s): ##valid_sequences##\nFeedback: ##feedback##\nBeing aware of the valid sequence(s) and feedback, for each target function in ##target_functions##, please re-generate a function sequence by selecting one from the candidate sequences of this target in ##candidate_sequences##. If no candidate sequence is found, then you should generate with your best effort a sequence (which has the length falling in [2, ##seq_length##], starts with a start function, and ends with this target). Please note that a sequence of type [A,A] is acceptable but you should have a reason. In addition, please keep in mind that the sequence should be different from any sequences you generated previously. If you can not generate a sequence, just use [] instead. Please return the sequences in json format: {\"target function\":function sequence,...}. Please also provide explanation after the json content.",
       "data": [
          "iteration",
         "one_iteration_before",
@@ -51,16 +52,24 @@
    }
   },
 
- "get_sequence_gen_sel_llm":{
+ "get_candidate_sequences_llm":{
+   "system": {
+     "content": "You are a Solidity smart contract expert understanding Solidity language. You can identify the conditions that need to be satisfied to cover functions and then know how to make the conditions satisfied by identifying function sequences, the symbolic execution of which can result in the conditions satisfied. You can reason based on the values of state variables that are either initialized or assigned in constructor function. If a state variable has no value, then use the default value 0 instead.",
+     "data":[]
+   },
     "user": {
-      "content": "Iteration ##iteration##. After symbolically executing the sequence(s) generated in Iteration ##one_iteration_before##:\n The target function(s):##target_functions##.\nValid sequences(s): ##valid_sequences##\nFeedback: ##feedback##\nBeing aware of the valid sequence(s) and feedback, for each target function in ##target_functions##, please re-generate a function sequence by selecting one from the candidate sequences of this target in ##candidate_sequences##. You can also re-generate a function sequence that is not from the candidate sequences if you identify a better one. If no candidate sequence is found, then you should generate with your best effort a sequence (which has the length falling in [2, ##seq_length##], starts with a start function, and ends with this target). Please note that a sequence of type [A,A] is acceptable and keep in mind that the sequence should be different from any sequences you generated previously. If you can not generate a sequence, just use [] instead. Please return the sequences in json format: {\"target function\":function sequence,...}. Please also provide explanation after the json content.",
+      "content": "On contract ##contract_name## with the Solidity code given at the end, please generate valid function sequences for a set of target functions such that the symbolic execution of those function can have them covered. Here are the partial feedback I know so far about target functions, valid sequence(s) with a reason, and bad sequence(s).\nFeedback: ##feedback##.\n Valid sequence(s): ##valid_sequences##. Bad sequence(s): ##bad_sequences##\nFor each target function in ##target_functions##,  please generate ##num_sequences## different valid function sequences, the symbolic executions of which are more likely to have this target function executed. The length of these function sequences must be fall in [2, ##seq_length##] and the first function in the sequences must be from the start function(s): ##start_functions##, and the last function must be this target itself. If there are no such sequences, just use [] instead. Please note that a sequence of type [A,A] is acceptable but you should have a reason. Please always check and make sure the sequences are returned in json format: {\"target function name 1\":[sequence1,sequence2,...],\"target function name 2\":[sequence1,sequence2,...],...}. No extra words as it causes problem to extract json data. Solidity code:##contract_code##",
       "data": [
-         "iteration",
-        "one_iteration_before",
-         "target_functions",
+         "contract_name",
+        "contract_code",
+        "target_functions",
+        "feedback",
+        "valid_sequences",
+        "start_functions",
+        "num_sequences",
+        "bad_sequences",
         "valid_sequences",
          "feedback",
-        "candidate_sequences",
         "seq_length"
       ]
    }
@@ -69,11 +78,11 @@
 
   "extract_correct_response": {
     "system": {
-      "content": "You are good at understanding analysis results. Please find the correct response from a response with explanation details.",
+      "content": "You are good at understanding analysis results. Please find the Json response from a response. If the part of json format may not strictly follow the rules of Json, you should also fix it.",
       "data": []
     },
     "user":{
-      "content": "Here is the response either with explanation or description (not in Json format):##given_response##. Could you please only extract the correct response in the Json format for easy data collection? Thank you!",
+      "content": "Here is the response either with explanation or description (not in Json format):##given_response##. Could you please only extract the json response in the Json format for easy data extraction? No extra description words. If th json part is problematic, please fix it and return only the json part. Thank you!",
       "data": ["given_response"]
     }
   }

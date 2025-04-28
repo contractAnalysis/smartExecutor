@@ -6,7 +6,8 @@ import llm
 from fdg.control.ftn_search_strategy import FunctionSearchStrategy
 from fdg.control.function_assignment import FunctionAssignment
 from fdg.control.llm_related import get_feedback, get_candidate_sequences, \
-    prune_candidate_sequences
+    prune_candidate_sequences, initial_check_generated_sequences, \
+    check_generated_candidate_sequences
 from fdg.control.weight_computation import compute, \
     turn_write_features_to_a_value
 from fdg.expression_slot import is_slot_in_a_list, \
@@ -18,7 +19,7 @@ from fdg.output_data import print_data_for_mine_strategy_1, \
 from fdg.utils import get_ftn_seq_from_key_1, get_key_1_prefix, \
     random_select_from_list
 from llm.llm_config import SEQ_iteration
-from llm.obtain_sequence import collect_sequences
+from llm.obtain_sequence import collect_sequences, collect_candidate_sequences
 from llm.utils import present_list_as_str, color_print
 from mythril.laser.plugin.plugins.dependency_pruner import \
     get_writes_annotation_from_ws
@@ -56,7 +57,7 @@ class LLM(FunctionSearchStrategy):
 
         self.valid_sequences_dict = {}  # save all valid sequences as additional context
 
-        self.invalid_bad_sequences_w_reason=[] # save all invalid sequences as additional context
+        self.bad_sequences_w_reason=[] # save all invalid sequences as additional context
         self.all_sequences=[]
 
 
@@ -82,6 +83,7 @@ class LLM(FunctionSearchStrategy):
                             ftn not in ['symbol', 'name', 'version', 'owner']]
 
         self.all_functions=all_functions
+        self.all_functions_pure_name=[item.split(f'(')[0] if '(' in item else item for item in all_functions]
         self.cur_targets=self.target_functions
 
         self.gen_sequences()  # obtain sequences
@@ -92,6 +94,7 @@ class LLM(FunctionSearchStrategy):
 
         self.candidate_sequences={}
         self.candidate_sequences_original = {}
+        self.left_target_code_coverage={}
 
     def save_valid_sequences(self, valid_sequence):
         if self.cur_iteration not in self.valid_sequences_dict.keys():
@@ -115,55 +118,10 @@ class LLM(FunctionSearchStrategy):
 
         # prepare for data used to prompt construction
         data={}
-        if llm.llm_config.LLM_Mode not in ['gen']:
-            # prepare for the candidate sequences for the targets
-            if self.cur_iteration == 2:
-
-                # collect candidate sequences based on the graph
-                # get the graph
-                graph = {k.split(f'(')[0] if '(' in k else k: [
-                    item.split(f'(')[0] if '(' in item else item for item in v] for
-                    k, v
-                    in self.fwrg_manager.updateFWRG.fwrg_targets_augmented.items()}
-                # get the candidate sequences
-                self.candidate_sequences_original = get_candidate_sequences(graph,self.start_functions,self.cur_targets)
-                self.candidate_sequences = copy(self.candidate_sequences_original)
-
-            # prune candidate sequences
-            if self.cur_iteration >= 2:
-                self.candidate_sequences=prune_candidate_sequences(
-                    self.cur_iteration,
-                    self.cur_targets,
-                    self.cur_sequences_to_be_exe_dict,
-                    self.cur_all_sequences,
-                    self.cur_actual_executed_seq,
-                    self.candidate_sequences)
-
-
-            # check: when there is one candidate sequence for a target
-            target_candidate_sequences_dict_for_prompt = {}
-            targets_with_1_candidate_sequence = {}
-            if self.cur_iteration >=2:
-                for target in self.cur_targets:
-                    if target not in self.candidate_sequences.keys():
-                        target_candidate_sequences_dict_for_prompt[target]=[]
-                        continue
-                    else:
-                        paths=self.candidate_sequences[target]
-                        if len(paths)==1:
-                            targets_with_1_candidate_sequence[target] = paths
-                        else:
-                            target_candidate_sequences_dict_for_prompt[target] =paths
-
-            # filter to have SEQ_4_Consideration paths for selection
-            for key, paths in target_candidate_sequences_dict_for_prompt.items():
-                if len(paths)>llm.llm_config.SEQ_4_Consideration:
-                    selected_indices=random_select_from_list(list(range(len(paths))),llm.llm_config.SEQ_4_Consideration)
-                    target_candidate_sequences_dict_for_prompt[key]=[path for idx, path in enumerate(paths) if idx in selected_indices]
-
-            # check if there are some targets that have only one candidate sequence so that LLM is not required to make selection
-            targets_w1_candi_seq = list(targets_with_1_candidate_sequence.keys())
-
+        sequences={}
+        # ----------------------------
+        # data preparation for prompt construction
+        if self.cur_iteration==1 or llm.llm_config.LLM_Mode in ['gen']:
             # Define the JSON data to send in the POST request
             data = {"solidity_name": f"{self.solidity_name}",
                     "contract_name": f"{self.contract_name}",
@@ -174,120 +132,196 @@ class LLM(FunctionSearchStrategy):
                                  t in self.cur_targets},
 
                     "valid_sequences": self.valid_sequences_dict,
-                    "invalid_bad_sequences_w_reason": self.invalid_bad_sequences_w_reason,
-                    "iteration": self.cur_iteration,
-                    "candidate_sequences": target_candidate_sequences_dict_for_prompt,
-                    'targets_w1_candidate_sequence': targets_w1_candi_seq,
-                    "msg_so_far": msg_so_far
-                    }
-
-        if len(data)==0:
-            # Define the JSON data to send in the POST request
-            data = {"solidity_name": f"{self.solidity_name}",
-                    "contract_name": f"{self.contract_name}",
-                    "start_functions": self.start_functions,
-                    "target_functions": self.cur_targets,
-                    "contract_code": self.contract_code,
-                    "feedback": {t: v for t, v in feedback.items() if
-                                 t in self.cur_targets},
-
-                    "valid_sequences": self.valid_sequences_dict,
-                    "invalid_bad_sequences_w_reason": self.invalid_bad_sequences_w_reason,
+                    "bad_sequences_w_reason": self.bad_sequences_w_reason,
                     "iteration": self.cur_iteration,
                     "candidate_sequences": {},
                     'targets_w1_candidate_sequence': {},
                     "msg_so_far": msg_so_far
                     }
 
-        sequences,self.msg_so_far=collect_sequences(data,iteration=self.cur_iteration)
+        elif self.cur_iteration>=2 and llm.llm_config.LLM_Mode not in ['gen']:
+            if self.cur_iteration==2:
+                #---------------
+                # candidate sequence collection
+                if llm.llm_config.LLM_Mode in ['gen_sel']:
+                    # collect candidate sequences based on the graph
+                    # get the graph
+                    graph = {k.split(f'(')[0] if '(' in k else k: [
+                        item.split(f'(')[0] if '(' in item else item for item in v]
+                        for
+                        k, v
+                        in
+                        self.fwrg_manager.updateFWRG.fwrg_targets_augmented.items()}
+                    self.candidate_sequences_original = get_candidate_sequences(
+                        graph, self.start_functions, self.cur_targets)
+                    self.candidate_sequences = copy(
+                        self.candidate_sequences_original)
+                elif llm.llm_config.LLM_Mode in ['gen_sel_llm']:
+                    # get candidate sequences from an LLM model
+                    # make sure msg_so_far is an empty list
+                    data = {"solidity_name": f"{self.solidity_name}",
+                            "contract_name": f"{self.contract_name}",
+                            "start_functions": self.start_functions,
+                            "target_functions": self.cur_targets,
+                            "contract_code": self.contract_code,
+                            "feedback": {t: v for t, v in feedback.items() if
+                                         t in self.cur_targets},
+                            "num_sequences": llm.llm_config.NUM_max_candidate_sequences,
+                            "valid_sequences": self.valid_sequences_dict,
+                            "bad_sequences_w_reason": self.bad_sequences_w_reason,
+                            "iteration": self.cur_iteration,
+                            "msg_so_far": [],
+                            "candidate_sequences": {}
+                            }
+                    self.candidate_sequences_original = collect_candidate_sequences(
+                        data)
+                    self.candidate_sequences = copy(
+                        self.candidate_sequences_original)
+
+                    # initial check the candidate sequences
+                    # check_generated_candidate_sequences
+                    self.candidate_sequences= check_generated_candidate_sequences(
+                        sequences, self.start_functions, self.cur_targets,
+                        self.all_functions_pure_name)
 
 
-        # check the generated sequences
-        self.cur_sequences_to_be_exe_dict = {}
-        self.cur_all_sequences=[]
-        self.cur_seq_status={}
-        for key,seq in sequences.items():
-            if len(seq)==0:continue
-            func_name=key.split(f'(')[0] if "(" in key else key
-            seq_temp=[ftn.split(f'(')[0] if "(" in ftn else ftn for ftn in seq]
+            # ---------------
+            # candidate sequence pruning
+            valid_sequences = [[item] for item in
+                               self.start_functions]  # valid sequences of length 1
+            valid_others = [item for sublist in
+                            self.valid_sequences_dict.values() for item in
+                            sublist]
+            valid_sequences = valid_sequences + valid_others
+            if len(self.candidate_sequences.keys())>0:
+                self.candidate_sequences = prune_candidate_sequences(
+                    self.cur_iteration,
+                    self.cur_targets,
+                    self.cur_sequences_to_be_exe_dict,
+                    self.cur_all_sequences,
+                    self.cur_actual_executed_seq,
+                    valid_sequences,
+                    self.candidate_sequences)
 
-            # ------------------------
-            # check the first function
-            if seq_temp[0] not in self.start_functions:
-                self.cur_seq_status[func_name]=f"{seq} is invalid as the first function {seq_temp[0]} is not a start function."
-                self.cur_all_sequences.append(seq_temp)
-                if seq_temp not in self.all_sequences:
-                    self.invalid_bad_sequences_w_reason.append(
-                        f'{seq} is invalid as the first function {seq_temp[0]} is not a start function.')
-                    self.all_sequences.append(seq_temp)
-                continue
+            # ---------------
+            # prepare for data for sequence generation
+            # check: when there is one candidate sequence for a target
+            target_candidate_sequences_dict_for_prompt = {}
+            targets_with_1_candidate_sequence = {}
 
-            # ------------------------
-            # check the sequence length
-            if len(seq_temp)>fdg.global_config.seq_len_limit:
-                self.cur_all_sequences.append(seq_temp)
-                self.cur_seq_status[
-                    func_name] = f"{seq} is a bad sequence as the length exceeds the limit {fdg.global_config.seq_len_limit}."
-                if seq_temp not in self.all_sequences:
-                    self.invalid_bad_sequences_w_reason.append(
-                        f"{seq} is a bad sequence as the length exceeds the limit {fdg.global_config.seq_len_limit}.")
-                    self.all_sequences.append(seq_temp)
-                continue
-
-            if len(seq_temp) == 1:
-                self.cur_all_sequences.append(seq_temp)
-                self.cur_seq_status[
-                    func_name] =  f"{seq} is a bad sequence as there should be at least two functions in a sequence."
-
-                self.invalid_bad_sequences_w_reason.append(
-                    f"{seq} is a bad sequence as there should be at least two functions in a sequence.")
-
-                if seq_temp not in self.all_sequences:
-                    self.all_sequences.append(seq_temp)
-
-            #------------------------
-            # check if the last function is the target
-            if len(seq_temp)==1:
-                # manually add the target function to form a sequence of length 2.
-                seq_temp.append(func_name)
-            else:
-                last_func_name=seq_temp[-1]
-                if last_func_name not in [func_name]:
-                    self.cur_all_sequences.append(seq_temp)
-                    if seq_temp not in self.all_sequences:
-                        self.all_sequences.append(seq_temp)
-                    if func_name in seq_temp[0:-1]:
-                        self.cur_seq_status[
-                            func_name] = f"{seq} is bad sequence as the target function {func_name} is not the last function in the sequence."
-                        self.invalid_bad_sequences_w_reason.append(f"{seq} is bad sequence as the target function {func_name} is not the last function in the sequence.")
-                        continue
+            for target in self.cur_targets:
+                if target not in self.candidate_sequences.keys():
+                    target_candidate_sequences_dict_for_prompt[target] = []
+                    continue
+                else:
+                    paths = self.candidate_sequences[target]
+                    if len(paths) == 1:
+                        targets_with_1_candidate_sequence[target] = paths
                     else:
-                        self.cur_seq_status[
-                            func_name] = f"{seq} is bad sequence as the target function {func_name} should be the last function in the sequence."
-                        self.invalid_bad_sequences_w_reason.append(
-                            f"{seq} is bad sequence as the target function {func_name} should be the last function in the sequence.")
+                        target_candidate_sequences_dict_for_prompt[
+                            target] = paths
 
-                        continue
+            # filter to have SEQ_4_Consideration paths for selection
+            for key, paths in target_candidate_sequences_dict_for_prompt.items():
+                if len(paths) > llm.llm_config.SEQ_4_Consideration:
+                    selected_indices = random_select_from_list(
+                        list(range(len(paths))),
+                        llm.llm_config.SEQ_4_Consideration)
+                    target_candidate_sequences_dict_for_prompt[key] = [path for
+                                                                       idx, path
+                                                                       in
+                                                                       enumerate(
+                                                                           paths)
+                                                                       if
+                                                                       idx in selected_indices]
 
-            self.cur_all_sequences.append(seq_temp)
-            if seq_temp in self.all_sequences:
-                self.cur_seq_status[
-                    func_name] = f"{seq} for target function {func_name} is already considered. Please avoid giving repeated sequences."
-                continue
-            else:
-                self.cur_sequences_to_be_exe_dict[func_name] = seq_temp
-                self.all_sequences.append(seq_temp)
+            # check if there are some targets that have only one candidate sequence so that LLM is not required to make selection
+            targets_w1_candi_seq = list(
+                targets_with_1_candidate_sequence.keys())
+
+            # Define the JSON data to send in the POST request
+            data = {"solidity_name": f"{self.solidity_name}",
+                    "contract_name": f"{self.contract_name}",
+                    "start_functions": self.start_functions,
+                    "target_functions": self.cur_targets,
+                    "contract_code": self.contract_code,
+                    "feedback": {t: v for t, v in feedback.items() if
+                                 t in self.cur_targets},
+
+                    "valid_sequences": self.valid_sequences_dict,
+                    "bad_sequences_w_reason": self.bad_sequences_w_reason,
+                    "iteration": self.cur_iteration,
+                    "candidate_sequences": target_candidate_sequences_dict_for_prompt,
+                    'targets_w1_candidate_sequence': targets_w1_candi_seq,
+                    "msg_so_far": msg_so_far
+                    }
+
+            if len(target_candidate_sequences_dict_for_prompt) == 0 and len(targets_w1_candi_seq)>0:
+                color_print('Red',
+                            f"No need to generate sequences as there is only one candidate sequence for each target({os.path.basename(__file__)}).")
+                sequences = targets_with_1_candidate_sequence
 
 
-        # add sequences for targets with 1 candidate sequence (no need to query an LLM)
-        if llm.llm_config.LLM_Mode not in ['gen'] and self.cur_iteration>=2:
+        #----------------------------
+        # sequence generation
+        if len(sequences)==0:
+            sequences,self.msg_so_far=collect_sequences(data,iteration=self.cur_iteration)
 
-            for key, paths in targets_with_1_candidate_sequence.items():
-                for path in paths:
-                    if path not in self.all_sequences:
-                        self.cur_all_sequences.append(seq_temp)
-                        self.cur_sequences_to_be_exe_dict[key] = path
-                        self.all_sequences.append(path)
+            if len(sequences)==0:
+                color_print("Red",f'No sequence is generated ({os.path.basename(__file__)}).')
+                return
+
+            # ----------------------------
+            # sequence initial checking or preliminary checking
+            self.cur_sequences_to_be_exe_dict = {}
+            self.cur_all_sequences=[]
+            self.cur_seq_status={}
+
+            sequences_status_dict,sequences_w1_status_dict=initial_check_generated_sequences(sequences,self.start_functions,self.cur_targets,self.all_functions_pure_name)
+
+            sequences_to_consider={}
+            if len(sequences_status_dict.keys())>0:
+                sequences_to_consider={k:v["sequence"] for k,v in sequences_status_dict.items() if v['consider']}
+
+            for k,v in sequences_w1_status_dict.items():
+                if k not in sequences_to_consider.keys():
+                    if v["consider"]:sequences_to_consider[k]=v["sequence"]
+
+
+            self.cur_sequences_to_be_exe_dict=sequences_to_consider
+
+
+            self.cur_all_sequences=[value["sequence"] for value in sequences_status_dict.values() ]
+            # these are the sequences manually fixed from the generated sequences
+            self.cur_all_sequences+=[value["sequence"] for value in sequences_w1_status_dict.values() ]
+
+
+            # add bad_sequences
+
+            for value in sequences_status_dict.values():
+                if value['sequence'] not in self.all_sequences and not value['consider']:
+                    # only consider the statuses on sequences not on target or length.
+                    if "[" in value['status'] and "]" in value['status']:
+                        self.bad_sequences_w_reason.append(value['status'])
+
+
+            # keep the status of the sequences, which can be updated based on the execution of a subset of sequences.
+            self.cur_seq_status={k:v["status"] for k,v in sequences_status_dict.items() }
+
+            # add all current sequences to all the sequences of the whole process
+            for seq in self.cur_all_sequences:
+                if seq not in self.all_sequences:
+                    self.all_sequences.append(seq)
+
+
+            # add sequences for targets with 1 candidate sequence (no need to query an LLM)
+            if llm.llm_config.LLM_Mode not in ['gen'] and self.cur_iteration>=2:
+                for key, paths in targets_with_1_candidate_sequence.items():
+                    if len(paths)==1:
+                        if paths[0] not in self.all_sequences:
+                            self.cur_all_sequences.append(paths[0])
+                            self.cur_sequences_to_be_exe_dict[key] = paths[0]
+                            self.all_sequences.append(paths[0])
 
 
         if self.cur_iteration>=2:
@@ -325,6 +359,9 @@ class LLM(FunctionSearchStrategy):
                                     color_print('Red',
                                                 f'Find the state {key} for sequence {seq}')
                                     self.queue.append(key)
+
+
+
 
     def identify_functions(self,state_key:str):
         """
@@ -391,8 +428,14 @@ class LLM(FunctionSearchStrategy):
                 self.cur_targets = [ftn for ftn in self.cur_targets if
                                     ftn not in ['symbol', 'name', 'version',
                                                 'owner']]
+                if self.cur_iteration==1:
+                    for k, cov in left_target_cov.items():
+                        self.left_target_code_coverage[k]=[cov]
+                elif self.cur_iteration>=2:
+                    for k,v in left_target_cov.items():
+                        self.left_target_code_coverage[k].append(v)
 
-                cur_feedback=get_feedback(self.cur_targets, self.cur_sequences_to_be_exe_dict, self.cur_actual_executed_seq, left_target_cov, other_cur_feedback=self.cur_seq_status)
+                cur_feedback=get_feedback(self.cur_targets, self.cur_sequences_to_be_exe_dict, self.cur_actual_executed_seq, left_target_cov,target_code_coverage=self.left_target_code_coverage, other_cur_feedback=self.cur_seq_status)
                 for t,status in cur_feedback.items():
                     if t in self.feedback_all.keys():
                         self.feedback_all[t].append(status)

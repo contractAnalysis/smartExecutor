@@ -131,7 +131,6 @@ def prune_candidate_sequences(cur_iteration, cur_targets,
                 color_print('Blue',
                             f'{seq} should be included. It has a prefix {path}')
                 return True
-        color_print('Red', f'{seq} should not be included')
         return False
 
     def is_contained(seq, seq_list):
@@ -201,7 +200,7 @@ def prune_candidate_sequences(cur_iteration, cur_targets,
         flag_stop = False
         for i in range(3, 0, -1):
             for seq in temp_candi_2:
-
+                if seq in refined_paths:continue
                 if should_include(seq, [path[0:i] for path in
                                         cur_actual_executed_seq if
                                         len(path) >= i]):

@@ -557,13 +557,17 @@ def add_fwrg_analysis_args(options):
     )
 
     options.add_argument(
-
         "--temperature",
         default=0,
         type=float,
         help="specify the temperature for LLM models",
     )
-
+    options.add_argument(
+        "--candi_prune",
+        default=True,
+        action="store_false",
+        help="indicate whether to prune the candidate sequences",
+    )
 
 def parse_list_of_lists(value):
     try:

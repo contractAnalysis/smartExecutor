@@ -16,10 +16,14 @@ contract_code=""
 LLM_model= "gpt"
 
 gpt_model= "gpt-4o-2024-05-13"
-deepseek_model="deepseek-ai/DeepSeek-R1-Distill-Llama-70B-free"
-llama_model="meta-llama/Llama-3.3-70B-Instruct-Turbo-Free"
-starcoder_model=""
-
+# deepseek_model="deepseek-ai/DeepSeek-R1-Distill-Llama-70B-free" # together.ai
+deepseek_model="deepseek-ai/deepseek-r1-distill-qwen-32b"
+# llama_model="meta-llama/Llama-3.3-70B-Instruct-Turbo-Free" # together.ai
+llama_model="meta/llama-3.1-70b-instruct"
+starcoder_model="bigcode/starcoder2-15b"
+mistral_model="nv-mistralai/mistral-nemo-12b-instruct"
+qwen_model="qwen/qwen2.5-coder-32b-instruct"
+palmyra_model="writer/palmyra-creative-122b"
 temperature=0
 
 
@@ -30,7 +34,7 @@ LLM_Mode='gen'  #gen, gen_sel, xxx
 SEQ_iteration=3
 
 SEQ_4_Consideration=5
-NUM_max_candidate_sequences=15
+NUM_max_candidate_sequences=5
 NUM_min_candidate_sequences=5 #same as SEQ_4_Consideration
 
 

@@ -18,7 +18,7 @@ def is_prefix(seq1, seq2):
     # If we've made it through the loop, seq1 is a prefix of seq2
     return True
 
-def get_feedback(cur_targets, cur_sequences_to_be_exe_dict, cur_actual_executed_seq, left_targets_and_coverage:dict, other_cur_feedback:dict={}):
+def get_feedback(cur_targets, cur_sequences_to_be_exe_dict, cur_actual_executed_seq, left_targets_and_coverage:dict,target_code_coverage:dict={}, other_cur_feedback:dict={}):
     """
         feedback: valid sequence, or invalid (pointing the position the execution stop)
         via: comparing with the sequences before and after sequence execution.
@@ -26,7 +26,7 @@ def get_feedback(cur_targets, cur_sequences_to_be_exe_dict, cur_actual_executed_
 
         only provide feedback for targets that more sequences are required.
     """
-    color_print('Red', f'=============================')
+    color_print('Red', f'====== Collect feedback =========={os.path.basename(__file__)}')
     color_print('Red', f'target(s):{ cur_targets}')
     color_print('Red', f'target: code coverage:')
     for k, v in left_targets_and_coverage.items():
@@ -60,7 +60,22 @@ def get_feedback(cur_targets, cur_sequences_to_be_exe_dict, cur_actual_executed_
                 if be_a_prefix_1(gen_seq, actual_seq):
                     flag_valid = True
                     if target in left_targets_and_coverage.keys():
-                        cur_seq_status[target]=f"{gen_seq} is a valid sequence, but function {target} has the code coverage {left_targets_and_coverage[target]} below the threshold {fdg.global_config.function_coverage_threshold} and thus another different sequence is required."
+                        code_cov=[]
+                        if target in target_code_coverage.keys():
+                            code_cov=target_code_coverage[target]
+                        if len(code_cov)==0:
+                            cur_seq_status[target]=f"{gen_seq} is a valid sequence, but function {target} has the code coverage {left_targets_and_coverage[target]} below the threshold {fdg.global_config.function_coverage_threshold} and thus another different sequence is required for {target}."
+                        else:
+                            if round(left_targets_and_coverage[target])==round(code_cov[-1]):
+                                cur_seq_status[
+                                    target] = f"{gen_seq} is a valid sequence. However,function {target} still has the code coverage {left_targets_and_coverage[target]} below the threshold {fdg.global_config.function_coverage_threshold}. The code coverage does not change after the execution of this sequence. Hence, please try to reason the contract code and find a proper sequence for {target}."
+                            elif round(left_targets_and_coverage[target])-round(code_cov[-1])<5:
+                                cur_seq_status[
+                                    target] = f"{gen_seq} is a valid sequence. However,function {target} still has the code coverage {left_targets_and_coverage[target]} below the threshold {fdg.global_config.function_coverage_threshold}. The code coverage increase is not significant after the execution of this sequence. Please try your best to find a proper sequence for {target}."
+                            else:
+                                cur_seq_status[
+                                    target] = f"{gen_seq} is a valid sequence. However, the code coverage  {left_targets_and_coverage[target]} of function {target} remains below the threshold {fdg.global_config.function_coverage_threshold}. The code coverage increases a lot. Please keep up to find a sequence for this target function."
+
                     else:
                         cur_seq_status[
                             target] = f"{gen_seq} is a valid sequence. The coverage of {target} reaches a threshold. "
@@ -79,15 +94,21 @@ def get_feedback(cur_targets, cur_sequences_to_be_exe_dict, cur_actual_executed_
 
                 if idx <len(gen_seq):
                     if idx==0:idx=1 # never stops at depth 1
-                    cur_seq_status[
-                        target] = f"{gen_seq} is invalid. The execution stops at function {gen_seq[idx]}."
+
+                    dif_cur_cov_threshold=round(fdg.global_config.function_coverage_threshold)-round(left_targets_and_coverage[target])
+
+                    if dif_cur_cov_threshold>20:
+                        cur_seq_status[
+                            target] = f"{gen_seq} is invalid. The execution stops at function {gen_seq[idx]}. The code coverage of this function so far is {left_targets_and_coverage[target]}, far below the threshold. Please reason the whole smart contract code to find a proper sequence for {target}."
+                    else:
+                        cur_seq_status[
+                            target] = f"{gen_seq} is invalid. The execution stops at function {gen_seq[idx]}. The code coverage of this function so far is {left_targets_and_coverage[target]}. The code coverage can be further improved. Please find a proepr sequence to increase code coverage for {target}."
 
 
-    color_print('Red',
-    f'\n==== feedback on targets ======={os.path.basename(__file__)}')
     for target, status in cur_seq_status.items():
         color_print('Blue', f'{target}')
         color_print('Gray', f'{status}')
+
     return cur_seq_status
 
 
@@ -166,12 +187,16 @@ def find_invalid_sequences(sequences_bf_exe, sequences_af_exe) -> list:
 
 def prune_candidate_sequences(cur_iteration, cur_targets,
                               cur_sequences_to_be_exe_dict, cur_all_sequences,
-                              cur_actual_executed_seq, candidate_sequences
+                              cur_actual_executed_seq, valid_sequences,candidate_sequences
                              ):
     """
     prune candidate sequences for current targets
 
-    remove executed sequences
+    remove:
+        sequences in cur_all_sequences
+        sequences containing a prefix that is invalid  (invalid sequences found via: all current sequences and all currently executd sequences
+    keep:
+        sequences containing a prefix that is valid until the number of the kept sequences reaches a threshold.
 
 
     """
@@ -183,7 +208,6 @@ def prune_candidate_sequences(cur_iteration, cur_targets,
                 color_print('Blue',
                             f'{seq} should be included. It has a prefix {path}')
                 return True
-        color_print('Red', f'{seq} should not be included')
         return False
 
     def is_contained(seq, seq_list):
@@ -201,42 +225,55 @@ def prune_candidate_sequences(cur_iteration, cur_targets,
                 return True
         return False
 
+    color_print("Red",
+                f"==== Prune generated candidate sequences (remove executed or invalid sequences) ==== {os.path.basename(__file__)}")
+    if len(candidate_sequences.keys())==0:
+        color_print("Red","No candidate sequences.")
+        return {}
+
     cur_sequences_to_be_exe = list(cur_sequences_to_be_exe_dict.values())
     pruned_candi_sequences = {}
 
+
+
     color_print('Red',
-                f'\n==== current all sequences ==== {cur_iteration} ===={os.path.basename(__file__)}')
+                f'\n==== current all sequences ==== {cur_iteration-1} ===={os.path.basename(__file__)}')
     for pa in cur_all_sequences:
         color_print('Gray', f'{pa}')
 
     color_print('Red',
-                f'\n==== all currently executed sequences ==== {cur_iteration} ===={os.path.basename(__file__)}')
+                f'\n==== all currently executed sequences ==== {cur_iteration-1} ===={os.path.basename(__file__)}')
     for pa in cur_actual_executed_seq:
         color_print('Gray', f'{pa}')
+
 
     for target in cur_targets:
         if target not in candidate_sequences.keys(): continue
 
         candi_seq = candidate_sequences[target]
+        if len(candi_seq)==0:continue
         color_print('Red',
                     f'\n==== candidate sequences for {target}===={os.path.basename(__file__)}')
         for pa in candi_seq:
             color_print('Gray', f'{pa}')
 
+
+        temp_candi_0=candi_seq
+
         # remove the sequences that are generated
-        temp_candi = []
-        for seq in candi_seq:
+        temp_candi_1 = []
+        for seq in temp_candi_0:
             if is_contained(seq, cur_all_sequences):
                 color_print('Red',
                             f'{seq} is contained in current sequences and thus should be removed')
             else:
-                temp_candi.append(seq)
+                temp_candi_1.append(seq)
 
         # remove the sequences that has an invalid prefix
         invalid_seq = find_invalid_sequences(cur_sequences_to_be_exe,
                                              cur_actual_executed_seq)
         temp_candi_2 = []
-        for seq in temp_candi:
+        for seq in temp_candi_1:
             flag_remove = False
             for x_seq in invalid_seq:
                 if is_prefix(x_seq, seq):
@@ -253,9 +290,9 @@ def prune_candidate_sequences(cur_iteration, cur_targets,
         flag_stop = False
         for i in range(3, 0, -1):
             for seq in temp_candi_2:
-
+                if seq in refined_paths: continue
                 if should_include(seq, [path[0:i] for path in
-                                        cur_actual_executed_seq if
+                                        valid_sequences if
                                         len(path) >= i]):
                     refined_paths.append(seq)
                     if len(refined_paths) >= NUM_max_candidate_sequences:
@@ -268,6 +305,238 @@ def prune_candidate_sequences(cur_iteration, cur_targets,
         color_print('Gray',
                     f'\n{len(refined_paths)}/{len(candi_seq)} are kept ({len(refined_paths) / len(candi_seq)})')
 
+    if len(pruned_candi_sequences.keys())>0:
+        for k, seq_list in pruned_candi_sequences.items():
+            color_print('Blue', f'{k}:')
+            if len(seq_list) == 0:
+                color_print("Gray", "\t[]")
+            else:
+                for path in seq_list:
+                    color_print("Gray", f'\t{path}')
+    else:
+        color_print('Red', f'all sequences are pruned:')
+
     return pruned_candi_sequences
 
+
+def initial_check_generated_sequences(sequences, start_functions,targets, all_functions_pure_name,length_limit=fdg.global_config.seq_len_limit):
+
+
+    sequences_status={}
+    sequences_of_length1={}
+
+    for key, seq in sequences.items():
+
+        target = key.split(f'(')[0] if "(" in key else key
+
+        #-----------------
+        # check if the target is indeed the target we focus on
+        if target not in targets:
+            sequences_status[target]={k:v for k,v in zip(["consider","status","sequence"],[False,f"{target} is not a target.",seq])}
+            continue
+
+        if len(seq) == 0:
+            sequences_status[target] = {k: v for k, v in
+                                    zip(["consider", "status", "sequence"],
+                                        [False, f"The length of the sequence is 0.",
+                                         seq])}
+            continue
+
+        # clear the sequence by only keeping the pure function names
+        seq_temp = [ftn.split(f'(')[0] if "(" in ftn else ftn for ftn in seq]
+
+        # ------------------
+        # check if contain not-defined functions
+        flag_consider = True
+        for func in seq_temp:
+            if func not in all_functions_pure_name:
+                flag_consider = False
+                status=f"{seq_temp} is a really bad sequence as it contains an element {func}, which is not a function. This is a serious problem. Please only consider the functions defined in the source code."
+                sequences_status[target] = {k: v for k, v in
+                                            zip(["consider", "status",
+                                                 "sequence"],
+                                                [False,
+                                                 status,
+                                                 seq_temp])
+                                            }
+
+                break
+        if not flag_consider:
+            continue
+
+        # #------------------
+        # # if containing no-state-changing functions
+        # # to-do-list: check if containing no-state-changing functions (need to distinguish state-changing functions
+        # for item in seq_temp:
+        #     if item not in self.functionAssignment.all_functions:
+        #         ...
+
+        # ------------------------
+        # check the first function
+        if seq_temp[0] not in start_functions:
+            status = f"{seq_temp} is a bad sequence as the first function {seq_temp[0]} is not a start function."
+            sequences_status[target] = {k: v for k, v in
+                                        zip(["consider", "status",
+                                             "sequence"],
+                                            [False,
+                                             status,
+                                             seq_temp])
+                                        }
+
+
+            continue
+
+        # ------------------------
+        # check the sequence length
+        if len(seq_temp) > length_limit:
+            status = f"{seq_temp} is a bad sequence as the length exceeds the limit {length_limit}."
+            sequences_status[target] = {k: v for k, v in
+                                        zip(["consider", "status",
+                                             "sequence"],
+                                            [False,
+                                             status,
+                                             seq_temp])
+                                        }
+
+            continue
+
+
+        if len(seq_temp) == 1:
+
+            status =  f"{seq_temp} is a bad sequence as there should be at least two functions in a sequence."
+            sequences_status[target] = {k: v for k, v in
+                                        zip(["consider", "status",
+                                             "sequence"],
+                                            [False,
+                                             status,
+                                             seq_temp])
+                                        }
+
+            # manually add the target function to form a sequence of length 2.
+            seq_temp.append(targets)
+            status=f'{seq_temp} is a sequence of type [A,A] to fix the sequence of type [A], which is a bad sequence.'
+            sequences_of_length1={k: v for k, v in
+                                        zip(["consider", "status",
+                                             "sequence"],
+                                            [True,
+                                             status,
+                                             seq_temp])
+                                        }
+
+            continue
+
+
+        # ------------------------
+        # check if the last function is the target
+        last_func_name = seq_temp[-1]
+        if last_func_name not in [target]:
+            if target in seq_temp[0:-1]:
+                status=f"{seq_temp} is bad sequence as the target function {target} is not the last function in the sequence."
+            else:
+                status=f"{seq_temp} is bad sequence as the target function {target} should be the last function in the sequence."
+
+            sequences_status[target] = {k: v for k, v in
+                                        zip(["consider", "status",
+                                             "sequence"],
+                                            [False,
+                                             status,
+                                             seq_temp])
+                                        }
+
+            continue
+
+
+        status=f'{seq_temp} is an appropriate sequences satisfying the given instruction guidance.'
+        sequences_status[target] = {k: v for k, v in
+                                    zip(["consider", "status",
+                                         "sequence"],
+                                        [True,
+                                         status,
+                                         seq_temp])
+                                    }
+
+    return sequences_status,sequences_of_length1
+
+
+def check_generated_candidate_sequences(sequences,start_functions,targets,all_functions_pure_name,length_limit=fdg.global_config.seq_len_limit):
+
+    sequences_checked={}
+
+    color_print("Red",f"==== Check generated candidate sequences (remove bad sequences) ==== {os.path.basename(__file__)}")
+    for key, seq_list in sequences.items():
+
+        target = key.split(f'(')[0] if "(" in key else key
+        #-----------------
+        # check if the target is indeed the target we focus on
+        if target not in targets:
+            color_print("Red", f"{target} is not a target in {targets}.")
+            continue
+
+        if len(seq_list)==0:
+            color_print("Red", f"{target} has no sequence generated.")
+            continue
+
+        keep_sequences=[]
+        for seq in seq_list:
+            if len(seq) == 0:
+                continue
+
+            # clear the sequence by only keeping the pure function names
+            seq_temp = [ftn.split(f'(')[0] if "(" in ftn else ftn for ftn in seq]
+
+            # ------------------
+            # check if contain not-defined functions
+            flag_consider = True
+            for func in seq_temp:
+                if func not in all_functions_pure_name:
+                    flag_consider = False
+                    break
+            if not flag_consider:
+                continue
+
+            # #------------------
+            # # if containing no-state-changing functions
+            # # to-do-list: check if containing no-state-changing functions (need to distinguish state-changing functions
+            # for item in seq_temp:
+            #     if item not in self.functionAssignment.all_functions:
+            #         ...
+
+            # ------------------------
+            # check the first function
+            if seq_temp[0] not in start_functions:
+                continue
+
+            # ------------------------
+            # check the sequence length
+            if len(seq_temp) > length_limit:
+                continue
+
+
+            if len(seq_temp) == 1:
+                keep_sequences.append(seq_temp.append(target))
+                continue
+
+
+            # ------------------------
+            # check if the last function is the target
+            last_func_name = seq_temp[-1]
+            if last_func_name not in [target]:
+                continue
+
+            if seq_temp not in keep_sequences:
+                keep_sequences.append(seq_temp)
+
+        sequences_checked[target]=keep_sequences
+    if len(sequences_checked.keys())>0:
+        for k,seq_list in sequences_checked.items():
+            color_print('Blue',f'{k}:')
+            if len(seq_list)==0:
+                color_print("Gray","\t[]")
+            else:
+                for path in seq_list:
+                    color_print("Gray",f'\t{path}')
+    else:
+        color_print('Red', f'all sequences are bad sequences:')
+
+    return sequences_checked
 

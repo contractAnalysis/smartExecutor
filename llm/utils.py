@@ -99,16 +99,19 @@ def load_a_json_file(file_path:str):
         return data
 
 def present_list_as_str(lst:list)->str:
-    if len(lst)==0:return ''
-    elif len(lst)==1: return str(lst[0])
-    elif len(lst)==2:return f'{lst[0]} and {lst[1]}'
+    if isinstance(lst,list):
+        if len(lst)==0:return ''
+        elif len(lst)==1: return str(lst[0])
+        elif len(lst)==2:return f'{lst[0]} and {lst[1]}'
+        else:
+            v=str(lst[0])
+            for e in lst[1:-1]:
+                v+=f', {e}'
+            v+=f', and {lst[-1]}'
+            return v
     else:
-        v=str(lst[0])
-        for e in lst[1:-1]:
-            v+=f', {e}'
-        v+=f', and {lst[-1]}'
-        return v
-
+        color_print("Red",f'Warning: {lst} should be a list. (in function:present_list_as_str) ({os.path.basename(__file__)})')
+        return lst
 def get_a_kv_pair_from_a_json(json_file_path_name:str,key:str):
     # Open the existing JSON file for reading
     if os.path.exists(json_file_path_name):
@@ -155,6 +158,30 @@ def get_json_data_from_response_in_dict(response: str,function_name:str=""):
                                         data = {}
                                         return data
 
+
+        elif "```" in response:
+            if response.startswith("```") and response.endswith("```"):
+                data = response.strip("```").strip("```")
+                return json.loads(data)
+            else:
+                response_seg = response.split("```")
+                for seg in response_seg:
+                    if "{" in seg:
+                        if "}" in seg:
+                            first_idx = seg.index('{')
+                            last_idx = seg.rindex('}')
+                            raw_data = seg[first_idx:last_idx + 1]
+
+                            data = json.loads(raw_data)
+                            if len(function_name) == 0:
+                                return data
+                            else:
+                                if function_name in data.keys():
+                                    return data
+                                else:
+                                    data = {}
+                                    return data
+
         else:
             if response.startswith("{") and response.endswith("}"):
                 data = response.strip("```json").strip("```")
@@ -162,7 +189,7 @@ def get_json_data_from_response_in_dict(response: str,function_name:str=""):
             else:
                 return data
     except JSONDecodeError:
-        print(f'JSONDecodeError')
+        color_print("Red",f'JSONDecodeError {os.path.basename(__file__)}')
     return data
 
 def write_a_kv_pair_to_a_json_file(json_file_path_name:str,key:str,value:str):
