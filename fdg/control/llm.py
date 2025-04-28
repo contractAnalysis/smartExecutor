@@ -181,7 +181,7 @@ class LLM(FunctionSearchStrategy):
                     # initial check the candidate sequences
                     # check_generated_candidate_sequences
                     self.candidate_sequences= check_generated_candidate_sequences(
-                        sequences, self.start_functions, self.cur_targets,
+                        self.candidate_sequences, self.start_functions, self.cur_targets,
                         self.all_functions_pure_name)
 
 

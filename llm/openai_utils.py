@@ -3,6 +3,7 @@ import openai
 from together import Together
 from openai import OpenAI
 
+from llm.llm_config import Nvidia_api
 from llm.utils import color_print
 
 client = OpenAI(
@@ -113,7 +114,7 @@ def deepseek_request(model, msg, temperature=0.0):
 def starcoder_request(model,msg,temperature=0.0):
     client = OpenAI(
         base_url="https://integrate.api.nvidia.com/v1",
-        api_key="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"
+        api_key=Nvidia_api
     )
 
     prompts=""
@@ -142,7 +143,7 @@ def starcoder_request(model,msg,temperature=0.0):
 def mistral_request(model,msg,temperature=0.0):
     client = OpenAI(
         base_url="https://integrate.api.nvidia.com/v1",
-        api_key="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"
+        api_key=Nvidia_api
     )
     # completion = client.chat.completions.create(
     response = client.chat.completions.create(
@@ -162,7 +163,7 @@ def mistral_request(model,msg,temperature=0.0):
 def qwen_request(model,msg,temperature=0.0):
     client = OpenAI(
         base_url="https://integrate.api.nvidia.com/v1",
-        api_key="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"
+        api_key=Nvidia_api
     )
     # completion = client.chat.completions.create(
     response = client.chat.completions.create(
@@ -182,7 +183,7 @@ def qwen_request(model,msg,temperature=0.0):
 def palmyra_request(model,msg,temperature=0.0):
     client = OpenAI(
         base_url="https://integrate.api.nvidia.com/v1",
-        api_key="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"
+        api_key=Nvidia_api
     )
 
     response = client.chat.completions.create(
@@ -211,3 +212,27 @@ def palmyra_request(model,msg,temperature=0.0):
     return message,token_counts
 
 
+def gemma_request(model,msg,temperature=0.0):
+    from openai import OpenAI
+
+    client = OpenAI(
+        base_url="https://integrate.api.nvidia.com/v1",
+        api_key=Nvidia_api
+    )
+
+    msg_=[m_dict for m_dict in msg if m_dict["role"] not in ['system'] ]
+    response = client.chat.completions.create(
+        model=model,
+        messages=msg_,
+        temperature=temperature,
+        stream=False
+    )
+
+
+
+    token_counts = [0, 0]
+    message = response.choices[0].message.content
+    token_counts = [response.usage.prompt_tokens,
+                    response.usage.completion_tokens]
+
+    return message, token_counts

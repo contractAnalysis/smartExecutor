@@ -9,7 +9,8 @@ import llm.llm_config
 
 from llm.llm_config import project_path, sleep_time
 from llm.openai_utils import gpt_request, llama_request, deepseek_request, \
-    starcoder_request, mistral_request, qwen_request, palmyra_request
+    starcoder_request, mistral_request, qwen_request, palmyra_request, \
+    gemma_request
 from llm.utils import load_specific_prompt_data, present_list_as_str, \
     get_a_kv_pair_from_a_json, get_json_data_from_response_in_dict, \
     write_a_kv_pair_to_a_json_file, color_print, present_for_dict
@@ -59,6 +60,8 @@ def data_processing(data:dict)->dict:
         model=llm.llm_config.qwen_model
     elif llm.llm_config.LLM_model in ['palmyra']:
         model=llm.llm_config.palmyra_model
+    elif llm.llm_config.LLM_model in ['gemma']:
+        model=llm.llm_config.gemma_model
     else:
         model=llm.llm_config.llama_model
 
@@ -187,6 +190,9 @@ def request_llm(llm_model_sim, llm_model_whole, msg, temperature=0):
                                                   temperature=temperature)
     elif llm_model_sim in ['palmyra']:
         response1, token_counts = palmyra_request(llm_model_whole, msg,
+                                               temperature=temperature)
+    elif llm_model_sim in ['gemma']:
+        response1, token_counts = gemma_request(llm_model_whole, msg,
                                                temperature=temperature)
     else:
         response1, token_counts = llama_request(llm_model_whole, msg, temperature=temperature)

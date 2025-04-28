@@ -374,14 +374,25 @@ def initial_check_generated_sequences(sequences, start_functions,targets, all_fu
         # ------------------------
         # check the first function
         if seq_temp[0] not in start_functions:
-            status = f"{seq_temp} is a bad sequence as the first function {seq_temp[0]} is not a start function."
-            sequences_status[target] = {k: v for k, v in
-                                        zip(["consider", "status",
-                                             "sequence"],
-                                            [False,
-                                             status,
-                                             seq_temp])
-                                        }
+            if len(seq_temp)==1:
+                status = f"{seq_temp} is a bad sequence as the first function {seq_temp[0]} is not a start function and the length of it is 1 while the required length should be larger than 1. Please be aware of the length limit."
+                sequences_status[target] = {k: v for k, v in
+                                            zip(["consider", "status",
+                                                 "sequence"],
+                                                [False,
+                                                 status,
+                                                 seq_temp])
+                                            }
+
+            else:
+                status = f"{seq_temp} is a bad sequence as the first function {seq_temp[0]} is not a start function."
+                sequences_status[target] = {k: v for k, v in
+                                            zip(["consider", "status",
+                                                 "sequence"],
+                                                [False,
+                                                 status,
+                                                 seq_temp])
+                                            }
 
 
             continue
@@ -536,7 +547,7 @@ def check_generated_candidate_sequences(sequences,start_functions,targets,all_fu
                 for path in seq_list:
                     color_print("Gray",f'\t{path}')
     else:
-        color_print('Red', f'all sequences are bad sequences:')
+        color_print('Red', f'all sequences are bad sequences')
 
     return sequences_checked
 

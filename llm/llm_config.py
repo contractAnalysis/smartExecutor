@@ -1,7 +1,7 @@
 import os
 import sys
 
-
+Nvidia_api="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"
 def get_project_root():
     return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 project_path=f'{get_project_root()}/'
@@ -24,6 +24,7 @@ starcoder_model="bigcode/starcoder2-15b"
 mistral_model="nv-mistralai/mistral-nemo-12b-instruct"
 qwen_model="qwen/qwen2.5-coder-32b-instruct"
 palmyra_model="writer/palmyra-creative-122b"
+gemma_model="google/gemma-2-27b-it"
 temperature=0
 
 
