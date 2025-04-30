@@ -75,6 +75,46 @@
    }
   },
 
+ "chop_candidate_sequences":{
+   "system": {
+     "content": "You are a Solidity smart contract expert understanding Solidity language. You can find the function sequences, the symbolic execution of which is very likely to have the last function in the sequences to be executed successfully.",
+     "data":[]
+   },
+    "user": {
+      "content": "##target_functions## have a huge number of function sequences here: ##huge_num_sequences##. These function sequences are based on the smart contract ##contract_name##, the Solidity source code of which is given at the end. For each function in ##target_functions##, could you please find the sequences of this function (i.e., function sequences ending with it) and select the top ##num_sequences## sequences, the execution of which is more likely to have this function executed successfully. Please always check and make sure the sequences are returned in json format: {\"function1\":[sequence1,sequence2,...],\"function2\":[sequence1,sequence2,...],...}. No extra words as it causes problem to extract json data. Solidity code:##contract_code##",
+      "data": [
+         "contract_name",
+        "contract_code",
+        "target_functions",
+        "num_sequences",
+        "huge_num_sequences"
+      ]
+   }
+
+
+  },
+
+ "chop_candidate_sequences1":{
+   "system": {
+     "content": "You are a Solidity smart contract expert understanding Solidity language. You can find the function sequences, the symbolic execution of which is very likely to have the last function in the sequences to be executed successfully.",
+     "data":[]
+   },
+     "user": {
+      "content": "##target_functions## has a huge number of function sequences here: ##huge_num_sequences##. These function sequences are based on the smart contract ##contract_name##, the Solidity source code of which is given at the end. Could you please find the sequences of this function (i.e., function sequences ending with it) and select the top ##num_sequences## sequences, the execution of which is more likely to have this function executed successfully. Please always check and make sure the sequences are returned in json format: {\"function\":[sequence1,sequence2,...]}. No extra words as it causes problem to extract json data. Solidity code:##contract_code##",
+      "data": [
+         "contract_name",
+        "contract_code",
+        "target_functions",
+        "num_sequences",
+        "huge_num_sequences"
+      ]
+   }
+
+
+
+  },
+
+
 
   "extract_correct_response": {
     "system": {

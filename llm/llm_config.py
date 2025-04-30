@@ -1,7 +1,7 @@
 import os
 import sys
 
-Nvidia_api="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"
+APK_key= "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"
 def get_project_root():
     return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 project_path=f'{get_project_root()}/'
@@ -35,9 +35,9 @@ LLM_Mode='gen'  #gen, gen_sel, xxx
 SEQ_iteration=3
 
 SEQ_4_Consideration=5
-NUM_max_candidate_sequences=5
+NUM_max_candidate_sequences=15
 NUM_min_candidate_sequences=5 #same as SEQ_4_Consideration
-
+Candi_prune=False
 
 FLAG_single_prompt=False
 Flag_gpt=True

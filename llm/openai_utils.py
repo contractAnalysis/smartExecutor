@@ -3,7 +3,7 @@ import openai
 from together import Together
 from openai import OpenAI
 
-from llm.llm_config import Nvidia_api
+from llm.llm_config import APK_key
 from llm.utils import color_print
 
 client = OpenAI(
@@ -114,7 +114,7 @@ def deepseek_request(model, msg, temperature=0.0):
 def starcoder_request(model,msg,temperature=0.0):
     client = OpenAI(
         base_url="https://integrate.api.nvidia.com/v1",
-        api_key=Nvidia_api
+        api_key=APK_key
     )
 
     prompts=""
@@ -143,7 +143,7 @@ def starcoder_request(model,msg,temperature=0.0):
 def mistral_request(model,msg,temperature=0.0):
     client = OpenAI(
         base_url="https://integrate.api.nvidia.com/v1",
-        api_key=Nvidia_api
+        api_key=APK_key
     )
     # completion = client.chat.completions.create(
     response = client.chat.completions.create(
@@ -163,7 +163,7 @@ def mistral_request(model,msg,temperature=0.0):
 def qwen_request(model,msg,temperature=0.0):
     client = OpenAI(
         base_url="https://integrate.api.nvidia.com/v1",
-        api_key=Nvidia_api
+        api_key=APK_key
     )
     # completion = client.chat.completions.create(
     response = client.chat.completions.create(
@@ -183,7 +183,7 @@ def qwen_request(model,msg,temperature=0.0):
 def palmyra_request(model,msg,temperature=0.0):
     client = OpenAI(
         base_url="https://integrate.api.nvidia.com/v1",
-        api_key=Nvidia_api
+        api_key=APK_key
     )
 
     response = client.chat.completions.create(
@@ -217,7 +217,7 @@ def gemma_request(model,msg,temperature=0.0):
 
     client = OpenAI(
         base_url="https://integrate.api.nvidia.com/v1",
-        api_key=Nvidia_api
+        api_key=APK_key
     )
 
     msg_=[m_dict for m_dict in msg if m_dict["role"] not in ['system'] ]

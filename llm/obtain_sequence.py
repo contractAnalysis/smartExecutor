@@ -46,6 +46,7 @@ def data_processing(data:dict)->dict:
             # remove the target that has only one candidate sequence (no need to generate a sequence)
             data['target_functions']=list(data['candidate_sequences'].keys())
 
+
     if llm.llm_config.LLM_model in ['gpt']:
         model=llm.llm_config.gpt_model
     elif llm.llm_config.LLM_model in ['deepseek']:
@@ -79,7 +80,18 @@ def message_preparation(state:str, prompt_file_name:str,data:dict={}):
         if data['llm_mode'] in ['gen']:
             seq_prompt = load_specific_prompt_data(prompt_path, prompt_file_name, 'get_sequence_gen')
         elif data['llm_mode'] in ['gen_sel']:
-            seq_prompt = load_specific_prompt_data(prompt_path, prompt_file_name,
+            if len(data['msg_so_far']) == 0:
+                # deal with large number of candidate sequences
+                if len(data['target_functions'])==1:
+                    seq_prompt = load_specific_prompt_data(prompt_path,
+                                                           prompt_file_name,
+                                                           'chop_candidate_sequences1')
+                else:
+                    seq_prompt = load_specific_prompt_data(prompt_path,
+                                                           prompt_file_name,
+                                                           'chop_candidate_sequences')
+            else:
+                seq_prompt = load_specific_prompt_data(prompt_path, prompt_file_name,
                                                    'get_sequence_gen_sel')
         elif data['llm_mode'] in ['gen_sel_llm']:
             if len(data['msg_so_far'])==0:
@@ -133,6 +145,9 @@ def message_preparation(state:str, prompt_file_name:str,data:dict={}):
 
         elif item=='candidate_sequences':
             value=present_for_dict(data["candidate_sequences"])
+
+        elif item=='huge_num_sequences':
+            value=present_for_dict(data["huge_num_sequences"])
         else:
             print(f'{item} is not provided. ')
         all_data_items_values[item]=value
@@ -401,6 +416,101 @@ def collect_candidate_sequences(data:dict):
 
     color_print('Red',
                 f'\n\n==== Generated candidate sequences ===={data["solidity_name"]}===={data["contract_name"]}===={data["iteration"]}===={os.path.basename(__file__)}')
+    if isinstance(seq_results,dict):
+        for k, v in seq_results.items():
+            color_print('Blue', f'{k}:')
+            if isinstance(v, list):
+                for s in v:
+                    color_print('Gray', f'\t{s}')
+            else:
+                color_print("Blue","not a list,why?")
+                color_print('Gray', f'\t{v}')
+    else:
+        color_print('Red', f'Fail to extract the sequences from the response.')
+
+    return seq_results
+
+def chop_candidate_sequences(data:dict):
+    data = data_processing(data)
+    prompt_file_name = data['prompt_file']
+    prompt_style = data['prompt_style']
+
+    # prepare for message
+    msg = message_preparation('sequence', prompt_file_name, data=data)
+
+    # save the results
+    if llm.llm_config.FLAG_exp:
+        key = f'{data["solidity_name"]}_{data["contract_name"]}_chop_candidate_sequences'
+        file_name_prefix = result_path + f'{data["solidity_name"]}_{data["contract_name"]}_{data["llm_model_sim"]}_{data["llm_mode"]}_{prompt_style}_{data["llm_temperature"]}'
+        json_file_path = file_name_prefix + '_seq_responses.json'
+        json_file_path_raw = file_name_prefix + '_seq_raw_responses.json'
+
+        if not os.path.exists(json_file_path):
+            # Create the file
+            with open(json_file_path, 'w') as file:
+                file.write('{}')
+        if not os.path.exists(json_file_path_raw):
+            # Create the file
+            with open(json_file_path_raw, 'w') as file:
+                file.write('{}')
+        saved_value = {}
+    else:
+        key = f'{data["solidity_name"]}_{data["contract_name"]}_chop_candidate_sequences'
+        file_name_prefix = result_path + f'{data["solidity_name"]}_{data["contract_name"]}_{data["llm_model_sim"]}_{data["llm_mode"]}_{prompt_style}_{data["llm_temperature"]}'
+
+        json_file_path = file_name_prefix + f'_seq_responses.json'
+        json_file_path_raw = file_name_prefix + f'_seq_raw_responses.json'
+
+        if not os.path.exists(json_file_path):
+            # Create the file
+            with open(json_file_path, 'w') as file:
+                file.write('{}')
+        if not os.path.exists(json_file_path_raw):
+            # Create the file
+            with open(json_file_path_raw, 'w') as file:
+                file.write('{}')
+        saved_value = get_a_kv_pair_from_a_json(json_file_path, key)
+
+    if len(saved_value) == 0:
+        sleep(sleep_time)  # used to control the request rate
+
+        start_time = time.time()
+        # request an LLM to get sequences
+        response1, token_counts = request_llm(data['llm_model_sim'],
+                                              data['llm_model'],
+                                              msg, temperature=data[
+                'llm_temperature'])
+
+        # to measure the time required to get sequences
+        end_time = time.time()
+        llm.llm_config.time_records.append(end_time - start_time)
+        llm.llm_config.input_tokens.append(token_counts[0])
+        llm.llm_config.output_tokens.append(token_counts[1])
+
+
+        write_a_kv_pair_to_a_json_file(json_file_path_raw, f'{key}_prompt',
+                                       msg)
+
+        response1_ = {"role": "assistant", "content": f'{response1}'}
+        write_a_kv_pair_to_a_json_file(json_file_path_raw, f'{key}_response',
+                                       response1_)
+
+        seq_results = get_json_data_from_response_in_dict(response1)
+        loop = 0
+        while isinstance(seq_results, str) or len(seq_results) == 0:
+            loop += 1
+            if loop >= 3:
+                color_print("Red",
+                            f"Fail to extract sequences from response {response1}({os.path.basename(__file__)})")
+                break
+            seq_results = extract_response_with_llm("gpt", "gpt-4o-2024-05-13", response1)
+        write_a_kv_pair_to_a_json_file(json_file_path, key, seq_results)
+
+    else:
+        seq_results = saved_value
+
+    color_print('Red',
+                f'\n\n==== Chop candidate sequences ===={data["solidity_name"]}===={data["contract_name"]}===={data["iteration"]}===={os.path.basename(__file__)}')
     if isinstance(seq_results,dict):
         for k, v in seq_results.items():
             color_print('Blue', f'{k}:')

@@ -19,7 +19,8 @@ from fdg.output_data import print_data_for_mine_strategy_1, \
 from fdg.utils import get_ftn_seq_from_key_1, get_key_1_prefix, \
     random_select_from_list
 from llm.llm_config import SEQ_iteration
-from llm.obtain_sequence import collect_sequences, collect_candidate_sequences
+from llm.obtain_sequence import collect_sequences, collect_candidate_sequences, \
+    chop_candidate_sequences
 from llm.utils import present_list_as_str, color_print
 from mythril.laser.plugin.plugins.dependency_pruner import \
     get_writes_annotation_from_ws
@@ -119,6 +120,7 @@ class LLM(FunctionSearchStrategy):
         # prepare for data used to prompt construction
         data={}
         sequences={}
+
         # ----------------------------
         # data preparation for prompt construction
         if self.cur_iteration==1 or llm.llm_config.LLM_Mode in ['gen']:
@@ -140,6 +142,7 @@ class LLM(FunctionSearchStrategy):
                     }
 
         elif self.cur_iteration>=2 and llm.llm_config.LLM_Mode not in ['gen']:
+            flag_prune = True
             if self.cur_iteration==2:
                 #---------------
                 # candidate sequence collection
@@ -152,10 +155,36 @@ class LLM(FunctionSearchStrategy):
                         k, v
                         in
                         self.fwrg_manager.updateFWRG.fwrg_targets_augmented.items()}
+
                     self.candidate_sequences_original = get_candidate_sequences(
                         graph, self.start_functions, self.cur_targets)
                     self.candidate_sequences = copy(
                         self.candidate_sequences_original)
+
+                    # chop candidate sequences if there are a huge number of sequences
+                    target_huge_sequences={k:seq_list for k,seq_list in self.candidate_sequences.items() if len(seq_list)>llm.llm_config.NUM_max_candidate_sequences}
+
+                    # randomly select 500 if the number of sequences goes beyond 500
+                    target_huge_sequences={k:random_select_from_list(seq_list,500) if len(seq_list)>500 else seq_list for k,seq_list in target_huge_sequences.items()}
+                    if len(target_huge_sequences)>0:
+                        data = {"solidity_name": f"{self.solidity_name}",
+                                "contract_name": f"{self.contract_name}",
+                                "start_functions": self.start_functions,
+                                "target_functions": list(target_huge_sequences.keys()),
+                                "contract_code": self.contract_code,
+                                "num_sequences": llm.llm_config.NUM_max_candidate_sequences,
+                                "feedback": {},
+                                "valid_sequences":{},
+                                "iteration": self.cur_iteration,
+                                "msg_so_far": [],
+                                "candidate_sequences": {},
+                                "huge_num_sequences":target_huge_sequences
+                                }
+                        target_huge_sequences_chopped = chop_candidate_sequences(data)
+                        for k,seq_list in target_huge_sequences_chopped.items():
+                            self.candidate_sequences[k]=seq_list
+
+
                 elif llm.llm_config.LLM_Mode in ['gen_sel_llm']:
                     # get candidate sequences from an LLM model
                     # make sure msg_so_far is an empty list
@@ -202,6 +231,8 @@ class LLM(FunctionSearchStrategy):
                     self.cur_actual_executed_seq,
                     valid_sequences,
                     self.candidate_sequences)
+
+
 
             # ---------------
             # prepare for data for sequence generation

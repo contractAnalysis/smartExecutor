@@ -569,6 +569,19 @@ def add_fwrg_analysis_args(options):
         help="indicate whether to prune the candidate sequences",
     )
 
+    options.add_argument(
+        "--max_num_candi_sequences",
+        default=15,
+        type=int,
+        help="specify the max number of candidate sequences for a target function.",
+    )
+
+    options.add_argument(
+        "--api_key",
+        default="",
+        type=str,
+        help="provide the api key to LLM models.",
+    )
 def parse_list_of_lists(value):
     try:
         # Parse the string representation of the list of lists into an actual list of lists
@@ -597,6 +610,9 @@ def add_fwrg_arguments(args: Namespace):
     llm.llm_config.LLM_model=args.llm_model
     llm.llm_config.FLAG_conversation=args.conversation
     llm.llm_config.temperature=args.temperature
+    llm.llm_config.Candi_prune=args.candi_prune
+    llm.llm_config.NUM_max_candidate_sequences=args.max_num_candi_sequences
+    llm.llm_config.API_key=args.api_key
     if args.no_guidance:
         fdg.global_config.flag_fwrg=False
     else:

@@ -187,7 +187,7 @@ def find_invalid_sequences(sequences_bf_exe, sequences_af_exe) -> list:
 
 def prune_candidate_sequences(cur_iteration, cur_targets,
                               cur_sequences_to_be_exe_dict, cur_all_sequences,
-                              cur_actual_executed_seq, valid_sequences,candidate_sequences
+                              cur_actual_executed_seq, valid_sequences,candidate_sequences, num_limit:bool=True
                              ):
     """
     prune candidate sequences for current targets
@@ -295,9 +295,10 @@ def prune_candidate_sequences(cur_iteration, cur_targets,
                                         valid_sequences if
                                         len(path) >= i]):
                     refined_paths.append(seq)
-                    if len(refined_paths) >= NUM_max_candidate_sequences:
-                        flag_stop = True
-                        break
+                    if num_limit: # do not limit the number of sequences
+                        if len(refined_paths) >= NUM_max_candidate_sequences:
+                            flag_stop = True
+                            break
             if flag_stop:
                 break
 
@@ -493,7 +494,10 @@ def check_generated_candidate_sequences(sequences,start_functions,targets,all_fu
                 continue
 
             # clear the sequence by only keeping the pure function names
-            seq_temp = [ftn.split(f'(')[0] if "(" in ftn else ftn for ftn in seq]
+            seq_temp = [ftn for ftn in seq if isinstance(ftn, str)]  # remove integer
+            seq_temp = [ftn.split(f'(')[0] if "(" in ftn else ftn for ftn in seq_temp]
+            seq_temp = [ftn for ftn in seq_temp if not ftn.startswith("0x")]
+            if len(seq_temp)==0:continue
 
             # ------------------
             # check if contain not-defined functions
@@ -517,6 +521,8 @@ def check_generated_candidate_sequences(sequences,start_functions,targets,all_fu
             if seq_temp[0] not in start_functions:
                 continue
 
+
+
             # ------------------------
             # check the sequence length
             if len(seq_temp) > length_limit:
@@ -524,7 +530,8 @@ def check_generated_candidate_sequences(sequences,start_functions,targets,all_fu
 
 
             if len(seq_temp) == 1:
-                keep_sequences.append(seq_temp.append(target))
+                seq_temp.append(target)
+                keep_sequences.append(seq_temp)
                 continue
 
 
