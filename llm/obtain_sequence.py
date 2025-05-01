@@ -70,6 +70,7 @@ def data_processing(data:dict)->dict:
     data['llm_model_sim'] = llm.llm_config.LLM_model
     data['llm_mode']=llm.llm_config.LLM_Mode
     data['llm_temperature']=llm.llm_config.temperature
+    data['num_max_candi']=llm.llm_config.NUM_max_candidate_sequences
     return data
 
 def message_preparation(state:str, prompt_file_name:str,data:dict={}):
@@ -252,7 +253,7 @@ def collect_sequences(data:dict,iteration:int=1):
     # save the results
     if llm.llm_config.FLAG_exp:
         key = f'{data["solidity_name"]}_{data["contract_name"]}_sequence_iter_{data["iteration"]}'
-        file_name_prefix=result_path + f'{data["solidity_name"]}_{data["contract_name"]}_{data["llm_model_sim"]}_{data["llm_mode"]}_{prompt_style}_{data["llm_temperature"]}'
+        file_name_prefix=result_path + f'{data["solidity_name"]}_{data["contract_name"]}_{data["llm_model_sim"]}_{data["llm_mode"]}_{prompt_style}_{data["llm_temperature"]}_{data["num_max_candi"]}'
         json_file_path = file_name_prefix+'_seq_responses.json'
         json_file_path_raw = file_name_prefix+'_seq_raw_responses.json'
 
@@ -267,7 +268,7 @@ def collect_sequences(data:dict,iteration:int=1):
         saved_value={}
     else:
         key = f'{data["solidity_name"]}_{data["contract_name"]}_sequence_iter_{data["iteration"]}'
-        file_name_prefix = result_path + f'{data["solidity_name"]}_{data["contract_name"]}_{data["llm_model_sim"]}_{data["llm_mode"]}_{prompt_style}_{data["llm_temperature"]}'
+        file_name_prefix = result_path + f'{data["solidity_name"]}_{data["contract_name"]}_{data["llm_model_sim"]}_{data["llm_mode"]}_{prompt_style}_{data["llm_temperature"]}_{data["num_max_candi"]}'
 
         json_file_path = file_name_prefix+f'_seq_responses.json'
         json_file_path_raw =file_name_prefix+f'_seq_raw_responses.json'
@@ -346,7 +347,7 @@ def collect_candidate_sequences(data:dict):
     # save the results
     if llm.llm_config.FLAG_exp:
         key = f'{data["solidity_name"]}_{data["contract_name"]}_candidate_sequences'
-        file_name_prefix = result_path + f'{data["solidity_name"]}_{data["contract_name"]}_{data["llm_model_sim"]}_{data["llm_mode"]}_{prompt_style}_{data["llm_temperature"]}'
+        file_name_prefix = result_path + f'{data["solidity_name"]}_{data["contract_name"]}_{data["llm_model_sim"]}_{data["llm_mode"]}_{prompt_style}_{data["llm_temperature"]}_{data["num_max_candi"]}'
         json_file_path = file_name_prefix + '_seq_responses.json'
         json_file_path_raw = file_name_prefix + '_seq_raw_responses.json'
 
@@ -361,7 +362,7 @@ def collect_candidate_sequences(data:dict):
         saved_value = {}
     else:
         key = f'{data["solidity_name"]}_{data["contract_name"]}_candidate_sequences'
-        file_name_prefix = result_path + f'{data["solidity_name"]}_{data["contract_name"]}_{data["llm_model_sim"]}_{data["llm_mode"]}_{prompt_style}_{data["llm_temperature"]}'
+        file_name_prefix = result_path + f'{data["solidity_name"]}_{data["contract_name"]}_{data["llm_model_sim"]}_{data["llm_mode"]}_{prompt_style}_{data["llm_temperature"]}_{data["num_max_candi"]}'
 
         json_file_path = file_name_prefix + f'_seq_responses.json'
         json_file_path_raw = file_name_prefix + f'_seq_raw_responses.json'
@@ -441,7 +442,7 @@ def chop_candidate_sequences(data:dict):
     # save the results
     if llm.llm_config.FLAG_exp:
         key = f'{data["solidity_name"]}_{data["contract_name"]}_chop_candidate_sequences'
-        file_name_prefix = result_path + f'{data["solidity_name"]}_{data["contract_name"]}_{data["llm_model_sim"]}_{data["llm_mode"]}_{prompt_style}_{data["llm_temperature"]}'
+        file_name_prefix = result_path + f'{data["solidity_name"]}_{data["contract_name"]}_{data["llm_model_sim"]}_{data["llm_mode"]}_{prompt_style}_{data["llm_temperature"]}_{data["num_max_candi"]}'
         json_file_path = file_name_prefix + '_seq_responses.json'
         json_file_path_raw = file_name_prefix + '_seq_raw_responses.json'
 
@@ -456,7 +457,7 @@ def chop_candidate_sequences(data:dict):
         saved_value = {}
     else:
         key = f'{data["solidity_name"]}_{data["contract_name"]}_chop_candidate_sequences'
-        file_name_prefix = result_path + f'{data["solidity_name"]}_{data["contract_name"]}_{data["llm_model_sim"]}_{data["llm_mode"]}_{prompt_style}_{data["llm_temperature"]}'
+        file_name_prefix = result_path + f'{data["solidity_name"]}_{data["contract_name"]}_{data["llm_model_sim"]}_{data["llm_mode"]}_{prompt_style}_{data["llm_temperature"]}_{data["num_max_candi"]}'
 
         json_file_path = file_name_prefix + f'_seq_responses.json'
         json_file_path_raw = file_name_prefix + f'_seq_raw_responses.json'
