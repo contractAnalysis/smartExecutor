@@ -34,9 +34,10 @@ LLM_Mode='gen'  #gen, gen_sel, xxx
 
 SEQ_iteration=3
 
-SEQ_4_Consideration=5
+
 NUM_max_candidate_sequences=15
-NUM_min_candidate_sequences=5 #same as SEQ_4_Consideration
+SEQ_for_Consideration=NUM_max_candidate_sequences
+
 Candi_prune=False
 
 FLAG_single_prompt=False

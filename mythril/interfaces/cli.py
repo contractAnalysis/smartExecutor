@@ -578,7 +578,7 @@ def add_fwrg_analysis_args(options):
 
     options.add_argument(
         "--api_key",
-        default="",
+        default="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",
         type=str,
         help="provide the api key to LLM models.",
     )

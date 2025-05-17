@@ -254,10 +254,10 @@ class LLM(FunctionSearchStrategy):
 
             # filter to have SEQ_4_Consideration paths for selection
             for key, paths in target_candidate_sequences_dict_for_prompt.items():
-                if len(paths) > llm.llm_config.SEQ_4_Consideration:
+                if len(paths) > llm.llm_config.SEQ_for_Consideration:
                     selected_indices = random_select_from_list(
                         list(range(len(paths))),
-                        llm.llm_config.SEQ_4_Consideration)
+                        llm.llm_config.SEQ_for_Consideration)
                     target_candidate_sequences_dict_for_prompt[key] = [path for
                                                                        idx, path
                                                                        in
@@ -578,11 +578,14 @@ class LLM(FunctionSearchStrategy):
         for key in self.queue:
             key_prefix = get_key_1_prefix(key)
             if '#' in key_prefix: # a state at depth 2 or deeper
-                if key_prefix.startswith('fallback') and key_prefix.endswith('fallback'):
+                # if key_prefix.startswith('fallback') and key_prefix.endswith('fallback'):
+                #     continue
+                # else:
+                #     if key_prefix.endswith('fallback#fallback'):
+                #         continue
+
+                if key_prefix.endswith('fallback#fallback'):
                     continue
-                else:
-                    if key_prefix.endswith('fallback#fallback'):
-                        continue
 
             if key_prefix not in count.keys():
                 count[key_prefix] = [key]
@@ -612,7 +615,7 @@ class LLM(FunctionSearchStrategy):
                 # only keep states that have different writes
                 cur_writes = []
                 for idx,(key, recent_writes) in enumerate(key_recent_writes_pairs):
-                    if idx<=2:
+                    if idx<=1:
                         self.queue.append(key)
                         cur_writes = recent_writes  # update cur_writes
                     else:

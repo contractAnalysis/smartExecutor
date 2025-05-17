@@ -350,7 +350,7 @@ def initial_check_generated_sequences(sequences, start_functions,targets, all_fu
         # check if contain not-defined functions
         flag_consider = True
         for func in seq_temp:
-            if func not in all_functions_pure_name:
+            if func not in all_functions_pure_name+['fallback']:
                 flag_consider = False
                 status=f"{seq_temp} is a really bad sequence as it contains an element {func}, which is not a function. This is a serious problem. Please only consider the functions defined in the source code."
                 sequences_status[target] = {k: v for k, v in
