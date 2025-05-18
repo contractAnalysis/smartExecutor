@@ -322,7 +322,7 @@ def collect_sequences(data:dict,iteration:int=1):
         seq_results=saved_value
         response1=get_a_kv_pair_from_a_json(json_file_path_raw,f'{key}_response')
 
-    color_print('Red', f'\n\n==== Generated sequences ===={data["solidity_name"]}===={data["contract_name"]}===={data["iteration"]}===={os.path.basename(__file__)}')
+    color_print('Red', f'\n\n===== Generated sequences ===={data["solidity_name"]}===={data["contract_name"]}===={data["iteration"]}===={os.path.basename(__file__)}')
     if isinstance(seq_results,dict):
         for k,v in seq_results.items():
             if k not in data['target_functions']:continue
@@ -416,7 +416,7 @@ def collect_candidate_sequences(data:dict):
         seq_results = saved_value
 
     color_print('Red',
-                f'\n\n==== Generated candidate sequences ===={data["solidity_name"]}===={data["contract_name"]}===={data["iteration"]}===={os.path.basename(__file__)}')
+                f'\n\n===== Generated candidate sequences ===={data["solidity_name"]}===={data["contract_name"]}===={data["iteration"]}===={os.path.basename(__file__)}')
     if isinstance(seq_results,dict):
         for k, v in seq_results.items():
             color_print('Blue', f'{k}:')
@@ -511,7 +511,7 @@ def chop_candidate_sequences(data:dict):
         seq_results = saved_value
 
     color_print('Red',
-                f'\n\n==== Chop candidate sequences ===={data["solidity_name"]}===={data["contract_name"]}===={data["iteration"]}===={os.path.basename(__file__)}')
+                f'\n\n===== Chop candidate sequences ===={data["solidity_name"]}===={data["contract_name"]}===={data["iteration"]}===={os.path.basename(__file__)}')
     if isinstance(seq_results,dict):
         for k, v in seq_results.items():
             color_print('Blue', f'{k}:')

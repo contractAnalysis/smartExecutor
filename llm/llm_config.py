@@ -32,11 +32,11 @@ temperature=0
 sleep_time=0
 LLM_Mode='gen'  #gen, gen_sel, xxx
 
-SEQ_iteration=3
+SEQ_iteration=4
 
 
-NUM_max_candidate_sequences=15
-SEQ_for_Consideration=NUM_max_candidate_sequences
+NUM_max_candidate_sequences=10
+
 
 Candi_prune=False
 

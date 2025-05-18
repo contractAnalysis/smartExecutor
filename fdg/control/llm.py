@@ -7,7 +7,9 @@ from fdg.control.ftn_search_strategy import FunctionSearchStrategy
 from fdg.control.function_assignment import FunctionAssignment
 from fdg.control.llm_related import get_feedback, get_candidate_sequences, \
     prune_candidate_sequences, initial_check_generated_sequences, \
-    check_generated_candidate_sequences
+    check_generated_candidate_sequences, prune_candidate_sequences_basic, \
+    prune_candidate_sequences_advance, shorten_candidate_sequences, \
+    print_sequences_in_dict, shorten_candidate_sequences_LP
 from fdg.control.weight_computation import compute, \
     turn_write_features_to_a_value
 from fdg.expression_slot import is_slot_in_a_list, \
@@ -94,7 +96,6 @@ class LLM(FunctionSearchStrategy):
         self.fwrg_manager=fwrg_manager
 
         self.candidate_sequences={}
-        self.candidate_sequences_original = {}
         self.left_target_code_coverage={}
 
     def save_valid_sequences(self, valid_sequence):
@@ -156,33 +157,10 @@ class LLM(FunctionSearchStrategy):
                         in
                         self.fwrg_manager.updateFWRG.fwrg_targets_augmented.items()}
 
-                    self.candidate_sequences_original = get_candidate_sequences(
+                    self.candidate_sequences = get_candidate_sequences(
                         graph, self.start_functions, self.cur_targets)
-                    self.candidate_sequences = copy(
-                        self.candidate_sequences_original)
 
-                    # chop candidate sequences if there are a huge number of sequences
-                    target_huge_sequences={k:seq_list for k,seq_list in self.candidate_sequences.items() if len(seq_list)>llm.llm_config.NUM_max_candidate_sequences}
 
-                    # randomly select 500 if the number of sequences goes beyond 500
-                    target_huge_sequences={k:random_select_from_list(seq_list,500) if len(seq_list)>500 else seq_list for k,seq_list in target_huge_sequences.items()}
-                    if len(target_huge_sequences)>0:
-                        data = {"solidity_name": f"{self.solidity_name}",
-                                "contract_name": f"{self.contract_name}",
-                                "start_functions": self.start_functions,
-                                "target_functions": list(target_huge_sequences.keys()),
-                                "contract_code": self.contract_code,
-                                "num_sequences": llm.llm_config.NUM_max_candidate_sequences,
-                                "feedback": {},
-                                "valid_sequences":{},
-                                "iteration": self.cur_iteration,
-                                "msg_so_far": [],
-                                "candidate_sequences": {},
-                                "huge_num_sequences":target_huge_sequences
-                                }
-                        target_huge_sequences_chopped = chop_candidate_sequences(data)
-                        for k,seq_list in target_huge_sequences_chopped.items():
-                            self.candidate_sequences[k]=seq_list
 
 
                 elif llm.llm_config.LLM_Mode in ['gen_sel_llm']:
@@ -202,10 +180,8 @@ class LLM(FunctionSearchStrategy):
                             "msg_so_far": [],
                             "candidate_sequences": {}
                             }
-                    self.candidate_sequences_original = collect_candidate_sequences(
+                    self.candidate_sequences= collect_candidate_sequences(
                         data)
-                    self.candidate_sequences = copy(
-                        self.candidate_sequences_original)
 
                     # initial check the candidate sequences
                     # check_generated_candidate_sequences
@@ -214,24 +190,38 @@ class LLM(FunctionSearchStrategy):
                         self.all_functions_pure_name)
 
 
+
+
             # ---------------
             # candidate sequence pruning
-            valid_sequences = [[item] for item in
-                               self.start_functions]  # valid sequences of length 1
-            valid_others = [item for sublist in
+            valid_sequences = [item for sublist in
                             self.valid_sequences_dict.values() for item in
                             sublist]
-            valid_sequences = valid_sequences + valid_others
-            if len(self.candidate_sequences.keys())>0:
-                self.candidate_sequences = prune_candidate_sequences(
-                    self.cur_iteration,
-                    self.cur_targets,
-                    self.cur_sequences_to_be_exe_dict,
-                    self.cur_all_sequences,
-                    self.cur_actual_executed_seq,
-                    valid_sequences,
-                    self.candidate_sequences)
+            others = [[item] for item in
+                               self.start_functions]  # valid sequences of length 1
+            valid_sequences = valid_sequences + others
 
+            # basic pruning
+            self.candidate_sequences = prune_candidate_sequences_basic(
+                self.cur_iteration,
+                self.cur_targets,
+                self.cur_sequences_to_be_exe_dict,
+                self.cur_all_sequences,
+                self.cur_actual_executed_seq,
+                self.candidate_sequences)
+
+            self.candidate_sequences_cur,candidate_sequences_dict = prune_candidate_sequences_advance(
+                self.cur_targets,
+                valid_sequences,
+                self.candidate_sequences)
+
+            # shorten the number of candidate sequences if it is configured
+            # self.candidate_sequences_cur=shorten_candidate_sequences(candidate_sequences_dict,llm.llm_config.NUM_max_candidate_sequences)
+            self.candidate_sequences_cur = shorten_candidate_sequences_LP(
+                candidate_sequences_dict,
+                llm.llm_config.NUM_max_candidate_sequences)
+
+            print_sequences_in_dict(self.candidate_sequences_cur)
 
 
             # ---------------
@@ -241,30 +231,17 @@ class LLM(FunctionSearchStrategy):
             targets_with_1_candidate_sequence = {}
 
             for target in self.cur_targets:
-                if target not in self.candidate_sequences.keys():
+                if target not in self.candidate_sequences_cur.keys():
                     target_candidate_sequences_dict_for_prompt[target] = []
                     continue
                 else:
-                    paths = self.candidate_sequences[target]
+                    paths = self.candidate_sequences_cur[target]
                     if len(paths) == 1:
                         targets_with_1_candidate_sequence[target] = paths
                     else:
                         target_candidate_sequences_dict_for_prompt[
                             target] = paths
 
-            # filter to have SEQ_4_Consideration paths for selection
-            for key, paths in target_candidate_sequences_dict_for_prompt.items():
-                if len(paths) > llm.llm_config.SEQ_for_Consideration:
-                    selected_indices = random_select_from_list(
-                        list(range(len(paths))),
-                        llm.llm_config.SEQ_for_Consideration)
-                    target_candidate_sequences_dict_for_prompt[key] = [path for
-                                                                       idx, path
-                                                                       in
-                                                                       enumerate(
-                                                                           paths)
-                                                                       if
-                                                                       idx in selected_indices]
 
             # check if there are some targets that have only one candidate sequence so that LLM is not required to make selection
             targets_w1_candi_seq = list(
@@ -291,6 +268,8 @@ class LLM(FunctionSearchStrategy):
                 color_print('Red',
                             f"No need to generate sequences as there is only one candidate sequence for each target({os.path.basename(__file__)}).")
                 sequences = targets_with_1_candidate_sequence
+            else:
+                sequences={}
 
 
         #----------------------------
@@ -460,6 +439,10 @@ class LLM(FunctionSearchStrategy):
                 self.cur_targets = [ftn for ftn in self.cur_targets if
                                     ftn not in ['symbol', 'name', 'version',
                                                 'owner']]
+
+                if self.cur_iteration >= llm.llm_config.SEQ_iteration:
+                    return {}, None
+
                 if self.cur_iteration==1:
                     for k, cov in left_target_cov.items():
                         self.left_target_code_coverage[k]=[cov]
@@ -475,15 +458,10 @@ class LLM(FunctionSearchStrategy):
                         self.feedback_all[t]=[status]
 
                 self.gen_sequences(feedback=self.feedback_all,msg_so_far=self.msg_so_far)
-
-
                 self.cur_actual_executed_seq = []
 
 
-                if self.cur_iteration>llm.llm_config.SEQ_iteration:
-                    return {},None
-                else:
-                    continue
+
 
 
             flag_can_be_deleted = False
