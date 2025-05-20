@@ -176,7 +176,10 @@ def message_preparation(state:str, prompt_file_name:str,data:dict={}):
     # prepare for the user message
     if state in ['sequence']:
         #---------------------------
-        user_msg = seq_prompt["user"]["content"]
+        if data['iteration']>2 and data['llm_mode'] not in ['gen']:
+            user_msg = seq_prompt["user"]["content1"]
+        else:
+            user_msg = seq_prompt["user"]["content"]
         for item in seq_prompt["user"]["data"]:
             user_msg = user_msg.replace("##{}##".format(item),
                                         "{}".format(

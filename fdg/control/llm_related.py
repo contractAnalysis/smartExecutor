@@ -1,4 +1,5 @@
 import os
+from math import floor
 
 import numpy as np
 
@@ -71,7 +72,7 @@ def get_feedback(cur_targets, cur_sequences_to_be_exe_dict, cur_actual_executed_
                         else:
                             if round(left_targets_and_coverage[target])==round(code_cov[-1]):
                                 cur_seq_status[
-                                    target] = f"{gen_seq} is a valid sequence. However,function {target} still has the code coverage {left_targets_and_coverage[target]} below the threshold {fdg.global_config.function_coverage_threshold}. The code coverage does not change after the execution of this sequence. Hence, please try to reason the contract code and find a proper sequence for {target}."
+                                    target] = f"{gen_seq} is a valid sequence. However,function {target} still has the code coverage {left_targets_and_coverage[target]} below the threshold {fdg.global_config.function_coverage_threshold}. The code coverage does not change after the execution of this sequence. Hence, please try to understand the contract code and find a proper sequence for {target}."
                             elif round(left_targets_and_coverage[target])-round(code_cov[-1])<5:
                                 cur_seq_status[
                                     target] = f"{gen_seq} is a valid sequence. However,function {target} still has the code coverage {left_targets_and_coverage[target]} below the threshold {fdg.global_config.function_coverage_threshold}. The code coverage increase is not significant after the execution of this sequence. Please try your best to find a proper sequence for {target}."
@@ -102,10 +103,10 @@ def get_feedback(cur_targets, cur_sequences_to_be_exe_dict, cur_actual_executed_
 
                     if dif_cur_cov_threshold>20:
                         cur_seq_status[
-                            target] = f"{gen_seq} is invalid. The execution stops at function {gen_seq[idx]}. The code coverage of this function so far is {left_targets_and_coverage[target]}, far below the threshold. Please reason the whole smart contract code to find a proper sequence for {target}."
+                            target] = f"{gen_seq} is invalid. The execution stops at function {gen_seq[idx]}. The code coverage of this function so far is {left_targets_and_coverage[target]}, far below the threshold. Please check the whole smart contract code to find a proper sequence for {target}."
                     else:
                         cur_seq_status[
-                            target] = f"{gen_seq} is invalid. The execution stops at function {gen_seq[idx]}. The code coverage of this function so far is {left_targets_and_coverage[target]}. The code coverage can be further improved. Please find a proepr sequence to increase code coverage for {target}."
+                            target] = f"{gen_seq} is invalid. The execution stops at function {gen_seq[idx]}. The code coverage of this function so far is {left_targets_and_coverage[target]}. The code coverage can be further improved. Please find a proper sequence to increase code coverage for {target}."
 
 
     for target, status in cur_seq_status.items():
@@ -154,13 +155,13 @@ def get_candidate_sequences(graph, start_functions, cur_targets):
                     target_paths.append(p)
         all_target_paths_dict[target] = target_paths
 
-    # print the paths grouped by targets
-    color_print('Red',
-                f'\n\n==== paths grouped by targets===={os.path.basename(__file__)}')
-    for tar, paths in all_target_paths_dict.items():
-        color_print('Blue', f'"{tar}":')
-        for pa in paths:
-            color_print('Gray', f'{pa},')
+    # # print the paths grouped by targets
+    # color_print('Red',
+    #             f'\n\n==== paths grouped by targets===={os.path.basename(__file__)}')
+    # for tar, paths in all_target_paths_dict.items():
+    #     color_print('Blue', f'"{tar}":')
+    #     for pa in paths:
+    #         color_print('Gray', f'{pa},')
 
     return all_target_paths_dict
 
@@ -381,75 +382,6 @@ def prune_candidate_sequences(cur_iteration, cur_targets,
 
     return pruned_candi_sequences_dict
 
-def prune_candidate_sequences_advance(cur_targets,
-                               valid_sequences,candidate_sequences
-                             ):
-    """
-    prune candidate sequences for current targets
-
-    """
-
-    def contain_other_targets(seq_sufix,targets):
-        """
-        check if there are other targets following the valid prefix of a sequence.
-        """
-        for func in seq_sufix[0:-1]:
-            if func in targets:
-                return True
-        return False
-
-    def distance_to_longest_valid_prefix(valid_sequences,seq):
-        seq_len=[len(s) for s in valid_sequences]
-        max_len=max(seq_len)
-        for i in range(max_len,0,-1):
-            valid_seq=[p for p in valid_sequences if len(p)==i]
-            for s in valid_seq:
-                if is_prefix(s, seq):
-                    distance=len(seq)-len(s)
-                    # color_print("Blue",f'\t\tDistance:{len(seq)-len(s)}; valid prefix: {s}')
-                    return distance,s        #
-        # color_print("Blue",f'\t\tDistance:{len(seq)-1}; (longest valid prefix is 1)')
-        return 0,[]
-
-
-    color_print("Red", f"===== advanced pruning ==== {os.path.basename(__file__)}")
-    if len(candidate_sequences.keys())==0:
-        color_print("Red","No candidate sequences.")
-        return {}
-
-
-    pruned_candi_sequences = {}
-    pruned_candi_sequences_dict={}
-
-    for target in cur_targets:
-        if target not in candidate_sequences.keys(): continue
-        candi_seq = candidate_sequences[target]
-        if len(candi_seq)==0:continue
-        # color_print('Red',
-        #             f'\n==== candidate sequences for {target}===={os.path.basename(__file__)}')
-        # for pa in candi_seq:
-        #     color_print('Gray', f'{pa}')
-
-        refined_paths=[]
-        refine_paths_dict={}
-        for seq in candi_seq:
-            distance,prefix=distance_to_longest_valid_prefix(valid_sequences,seq)
-            if distance>0:
-                if not contain_other_targets(seq[len(prefix):len(seq)],
-                                             candidate_sequences.keys()):
-                    refined_paths.append(seq)
-                    if distance in refine_paths_dict.keys():
-                        refine_paths_dict[distance]+=[seq]
-                    else:
-                        refine_paths_dict[distance]=[seq]
-
-        pruned_candi_sequences[target] = refined_paths
-        pruned_candi_sequences_dict[target]=refine_paths_dict
-
-
-        color_print('Gray', f'{target}:{len(refined_paths)}/{len(candi_seq)} are kept ({len(refined_paths) / len(candi_seq)})')
-
-    return pruned_candi_sequences,pruned_candi_sequences_dict
 
 def print_sequences_in_dict(sequences_dict:dict):
     if len(sequences_dict.keys()) > 0:
@@ -462,99 +394,6 @@ def print_sequences_in_dict(sequences_dict:dict):
                     color_print("Gray", f'\t{path}')
     else:
         color_print('Red', f'No sequences:')
-
-def shorten_candidate_sequences(candidate_sequences_dict,num_candi):
-    results={}
-    for target, candi_dict in candidate_sequences_dict.items():
-        keys =list(candi_dict.keys())
-        keys.sort(reverse=False)
-        if len(keys)==0:continue
-
-        return_seq=[]
-        for d in keys:
-            if d in candi_dict.keys():
-                d_seq = candi_dict[d]
-            else:
-                d_seq = []
-            if len(d_seq) <= num_candi- len(return_seq):
-                return_seq += d_seq
-            else:
-                sel_seq = random_select_from_list(d_seq, num_candi - len(
-                                                      return_seq))
-
-                return_seq += sel_seq
-                break
-
-        results[target]=return_seq
-    return results
-
-def shorten_candidate_sequences_LP(candidate_sequences_dict,num_candi):
-    """
-    prioritize sequences with longer valid prefixes
-    """
-    reorgainze_seq={}
-    for target, candi_dict in candidate_sequences_dict.items():
-        d_seq={}
-        for d,seq_list in candi_dict.items():
-            for seq in seq_list:
-                prefix_len=len(seq)-d
-                if f'{prefix_len}:{d}' not in d_seq.keys():
-                    d_seq[f'{prefix_len}:{d}']=[seq]
-                else:
-                    d_seq[f'{prefix_len}:{d}']+=[seq]
-                # if prefix_len not in d_seq.keys():
-                #     d_seq[prefix_len]=[seq]
-                # else:
-                #     d_seq[prefix_len]+=[seq]
-        reorgainze_seq[target]=d_seq
-
-    results = {}
-
-
-    for target, candi_dict in reorgainze_seq.items():
-        # keys =list(candi_dict.keys())
-        # keys.sort(reverse=True)
-        # if len(keys)==0:continue
-
-        return_seq =[]
-        # assume that the longest length is 4
-        # keys=["3:1","2:1","2:2","1:1","1:2","1:3"]
-        keys = ["3:1", "2:1", "2:2"]
-        for d in keys:
-            if d in candi_dict.keys():
-                d_seq = candi_dict[d]
-            else:
-                d_seq = []
-            if len(d_seq) <= num_candi - len(return_seq):
-                return_seq += d_seq
-            else:
-                sel_seq = random_select_from_list(d_seq,
-                                                      num_candi - len(
-                                                          return_seq))
-
-                return_seq += sel_seq
-                break
-        if len(return_seq)<num_candi:
-            keys = ["1:1", "1:2", "1:3"]
-            for d in keys:
-                if d in candi_dict.keys():
-                    d_seq = candi_dict[d]
-                else:
-                    d_seq = []
-                if len(d_seq) <= num_candi - len(return_seq):
-                    return_seq += d_seq
-                else:
-                    sel_seq = random_select_from_list(d_seq,
-                                                      num_candi - len(
-                                                          return_seq))
-
-                    return_seq += sel_seq
-                    break
-        results[target] = return_seq
-
-
-    return results
-
 
 
 def prune_candidate_sequences_basic(cur_iteration, cur_targets,
@@ -640,10 +479,273 @@ def prune_candidate_sequences_basic(cur_iteration, cur_targets,
 
         pruned_candi_sequences_dict[target]=temp_candi_2
 
-
         color_print('Gray', f'{target}:{len(pruned_candi_sequences_dict[target])}/{len(candi_seq)} are kept ({len(pruned_candi_sequences_dict[target]) / len(candi_seq)})')
 
     return pruned_candi_sequences_dict
+
+def prune_candidate_sequences_advance(cur_targets,
+                               valid_sequences,candidate_sequences
+                             ):
+    """
+    prune candidate sequences for current targets
+
+    """
+
+    def contain_other_targets(seq_sufix,targets):
+        """
+        check if there are other targets following the valid prefix of a sequence.
+        """
+        for func in seq_sufix[0:-1]:
+            if func in targets:
+                return True
+        return False
+
+    def distance_to_longest_valid_prefix(valid_sequences,seq):
+        seq_len=[len(s) for s in valid_sequences]
+        max_len=max(seq_len)
+        for i in range(max_len,0,-1):
+            valid_seq=[p for p in valid_sequences if len(p)==i]
+            for s in valid_seq:
+                if is_prefix(s, seq):
+                    distance=len(seq)-len(s)
+                    # color_print("Blue",f'\t\tDistance:{len(seq)-len(s)}; valid prefix: {s}')
+                    return distance,s        #
+        # color_print("Blue",f'\t\tDistance:{len(seq)-1}; (longest valid prefix is 1)')
+        return 0,[]
+
+
+    color_print("Red", f"===== advanced pruning ==== {os.path.basename(__file__)}")
+    if len(candidate_sequences.keys())==0:
+        color_print("Red","No candidate sequences.")
+        return {},{}
+
+
+    pruned_candi_sequences = {}
+    pruned_candi_sequences_dict={}
+
+    for target in cur_targets:
+        if target not in candidate_sequences.keys(): continue
+        candi_seq = candidate_sequences[target]
+        if len(candi_seq)==0:continue
+        # color_print('Red',
+        #             f'\n==== candidate sequences for {target}===={os.path.basename(__file__)}')
+        # for pa in candi_seq:
+        #     color_print('Gray', f'{pa}')
+
+        refined_paths=[]
+        refine_paths_dict={}
+        for seq in candi_seq:
+            # use the number of sequence to determine the rigorousness of pruning
+            if len(candi_seq)>=100:
+                flag=True
+            else:
+                flag=False
+            distance,prefix=distance_to_longest_valid_prefix(valid_sequences,seq)
+            if distance>0:
+                if not flag:
+                    seq_seg_to_check=seq[len(prefix):len(seq)]
+                else:
+                    seq_seg_to_check = seq[1:len(seq)]
+
+                if not contain_other_targets(seq_seg_to_check,
+                                             candidate_sequences.keys()):
+                    refined_paths.append(seq)
+                    if distance in refine_paths_dict.keys():
+                        refine_paths_dict[distance]+=[seq]
+                    else:
+                        refine_paths_dict[distance]=[seq]
+
+        pruned_candi_sequences[target] = refined_paths
+        pruned_candi_sequences_dict[target]=refine_paths_dict
+
+
+        color_print('Gray', f'{target}:{len(refined_paths)}/{len(candi_seq)} are kept ({len(refined_paths) / len(candi_seq)})')
+
+    return pruned_candi_sequences,pruned_candi_sequences_dict
+
+def prune_candidate_sequences_PS(candidate_sequences_dict,generated_sequences_dict,num_candi):
+    """
+    keep sequences based on the past generated sequences
+    take advantage of the sequences generated. there should be some reasons or logic.
+    """
+    def contain_a_subet(sequence,subset_list):
+        for subset in subset_list:
+            if set(subset).issubset(set(sequence)):
+                return True
+        return False
+
+    def contain_a_subet0(sequence,subset):
+        if set(subset).issubset(set(sequence)):
+            return True
+        return False
+
+    def need_to_prune(sequences_dict, num_candi):
+        sequences=[s for seq_list in sequences_dict.values() for s in seq_list]
+        if len(sequences)<num_candi:
+            return False
+        else:
+            return True
+
+    results={}
+    for target, candi_dict in candidate_sequences_dict.items():
+        if not need_to_prune(candi_dict,num_candi):
+            results[target] = candi_dict
+            continue
+
+        d_seq={}
+        if target in generated_sequences_dict.keys():
+            seq_generated = generated_sequences_dict[target]
+            seq_generated=[ seq_generated[0:i] for i in range(1,len(seq_generated),1)]
+        else:
+            seq_generated = []
+        if len(seq_generated)>0:
+            for d,seq_list in candi_dict.items():
+                seq_left = []
+                for s in seq_list:
+                    if contain_a_subet(s,seq_generated):
+                        seq_left.append(s)
+                d_seq[d]=seq_left
+        else:
+            d_seq=candi_dict
+
+        results[target]=d_seq
+    return results
+
+
+
+def shorten_candidate_sequences(candidate_sequences_dict,num_candi):
+    """
+    prioritize sequences with short distances from valid prefix to the target.
+    """
+    results={}
+    for target, candi_dict in candidate_sequences_dict.items():
+        keys =list(candi_dict.keys())
+        keys.sort(reverse=False)
+        if len(keys)==0:continue
+
+        return_seq=[]
+        for d in keys:
+            if d in candi_dict.keys():
+                d_seq = candi_dict[d]
+            else:
+                d_seq = []
+            if len(d_seq) <= num_candi- len(return_seq):
+                return_seq += d_seq
+            else:
+                sel_seq = random_select_from_list(d_seq, num_candi - len(
+                                                      return_seq))
+
+                return_seq += sel_seq
+                break
+
+        results[target]=return_seq
+    return results
+
+
+def shorten_candidate_sequences_LP(candidate_sequences_dict,num_candi,not_consider_sequences_dict:dict={}):
+    """
+    prioritize sequences with longer valid prefixes and shorter distances
+    """
+
+    def is_contained(seq, seq_list):
+        def is_equal(seq1, seq2):
+            if len(seq1) != len(seq2):
+                return False
+
+            for i in range(len(seq1)):
+                if seq1[i] not in [seq2[i]]:
+                    return False
+            return True
+
+        for path in seq_list:
+            if is_equal(seq, path):
+                return True
+        return False
+
+    # reorganize based the valid prefix length and distance
+    reorgainze_seq={}
+    for target, candi_dict in candidate_sequences_dict.items():
+        d_seq={}
+        for d,seq_list in candi_dict.items():
+            for seq in seq_list:
+                prefix_len=len(seq)-d
+                if f'{prefix_len}:{d}' not in d_seq.keys():
+                    d_seq[f'{prefix_len}:{d}']=[seq]
+                else:
+                    d_seq[f'{prefix_len}:{d}']+=[seq]
+        reorgainze_seq[target]=d_seq
+
+    results = {}
+    for target, candi_dict in reorgainze_seq.items():
+        # keys =list(candi_dict.keys())
+        # keys.sort(reverse=True)
+        # if len(keys)==0:continue
+
+        return_seq =[]
+        # assume that the longest length is 4
+        # keys=["3:1","2:1","2:2","1:1","1:2","1:3"]
+        keys = ["3:1", "2:1", "2:2","1:1"]
+        for d in keys:
+            d_seq = []
+            if d in candi_dict.keys():
+                d_seq = candi_dict[d]
+
+            d_rm=[]
+            if target in not_consider_sequences_dict.keys():
+                d_rm=not_consider_sequences_dict[target]
+            d_seq=[s for s in d_seq if not is_contained(s,d_rm)]
+
+            if len(d_seq) <= num_candi - len(return_seq):
+                return_seq += d_seq
+            else:
+                sel_seq = random_select_from_list(d_seq,
+                                                      num_candi - len(
+                                                          return_seq))
+                return_seq += sel_seq
+                break
+
+        if len(return_seq)<num_candi:
+            keys = [ "1:2", "1:3"]
+            for d in keys:
+                d_seq = []
+                if d in candi_dict.keys():
+                    d_seq = candi_dict[d]
+
+                d_rm = []
+                if target in not_consider_sequences_dict.keys():
+                    d_rm = not_consider_sequences_dict[target]
+                d_seq = [s for s in d_seq if not is_contained(s, d_rm)]
+
+                if len(d_seq) <= num_candi - len(return_seq):
+                    return_seq += d_seq
+                else:
+                    sel_seq = random_select_from_list(d_seq,
+                                                      num_candi - len(
+                                                          return_seq))
+
+                    return_seq += sel_seq
+                    break
+        results[target] = return_seq
+
+
+    return results
+
+def prune_PS_and_shorten(candidate_sequences_dict, generated_sequences_dict,num_candi):
+
+    consider_num = floor(num_candi * llm.llm_config.candi_percentage)
+    pruned_seq_dict=prune_candidate_sequences_PS(candidate_sequences_dict,generated_sequences_dict, consider_num)
+
+    result_seq_dict1=shorten_candidate_sequences_LP(pruned_seq_dict,consider_num)
+    result_seq_dict2= shorten_candidate_sequences_LP(candidate_sequences_dict,num_candi-consider_num,not_consider_sequences_dict=result_seq_dict1)
+    result_seq_dict={}
+    for t,v in result_seq_dict1.items():
+        if t in result_seq_dict2.keys():
+            v1=result_seq_dict2[t]
+            result_seq_dict[t]=v+v1
+        else:
+            result_seq_dict[t]=v
+    return result_seq_dict
+
 
 
 def initial_check_generated_sequences(sequences, start_functions,targets, all_functions_pure_name,length_limit=fdg.global_config.seq_len_limit):

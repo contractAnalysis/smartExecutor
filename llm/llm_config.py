@@ -7,7 +7,7 @@ def get_project_root():
 project_path=f'{get_project_root()}/'
 sys.path.append(project_path)
 
-FLAG_exp=True
+FLAG_exp=False
 
 contract_code=""
 
@@ -36,7 +36,7 @@ SEQ_iteration=4
 
 
 NUM_max_candidate_sequences=10
-
+candi_percentage=0.5
 
 Candi_prune=False
 

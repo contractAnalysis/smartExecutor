@@ -589,6 +589,14 @@ def add_fwrg_analysis_args(options):
         type=int,
         help="specify the iteration depth.",
     )
+    options.add_argument(
+        "--candi_percentage",
+        default=0.5,
+        type=float,
+        help="indicate the percentage of candidate sequences containing prefixes of sequences from the generator.",
+    )
+
+
 def parse_list_of_lists(value):
     try:
         # Parse the string representation of the list of lists into an actual list of lists
@@ -621,6 +629,7 @@ def add_fwrg_arguments(args: Namespace):
     llm.llm_config.NUM_max_candidate_sequences=args.max_num_candi_sequences
     llm.llm_config.API_key=args.api_key
     llm.llm_config.SEQ_iteration=args.iteration
+    llm.llm_config.candi_percentage=args.candi_percentage
     if args.no_guidance:
         fdg.global_config.flag_fwrg=False
     else:
