@@ -596,6 +596,13 @@ def add_fwrg_analysis_args(options):
         help="indicate the percentage of candidate sequences containing prefixes of sequences from the generator.",
     )
 
+    options.add_argument(
+        "--flag_exp_mode",
+        default=True,
+        action="store_false",
+        help="indicate that this is in experiment mode.",
+    )
+
 
 def parse_list_of_lists(value):
     try:
@@ -630,6 +637,7 @@ def add_fwrg_arguments(args: Namespace):
     llm.llm_config.API_key=args.api_key
     llm.llm_config.SEQ_iteration=args.iteration
     llm.llm_config.candi_percentage=args.candi_percentage
+    llm.llm_config.FLAG_exp=args.flag_exp_mode
     if args.no_guidance:
         fdg.global_config.flag_fwrg=False
     else:
