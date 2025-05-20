@@ -598,8 +598,8 @@ def add_fwrg_analysis_args(options):
 
     options.add_argument(
         "--flag_exp_mode",
-        default=True,
-        action="store_false",
+        default=False,
+        action="store_true",
         help="indicate that this is in experiment mode.",
     )
 
@@ -638,6 +638,7 @@ def add_fwrg_arguments(args: Namespace):
     llm.llm_config.SEQ_iteration=args.iteration
     llm.llm_config.candi_percentage=args.candi_percentage
     llm.llm_config.FLAG_exp=args.flag_exp_mode
+
     if args.no_guidance:
         fdg.global_config.flag_fwrg=False
     else:
