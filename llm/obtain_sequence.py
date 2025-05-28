@@ -258,7 +258,8 @@ def collect_sequences(data:dict,iteration:int=1):
     if llm.llm_config.FLAG_exp:
         key = f'{data["solidity_name"]}_{data["contract_name"]}_sequence_iter_{data["iteration"]}'
         result_path=get_path_to_save_result()
-        file_name_prefix=result_path + f'{data["solidity_name"]}_{data["contract_name"]}_{data["llm_model_sim"]}_{data["llm_mode"]}_{prompt_style}_{data["llm_temperature"]}_{data["num_max_candi"]}'
+        file_name_prefix = result_path + f'{data["solidity_name"]}_{data["contract_name"]}_{data["llm_model_sim"]}_{data["llm_mode"]}_{data["llm_temperature"]}_{llm.llm_config.SEQ_iteration}_{data["num_max_candi"]}_{llm.llm_config.candi_percentage}_{llm.llm_config.times}'
+
         json_file_path = file_name_prefix+'_seq_responses.json'
         json_file_path_raw = file_name_prefix+'_seq_raw_responses.json'
 
@@ -274,7 +275,7 @@ def collect_sequences(data:dict,iteration:int=1):
     else:
         key = f'{data["solidity_name"]}_{data["contract_name"]}_sequence_iter_{data["iteration"]}'
         result_path = get_path_to_save_result()
-        file_name_prefix = result_path + f'{data["solidity_name"]}_{data["contract_name"]}_{data["llm_model_sim"]}_{data["llm_mode"]}_{prompt_style}_{data["llm_temperature"]}_{data["num_max_candi"]}'
+        file_name_prefix = result_path + f'{data["solidity_name"]}_{data["contract_name"]}_{data["llm_model_sim"]}_{data["llm_mode"]}_{data["llm_temperature"]}_{llm.llm_config.SEQ_iteration}_{data["num_max_candi"]}_{llm.llm_config.candi_percentage}_{llm.llm_config.times}'
 
         json_file_path = file_name_prefix+f'_seq_responses.json'
         json_file_path_raw =file_name_prefix+f'_seq_raw_responses.json'
@@ -354,7 +355,8 @@ def collect_candidate_sequences(data:dict):
     if llm.llm_config.FLAG_exp:
         key = f'{data["solidity_name"]}_{data["contract_name"]}_candidate_sequences'
         result_path = get_path_to_save_result()
-        file_name_prefix = result_path + f'{data["solidity_name"]}_{data["contract_name"]}_{data["llm_model_sim"]}_{data["llm_mode"]}_{prompt_style}_{data["llm_temperature"]}_{data["num_max_candi"]}'
+        file_name_prefix = result_path + f'{data["solidity_name"]}_{data["contract_name"]}_{data["llm_model_sim"]}_{data["llm_mode"]}_{data["llm_temperature"]}_{llm.llm_config.SEQ_iteration}_{data["num_max_candi"]}_{llm.llm_config.candi_percentage}_{llm.llm_config.times}'
+
         json_file_path = file_name_prefix + '_seq_responses.json'
         json_file_path_raw = file_name_prefix + '_seq_raw_responses.json'
 
@@ -370,7 +372,7 @@ def collect_candidate_sequences(data:dict):
     else:
         key = f'{data["solidity_name"]}_{data["contract_name"]}_candidate_sequences'
         result_path = get_path_to_save_result()
-        file_name_prefix = result_path + f'{data["solidity_name"]}_{data["contract_name"]}_{data["llm_model_sim"]}_{data["llm_mode"]}_{prompt_style}_{data["llm_temperature"]}_{data["num_max_candi"]}'
+        file_name_prefix = result_path + f'{data["solidity_name"]}_{data["contract_name"]}_{data["llm_model_sim"]}_{data["llm_mode"]}_{data["llm_temperature"]}_{llm.llm_config.SEQ_iteration}_{data["num_max_candi"]}_{llm.llm_config.candi_percentage}_{llm.llm_config.times}'
 
         json_file_path = file_name_prefix + f'_seq_responses.json'
         json_file_path_raw = file_name_prefix + f'_seq_raw_responses.json'
@@ -451,7 +453,8 @@ def chop_candidate_sequences(data:dict):
     if llm.llm_config.FLAG_exp:
         key = f'{data["solidity_name"]}_{data["contract_name"]}_chop_candidate_sequences'
         result_path = get_path_to_save_result()
-        file_name_prefix = result_path + f'{data["solidity_name"]}_{data["contract_name"]}_{data["llm_model_sim"]}_{data["llm_mode"]}_{prompt_style}_{data["llm_temperature"]}_{data["num_max_candi"]}'
+        file_name_prefix = result_path + f'{data["solidity_name"]}_{data["contract_name"]}_{data["llm_model_sim"]}_{data["llm_mode"]}_{data["llm_temperature"]}_{llm.llm_config.SEQ_iteration}_{data["num_max_candi"]}_{llm.llm_config.candi_percentage}_{llm.llm_config.times}'
+
         json_file_path = file_name_prefix + '_seq_responses.json'
         json_file_path_raw = file_name_prefix + '_seq_raw_responses.json'
 
@@ -467,7 +470,7 @@ def chop_candidate_sequences(data:dict):
     else:
         key = f'{data["solidity_name"]}_{data["contract_name"]}_chop_candidate_sequences'
         result_path = get_path_to_save_result()
-        file_name_prefix = result_path + f'{data["solidity_name"]}_{data["contract_name"]}_{data["llm_model_sim"]}_{data["llm_mode"]}_{prompt_style}_{data["llm_temperature"]}_{data["num_max_candi"]}'
+        file_name_prefix = result_path + f'{data["solidity_name"]}_{data["contract_name"]}_{data["llm_model_sim"]}_{data["llm_mode"]}_{prompt_style}_{data["llm_temperature"]}_{data["num_max_candi"]}_{llm.llm_config.times}'
 
         json_file_path = file_name_prefix + f'_seq_responses.json'
         json_file_path_raw = file_name_prefix + f'_seq_raw_responses.json'

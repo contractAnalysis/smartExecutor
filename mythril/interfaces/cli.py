@@ -603,6 +603,12 @@ def add_fwrg_analysis_args(options):
         help="indicate that this is in experiment mode.",
     )
 
+    options.add_argument(
+        "--times",
+        default=1,
+        type=int,
+        help="index",
+    )
 
 def parse_list_of_lists(value):
     try:
@@ -638,6 +644,7 @@ def add_fwrg_arguments(args: Namespace):
     llm.llm_config.SEQ_iteration=args.iteration
     llm.llm_config.candi_percentage=args.candi_percentage
     llm.llm_config.FLAG_exp=args.flag_exp_mode
+    llm.llm_config.times=args.times
 
     if args.no_guidance:
         fdg.global_config.flag_fwrg=False
