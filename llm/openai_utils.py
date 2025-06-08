@@ -6,15 +6,14 @@ from openai import OpenAI
 from llm.llm_config import APK_key
 from llm.utils import color_print
 
-client = OpenAI(
-    # This is the default and can be omitted
-    api_key=os.environ['OPENAI_API_KEY'],
-)
-
-openai.api_key = os.environ['OPENAI_API_KEY']
 
 
 def gpt_request(model, msg, temperature=0.0):
+    client = OpenAI(
+        # This is the default and can be omitted
+        api_key=os.environ['OPENAI_API_KEY'],
+    )
+    openai.api_key = os.environ['OPENAI_API_KEY']
     response= client.chat.completions.create(
         model=model,
         messages=msg,
@@ -34,14 +33,6 @@ def gpt_request(model, msg, temperature=0.0):
     token_counts = [response.usage.prompt_tokens,
                     response.usage.completion_tokens]
     return message,token_counts
-
-model0="text-embedding-3-small"
-model1="text-embedding-3-large"
-model2="text-embedding-ada-002"
-def get_embedding(text, model=model0):
-   text = text.replace("\n", " ")
-   # return client.embeddings.create(input = [text], model=model,  encoding_format="float",  dimensions=256).data[0].embedding
-   return client.embeddings.create(input = [text], model=model,  encoding_format="float").data[0].embedding
 
 
 def llama_request(model, msg, temperature=0.0):

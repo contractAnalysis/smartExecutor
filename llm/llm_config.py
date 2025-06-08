@@ -7,7 +7,7 @@ def get_project_root():
 project_path=f'{get_project_root()}/'
 sys.path.append(project_path)
 
-FLAG_exp=True
+FLAG_exp=False
 
 times=1
 

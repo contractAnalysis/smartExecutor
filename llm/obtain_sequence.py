@@ -42,7 +42,9 @@ def data_processing(data:dict)->dict:
         data['prompt_style'] = "ind"
         data['prompt_file'] = 'prompts_ind'
 
-    if llm.llm_config.LLM_Mode not in ['gen'] and data['iteration']>=2:
+    if llm.llm_config.LLM_Mode in ['sel']:
+        ...
+    elif llm.llm_config.LLM_Mode not in ['gen'] and data['iteration']>=2:
         if len(data['msg_so_far'])>0:
             # remove the target that has only one candidate sequence (no need to generate a sequence)
             data['target_functions']=list(data['candidate_sequences'].keys())
@@ -76,8 +78,14 @@ def data_processing(data:dict)->dict:
 
 def message_preparation(state:str, prompt_file_name:str,data:dict={}):
     # prepare prompt data
-    if data['iteration']==1:
-        seq_prompt= load_specific_prompt_data(prompt_path,prompt_file_name, 'get_sequence')
+    if data['llm_mode'] in ['sel']:
+        seq_prompt = load_specific_prompt_data(prompt_path, prompt_file_name,
+                                               'get_sequence_sel')
+    elif data['iteration']==1:
+        seq_prompt = load_specific_prompt_data(prompt_path,
+                                                   prompt_file_name,
+                                                   'get_sequence')
+
     elif data['iteration']>=2:
         if data['llm_mode'] in ['gen']:
             seq_prompt = load_specific_prompt_data(prompt_path, prompt_file_name, 'get_sequence_gen')
@@ -95,6 +103,7 @@ def message_preparation(state:str, prompt_file_name:str,data:dict={}):
             else:
                 seq_prompt = load_specific_prompt_data(prompt_path, prompt_file_name,
                                                    'get_sequence_gen_sel')
+
         elif data['llm_mode'] in ['gen_sel_llm']:
             if len(data['msg_so_far'])==0:
                 # for candidate sequence generation
@@ -110,7 +119,10 @@ def message_preparation(state:str, prompt_file_name:str,data:dict={}):
 
 
     if state in ['sequence']:
-        seq_data_items=seq_prompt['user']['data']
+        if data['llm_mode'] in ['sel'] and data['iteration']>1:
+            seq_data_items = seq_prompt['user']['data1']
+        else:
+            seq_data_items=seq_prompt['user']['data']
     else:
         pass
 
@@ -177,11 +189,25 @@ def message_preparation(state:str, prompt_file_name:str,data:dict={}):
     # prepare for the user message
     if state in ['sequence']:
         #---------------------------
-        if data['iteration']>2 and data['llm_mode'] not in ['gen']:
+        if data['llm_mode'] in ['sel']:
+            if data['iteration']==1:
+                user_msg=seq_prompt['user']['content']
+            else:
+                user_msg=seq_prompt['user']['content1']
+
+        elif data['iteration']>2 and data['llm_mode'] not in ['gen']:
             user_msg = seq_prompt["user"]["content1"]
         else:
             user_msg = seq_prompt["user"]["content"]
-        for item in seq_prompt["user"]["data"]:
+
+        if data['llm_mode'] in ['sel']:
+            if data['iteration']==1:
+                data_items=seq_prompt["user"]["data"]
+            else:
+                data_items = seq_prompt["user"]["data1"]
+        else:
+            data_items= seq_prompt["user"]["data"]
+        for item in data_items:
             user_msg = user_msg.replace("##{}##".format(item),
                                         "{}".format(
                                             all_data_items_values[item]))

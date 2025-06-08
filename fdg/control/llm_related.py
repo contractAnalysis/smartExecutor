@@ -189,8 +189,11 @@ def find_invalid_sequences(sequences_bf_exe, sequences_af_exe) -> list:
     return invalid
 
 def random_select_from_list(given_data:list,size_select:int)->list:
-    select=np.random.choice(range(len(given_data)),size=size_select,replace=False)
-    return [given_data[idx] for idx in select]
+    if len(given_data)>size_select:
+        select=np.random.choice(range(len(given_data)),size=size_select,replace=False)
+        return [given_data[idx] for idx in select]
+    else:
+        return given_data
 
 def prune_candidate_sequences(cur_iteration, cur_targets,
                               cur_sequences_to_be_exe_dict, cur_all_sequences,
@@ -730,21 +733,32 @@ def shorten_candidate_sequences_LP(candidate_sequences_dict,num_candi,not_consid
 
     return results
 
-def prune_PS_and_shorten(candidate_sequences_dict, generated_sequences_dict,num_candi):
+def obtain_most_N_candi_sequences(candidate_sequences_dict, generated_sequences_dict, num_candi):
+    result_seq_dict = {}
+    if llm.llm_config.candi_percentage<0:
+        # randomly select num_candi sequences
+        print(f'randomly select {num_candi} candidate sequences')
+        for target, candi_dict in candidate_sequences_dict.items():
+            d_seq = []
+            for seq_list in candi_dict.values():
+                d_seq+=seq_list
 
-    consider_num = floor(num_candi * llm.llm_config.candi_percentage)
-    pruned_seq_dict=prune_candidate_sequences_PS(candidate_sequences_dict,generated_sequences_dict, consider_num)
+            result_seq_dict[target] = random_select_from_list(d_seq,num_candi)
+        return result_seq_dict
+    else:
+        consider_num = floor(num_candi * llm.llm_config.candi_percentage)
+        pruned_seq_dict=prune_candidate_sequences_PS(candidate_sequences_dict,generated_sequences_dict, consider_num)
 
-    result_seq_dict1=shorten_candidate_sequences_LP(pruned_seq_dict,consider_num)
-    result_seq_dict2= shorten_candidate_sequences_LP(candidate_sequences_dict,num_candi-consider_num,not_consider_sequences_dict=result_seq_dict1)
-    result_seq_dict={}
-    for t,v in result_seq_dict1.items():
-        if t in result_seq_dict2.keys():
-            v1=result_seq_dict2[t]
-            result_seq_dict[t]=v+v1
-        else:
-            result_seq_dict[t]=v
-    return result_seq_dict
+        result_seq_dict1=shorten_candidate_sequences_LP(pruned_seq_dict,consider_num)
+        result_seq_dict2= shorten_candidate_sequences_LP(candidate_sequences_dict,num_candi-consider_num,not_consider_sequences_dict=result_seq_dict1)
+
+        for t,v in result_seq_dict1.items():
+            if t in result_seq_dict2.keys():
+                v1=result_seq_dict2[t]
+                result_seq_dict[t]=v+v1
+            else:
+                result_seq_dict[t]=v
+        return result_seq_dict
 
 
 

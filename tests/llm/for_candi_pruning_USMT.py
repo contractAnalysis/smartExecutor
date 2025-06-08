@@ -7,7 +7,7 @@ from fdg.control.llm_related import prune_candidate_sequences, \
     prune_candidate_sequences_basic, prune_candidate_sequences_advance, \
     shorten_candidate_sequences, print_sequences_in_dict, \
     shorten_candidate_sequences_LP, prune_candidate_sequences_PS, \
-    prune_PS_and_shorten
+    obtain_most_N_candi_sequences
 from llm.utils import color_print
 
 candidate_sequences={
@@ -7827,5 +7827,5 @@ print_sequences_in_dict(candidate_sequences_cur1)
 candidate_sequences_cur2=shorten_candidate_sequences_LP(candidate_sequences_dict1,num_candi)
 print_sequences_in_dict(candidate_sequences_cur2)
 
-candidate_sequences_cur3=prune_PS_and_shorten(candidate_sequences_dict,cur_sequences_to_be_exe_dict, num_candi)
+candidate_sequences_cur3=obtain_most_N_candi_sequences(candidate_sequences_dict, cur_sequences_to_be_exe_dict, num_candi)
 print_sequences_in_dict(candidate_sequences_cur3)
